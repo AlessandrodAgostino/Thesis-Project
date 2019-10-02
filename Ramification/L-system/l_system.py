@@ -1,8 +1,8 @@
 #@author: Alessandro d'Agostino
 import cmath
 import numpy as np
+from numpy import random
 import matplotlib.pyplot as plt
-
 
 from branch import Branch
 
@@ -21,17 +21,21 @@ class L_System:
         else:
             self.branches = []
 
-    def iteration(self, rule = [( + 85/180*np.pi, 1.5), (-85/180*np.pi, 1.5)]):
+    def iteration(self, rule = [( + 85/180*np.pi, 1.5), (-85/180*np.pi, 1.5)], noise = True):
         """
-        This method is what differentiate an L-system form another:
+        This method is what differentiate an L-system form another. The necessary rules for the costruction are:
             -1) number of child branch (n = 2,3)
             -2) angle deviation of each child branch (+ alpha, - alpha)
             -3) increasing/decreasing length ratio (l1 = l0 * R).
-        The current branch is used to create the new branch(es). The three rules could be all condesed
+            -4) Presence of noise on the angle in the ramification. The noise it's not already adjustable.
+                It's greater and greater going on with the iterations (proportional to iter_lev).
+
+        The current branch is used to create the new branch(es). The first three rules could be all condesed
         in a list like this one:    [(+alpha, R), (-alpha, R)].
         This rule create 2 new branches (list lenght) with the reported angular deviation al lenght ratio.
         The origin and generation relationship shuold be update after every application of the rules.
         """
+        ang_noise = 5/180*np.pi #Fixed anguar noise to 5°
         if self.branches:
             for br in self.branches:
                 if br.iter_lev == self.n_iter:
@@ -39,6 +43,7 @@ class L_System:
                     for gen in rule:
                         l1 = l0/gen[1]
                         theta1 = theta0 + gen[0]
+                        theta1 = theta1 + noise*random.uniform(-br.iter_lev*ang_noise, br.iter_lev*ang_noise)  #Adding noise
                         travel = cmath.rect(l1, theta1)
                         new_branch = Branch(tail = br.head,
                                             head = br.head + travel,
@@ -52,6 +57,13 @@ class L_System:
         else:
             raise Exception('Start your L_system before iteration.')
 
+    def multiple_iterations(self, n, rule = [( + 85/180*np.pi, 1.5), (-85/180*np.pi, 1.5)], noise = True):
+        """
+        This method simply execute n times the itaration
+        """
+        for _ in range(n):
+            self.iteration(rule)
+
     def start(self, branch = Branch()):
         """
         Method that initialize/overwrite the previous drawing.
@@ -63,17 +75,13 @@ class L_System:
     def draw(self, **kwargs):
         fig = plt.figure()
         for br in self.branches:
-            #plt.plot((br.tail.real,br.head.real), (br.tail.imag, br.head.imag), **kwargs)
             br.draw(**kwargs)
         plt.show()
 
 
-
-
 #%%
-br10= Branch(tail, head)
+br10= Branch()
 ls = L_System()
 ls.start(br10)
-ls.iteration()
-ls.iteration()
+ls.multiple_iterations(7)
 ls.draw(c = 'b')
