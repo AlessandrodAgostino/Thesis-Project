@@ -14,7 +14,6 @@ class L_System:
     - branches: the list containing all the branches
     - n_iter: the number of iterations performed on the current drawing
     """
-
     def __init__(self, starting_branch = None):
         self.n_iter = 0
         if starting_branch is not None:
@@ -45,7 +44,7 @@ class L_System:
         The origin and generation relationship shuold be update after every application of the rules.
         """
         np.random.seed = 30
-        ang_noise = 5/180*np.pi #Fixed anguar noise to 5°
+        ang_noise = 10/180*np.pi #Fixed anguar noise to 5°
         if self.branches:
             for br in self.branches:
                 if br.iter_lev == self.n_iter:
@@ -82,13 +81,30 @@ class L_System:
         The strip is delimited by the two lines perpendicular to the line crossing P1 and P2,
         that cross their turn P1 and P2.
         """
-        a = (P2[0] - P1[0]) / (P2[1] - P1[1])
-        b = 1
-        c1 = -P1[1] + P1[0] * (P1[0] - P2[0]) / (P2[1] - P1[1])
-        c2 = -P2[1] + P2[0] * (P1[0] - P2[0]) / (P2[1] - P1[1])
+        #different y
+        if (P2[1] - P1[1]):
+            #different x
+            if (P2[0] - P1[0]):
+                #Probabily it's this step that doesn't work
+                a = (P2[0] - P1[0]) / (P2[1] - P1[1])
+                b = 1
+                c1 = -P1[1] + P1[0] * (P1[0] - P2[0]) / (P2[1] - P1[1])
+                c2 = -P2[1] + P2[0] * (P1[0] - P2[0]) / (P2[1] - P1[1])
 
-        if (P[0]*a + P[1]*b) > min(c1, c2) and (P[0]*a + P[1]*b) < max(c1, c2): return True
-        else: return False
+                if min(-c1, -c2) < (P[0]*a + P[1]*b) < max(-c1, -c2):
+                    return True
+                else: return False
+            #diff y, same x
+            elif min(P1[1], P2[1]) < P[1] < max(P1[1], P2[1]):
+                return True
+            else: return False
+        #same y, diff x
+        elif (P2[0] - P1[0]):
+            if min(P1[0], P2[0]) < P[0] < max(P1[0], P2[0]):
+                return True
+            else: return False
+        #same y, same x
+        else: raise Exception("The two points should be different.")
 
     def _line_point_dist(self, P1, P2, P):
         """
@@ -111,7 +127,8 @@ class L_System:
         """
         if len(sP)>2:
             dist = np.min([self._line_point_dist(P1,P2,P) for P1, P2 in zip(sP[:,:],sP[1:,:])])
-        else: dist = self._line_point_dist(*sP, P)
+        else:
+            dist = self._line_point_dist(*sP, P)
         return dist
 
     def _max_radius(self,br):
@@ -129,7 +146,6 @@ class L_System:
 
         dinasty_coord = np.array([(br.tail.real,br.tail.imag)] + [(bra.tail.real,bra.tail.imag) for bra in dinasty])
         free_end = np.array([br.head.real, br.head.imag])
-
         return self._spline_point_dist(dinasty_coord, free_end) #Max distance from the free end
 
 
@@ -155,12 +171,13 @@ class L_System:
                 if br.generate == []: #Free end
                     radius = self._max_radius(br)
                     permitted_radius = abs(br.head-br.tail)
-                    #if radius > permitted_radius: radius = permitted_radius
-                    plt.gca().add_artist(plt.Circle((br.head.real,br.head.imag),radius , color=kwargs['c']))
+                    if radius > permitted_radius:
+                        plt.gca().add_artist(plt.Circle((br.head.real,br.head.imag),radius , color=kwargs['c']))
+                    else: plt.gca().add_artist(plt.Circle((br.head.real,br.head.imag),radius , color='b'))
+
             elif circle == 'no_circles':
                 pass #no circle is drawn
             else: raise Exception("Invalid value for 'circle' parameter")
-
         plt.show()
 
 
@@ -169,6 +186,27 @@ br10= Branch()
 ls = L_System()
 ls.start(br10)
 ls.multiple_iterations(7)
-ls._max_radius(ls.branches[127])
-ls.draw(c = 'b', circle = 'std')
+# ls.draw(c = 'b', circle = 'std')
 ls.draw(c = 'r', circle = 'smart')
+#%%
+br = ls.branches[150]
+dinasty = [] #Container for the branch's dinasty
+parent = br.origin
+while parent is not None:
+    dinasty.append(parent)
+    parent = parent.origin
+
+dinasty_coord = np.array([(br.tail.real,br.tail.imag)] + [(bra.tail.real,bra.tail.imag) for bra in dinasty])
+free_end = np.array([br.head.real, br.head.imag])
+
+sP = dinasty_coord
+P = free_end
+
+#%%
+for i in range(len(sP)-1):
+    print("distance from the segment = {}".format(ls._line_point_dist(sP[i],sP[i+1],P)))
+    print("does it lie? {}".format(ls._lies_between(sP[i],sP[i+1],P)))
+    plt.plot(sP[:,0], sP[:,1])
+    plt.scatter(*free_end, c='red')
+    plt.scatter(*sP[i], c='green')
+    plt.scatter(*sP[i+1], c='green')
