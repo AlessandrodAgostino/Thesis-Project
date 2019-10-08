@@ -10,12 +10,12 @@ from branch import Branch
 class L_System:
     """
     This class is intended as a set of 'Branch' objects that compose a single L-system drawing.
-
     - branches: the list containing all the branches
     - n_iter: the number of iterations performed on the current drawing
     """
-    def __init__(self, starting_branch = None):
+    def __init__(self, starting_branch = None, ang_noise = 5):
         self.n_iter = 0
+        self.ang_noise = ang_noise #Default anguar noise to 5°
         if starting_branch is not None:
             self.branches = [starting_branch]
         else:
@@ -27,7 +27,7 @@ class L_System:
         The default starting branch is the tail = (0,0), head = (0,1), iter_lev = 0, origin = None]
         """
         self.n_iter = 0
-        self.branches.append(branch)
+        self.branches = [branch]
 
     def iteration(self, rule = [( + 85/180*np.pi, 1.5), (-85/180*np.pi, 1.5)], noise = True):
         """
@@ -35,17 +35,16 @@ class L_System:
             -1) number of child branch (n = 2,3)
             -2) angle deviation of each child branch (+ alpha, - alpha)
             -3) increasing/decreasing length ratio (l1 = l0 * R).
-            -4) Presence of noise on the angle in the ramification. The noise it's not already adjustable.
-                It's greater and greater going on with the iterations (proportional to iter_lev).
+            -4) Presence of noise on the angle in the ramification.
+                [It's greater and greater going on with the iterations (proportional to iter_lev)]
 
         The current branch is used to create the new branch(es). The first three rules could be all condesed
-        in a list like this one:    [(+alpha, R), (-alpha, R)].
+        in a list, like this one:    [(+alpha, R), (-alpha, R)].
         This rule create 2 new branches (list lenght) with the reported angular deviation al lenght ratio.
         The origin and generation relationship shuold be update after every application of the rules.
         """
-        np.random.seed = 30
-        ang_noise = 10/180*np.pi #Fixed anguar noise to 5°
-        if self.branches:
+        ang_noise = self.ang_noise/180*np.pi
+        if self.branches != []:
             for br in self.branches:
                 if br.iter_lev == self.n_iter:
                     l0, theta0 =cmath.polar(br.head - br.tail)
@@ -60,15 +59,14 @@ class L_System:
                                             origin = br)
                         br.generate.append(new_branch)
                         self.branches.append(new_branch)
-                        #print("new branch: {0:.2f} to {0:.2f}".format(new_branch.tail, new_branch.head))
 
-            self.n_iter += 1 #updating the n. of iteration
+            self.n_iter += 1 #updating n_iter
         else:
             raise Exception('Start your L_system before iteration.')
 
     def multiple_iterations(self, n, rule = [( + 85/180*np.pi, 1.5), (-85/180*np.pi, 1.5)], noise = True):
         """
-        This method simply execute n times the itaration
+        This method simply execute n times the itaration.
         """
         if n<=10:
             for _ in range(n):
@@ -80,17 +78,16 @@ class L_System:
         This function check if the point P lies in the plane-strip defined by the segment.
         The strip is delimited by the two lines perpendicular to the line crossing P1 and P2,
         that cross their turn P1 and P2.
+        The method manages also vertical and horizzontal segments.
         """
         #different y
         if (P2[1] - P1[1]):
             #different x
             if (P2[0] - P1[0]):
-                #Probabily it's this step that doesn't work
                 a = (P2[0] - P1[0]) / (P2[1] - P1[1])
                 b = 1
                 c1 = -P1[1] + P1[0] * (P1[0] - P2[0]) / (P2[1] - P1[1])
                 c2 = -P2[1] + P2[0] * (P1[0] - P2[0]) / (P2[1] - P1[1])
-
                 if min(-c1, -c2) < (P[0]*a + P[1]*b) < max(-c1, -c2):
                     return True
                 else: return False
@@ -131,6 +128,40 @@ class L_System:
             dist = self._line_point_dist(*sP, P)
         return dist
 
+    def _return_descent(self,br):
+        """
+        Generator that returns the content of `br.generate` recursively, so all the descent is yielded.
+        """
+        if br.generate == []:
+            yield br
+        else:
+            for gen in br.generate:
+                yield from self._return_descent(gen)
+
+
+    def _find_siblings(self, br):
+        """
+        Returns a list with all the siblings of the fixed degree = n_iter -2
+        n° siblings are all the free ends descending from the common anchestor found climbing back the tree by n steps from `br`.
+        """
+        sib_lev = self.n_iter - 2
+        com_des = br
+        if sib_lev < self.n_iter:
+            for lev in range(sib_lev):
+                com_des = com_des.origin
+        else: raise Exception("`sib_lev` parameter's too high. Max possible value is {}".format(n_iter -1))
+
+        siblings = [sb for sb in self._return_descent(com_des)]
+        siblings.remove(br) #Removing the calling branch from siblings
+        return siblings
+
+    def _siblings_dist(self, br):
+        """
+        This method returns the minumum distance from any sibling.
+        """
+        dists = [abs(br.head - sb.head) for sb in self._find_siblings(br) ]
+        return min(dists)
+
     def _max_radius(self,br):
         """
         Looks for the maximum radius available for the circle on a certain free end branch.
@@ -146,7 +177,13 @@ class L_System:
 
         dinasty_coord = np.array([(br.tail.real,br.tail.imag)] + [(bra.tail.real,bra.tail.imag) for bra in dinasty])
         free_end = np.array([br.head.real, br.head.imag])
-        return self._spline_point_dist(dinasty_coord, free_end) #Max distance from the free end
+        #Distance from the spline defined by the dinasty points.
+        spl_dist = self._spline_point_dist(dinasty_coord, free_end)
+
+        # TO DO: adding a list of rays, to avoid redundant computations
+        #Distance from the siblings free ends.
+        sib_dist = self._siblings_dist(br)
+        return min(spl_dist, sib_dist/2) #The available radius is half the distance by the centers
 
 
     def draw(self, circle = 'smart', **kwargs):
@@ -167,16 +204,15 @@ class L_System:
                 if br.generate == []: #Free end
                     radius = abs(br.head-br.tail)
                     plt.gca().add_artist(plt.Circle((br.head.real,br.head.imag),radius ))
+
             elif circle == 'smart':
                 if br.generate == []: #Free end
                     radius = self._max_radius(br)
-                    permitted_radius = abs(br.head-br.tail)
-                    if radius > permitted_radius:
-                        plt.gca().add_artist(plt.Circle((br.head.real,br.head.imag),radius , color=kwargs['c']))
-                    else: plt.gca().add_artist(plt.Circle((br.head.real,br.head.imag),radius , color='b'))
+                    plt.gca().add_artist(plt.Circle((br.head.real,br.head.imag),radius , color=kwargs['c']))
 
             elif circle == 'no_circles':
                 pass #no circle is drawn
+
             else: raise Exception("Invalid value for 'circle' parameter")
         plt.show()
 
@@ -185,28 +221,5 @@ class L_System:
 br10= Branch()
 ls = L_System()
 ls.start(br10)
-ls.multiple_iterations(7)
-# ls.draw(c = 'b', circle = 'std')
+ls.multiple_iterations(8)
 ls.draw(c = 'r', circle = 'smart')
-#%%
-br = ls.branches[150]
-dinasty = [] #Container for the branch's dinasty
-parent = br.origin
-while parent is not None:
-    dinasty.append(parent)
-    parent = parent.origin
-
-dinasty_coord = np.array([(br.tail.real,br.tail.imag)] + [(bra.tail.real,bra.tail.imag) for bra in dinasty])
-free_end = np.array([br.head.real, br.head.imag])
-
-sP = dinasty_coord
-P = free_end
-
-#%%
-for i in range(len(sP)-1):
-    print("distance from the segment = {}".format(ls._line_point_dist(sP[i],sP[i+1],P)))
-    print("does it lie? {}".format(ls._lies_between(sP[i],sP[i+1],P)))
-    plt.plot(sP[:,0], sP[:,1])
-    plt.scatter(*free_end, c='red')
-    plt.scatter(*sP[i], c='green')
-    plt.scatter(*sP[i+1], c='green')
