@@ -3,8 +3,6 @@ import cmath
 import numpy as np
 from numpy import random
 import matplotlib.pyplot as plt
-#from shapely.geometry import LineString
-
 from branch import Branch
 
 class L_System:
@@ -12,10 +10,19 @@ class L_System:
     This class is intended as a set of 'Branch' objects that compose a single L-system drawing.
     - branches: the list containing all the branches
     - n_iter: the number of iterations performed on the current drawing
+
+    Usage example:
+        ls = L_System()
+        ls.start()
+        ls.multiple_iterations(8)
+        ls.draw(c = 'r', circle = 'smart')
+        ls.savefig('RamificationSmartCircles.png', dpi=1000)    
     """
     def __init__(self, starting_branch = None, ang_noise = 5):
         self.n_iter = 0
         self.ang_noise = ang_noise #Default anguar noise to 5°
+        self.figure, self.axes = plt.subplots(figsize=(12,10))
+
         if starting_branch is not None:
             self.branches = [starting_branch]
         else:
@@ -138,7 +145,6 @@ class L_System:
             for gen in br.generate:
                 yield from self._return_descent(gen)
 
-
     def _find_siblings(self, br):
         """
         Returns a list with all the siblings of the fixed degree = n_iter -2
@@ -185,6 +191,19 @@ class L_System:
         sib_dist = self._siblings_dist(br)
         return min(spl_dist, sib_dist/2) #The available radius is half the distance by the centers
 
+    def _compute_size(self):
+        """
+        This methos returns the size
+        """
+        x_min = min([br.head.real for br in self.branches])
+        x_max = max([br.head.real for br in self.branches])
+
+        y_min = min([br.head.imag for br in self.branches])
+        y_max = max([br.head.imag for br in self.branches])
+
+        pad = 2*abs(self.branches[-1].head - self.branches[-1].tail)
+
+        return ([x_min-pad, x_max+pad],[y_min-pad, y_max+pad] )
 
     def draw(self, circle = 'smart', **kwargs):
         """
@@ -197,7 +216,6 @@ class L_System:
 
         Free end branches as 'Branch.generate == []'.
         """
-        fig = plt.figure(figsize=(12,10))
         for br in self.branches:
             br.draw(**kwargs)
             if circle == 'std':
@@ -214,12 +232,11 @@ class L_System:
                 pass #no circle is drawn
 
             else: raise Exception("Invalid value for 'circle' parameter")
-        plt.show()
+        #Fixing the image size
+        x_extr, y_extr = self._compute_size()
+        self.axes.set_xlim(x_extr)
+        self.axes.set_ylim(y_extr)
+        plt.gca().axis('off')
 
-
-#%%
-br10= Branch()
-ls = L_System()
-ls.start(br10)
-ls.multiple_iterations(8)
-ls.draw(c = 'r', circle = 'smart')
+    def savefig(self, name,**kwargs):
+        self.figure.savefig(name, **kwargs)
