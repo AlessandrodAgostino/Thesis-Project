@@ -1,6 +1,9 @@
 #@author: Alessandro d'Agostino
 import cmath
 import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib as mpl
+
 
 class Branch:
     """
@@ -24,3 +27,21 @@ class Branch:
 
     def draw(self, **kwargs):
         plt.plot((self.tail.real,self.head.real), (self.tail.imag, self.head.imag), **kwargs)
+
+    def thick_draw(self, thick,**kwargs):
+        #Quantity useful for drawing
+        # thick : Ratio between length and width
+        l = abs(self.tail - self.head)
+        pivot = [self.tail.real,self.tail.imag]
+        ll_corner = (pivot[0]-l*thick/2, pivot[1]) #Lower-left corner
+        theta = - (np.pi/2 - cmath.phase(self.head - self.tail))/np.pi*180
+
+        #transformation
+        ts = plt.gca().transData
+        tr = mpl.transforms.Affine2D().rotate_deg_around(pivot[0],pivot[1], theta)
+        t = tr + ts
+
+        #Rotated rectangle
+        rect = mpl.patches.Rectangle(ll_corner,l*thick,l,linewidth=2,edgecolor='r',facecolor='r',transform=t)
+
+        plt.gca().add_patch(rect)
