@@ -18,9 +18,10 @@ class L_System:
         ls.draw(c = 'r', circle = 'smart')
         ls.savefig('RamificationSmartCircles.png', dpi=1000)
     """
-    def __init__(self, starting_branch = None, ang_noise = 5):
+    def __init__(self, starting_branch = None, ang_noise = 5, thick = 1/10):
         self.n_iter = 0
         self.figure, self.axes = plt.subplots(figsize=(12,10))
+        self.thick = thick #Setting thickness of the system
 
         if starting_branch is not None:
             self.branches = [starting_branch]
@@ -109,7 +110,7 @@ class L_System:
         #same y, same x
         else: raise Exception("The two points should be different.")
 
-    def _line_point_dist(self, br, fe_br, thick = 1/6):
+    def _line_point_dist(self, br, fe_br):
         """
         If the free end `fe_br` branch's head lies between the plane-strip identified by the branch `br` then the
         function returns the distance between the line identified from `br` and the point `fe_br`'s head.
@@ -122,8 +123,8 @@ class L_System:
         if self._lies_between(P1, P2, P):
             abs = np.abs(((P2[1]-P1[1])*P[0] - (P2[0]-P1[0])*P[1] + P2[0]*P1[1] - P2[1]*P1[0]))
             den = np.abs(br.head - br.tail)
-            if thick: #If `thick` the distance should be decreased by the branch's thickness
-                thickness = np.abs(br.head - br.tail) * thick
+            if self.thick: #If `thick` the distance should be decreased by the branch's thickness
+                thickness = np.abs(br.head - br.tail) * self.thick
                 return abs/den-thickness/2
             else:
                 return abs/den
@@ -132,12 +133,12 @@ class L_System:
             dist2 = np.sqrt(np.square(P[1]-P2[1]) + np.square(P[0]-P2[0]))
             return min(dist1,dist2)
 
-    def _spline_point_dist(self, dinasty, fe_br, thick = 1/6):
+    def _spline_point_dist(self, dinasty, fe_br):
 
         if len(dinasty) > 1:
-            dist = np.min([self._line_point_dist(br, fe_br, thick) for br in dinasty])
+            dist = np.min([self._line_point_dist(br, fe_br, self.thick) for br in dinasty])
         else:
-            dist = self._line_point_dist(dinasty, fe_br, thick)
+            dist = self._line_point_dist(dinasty, fe_br, self.thick)
         return dist
 
     def _return_descent(self,br):
@@ -173,7 +174,7 @@ class L_System:
         dists = [abs(br.head - sb.head) for sb in self._find_siblings(br) ]
         return min(dists)
 
-    def _max_radius(self,br, thick = 1/6):
+    def _max_radius(self,br):
         """
         Looks for the maximum radius available for the circle on a certain free end branch.
         This method is called by the 'draw' method when the 'circle' parameter is equal to 'smart'.
@@ -187,7 +188,7 @@ class L_System:
             parent = parent.origin
 
         #Distance from the spline defined by the dinasty points.
-        spl_dist = self._spline_point_dist(dinasty, br, thick)
+        spl_dist = self._spline_point_dist(dinasty, br)
 
         # TO DO: adding a list of rays, to avoid redundant computations
         # About now this method doesn't really compute in a smart way...
@@ -209,7 +210,7 @@ class L_System:
 
         return ([x_min-pad, x_max+pad],[y_min-pad, y_max+pad] )
 
-    def draw(self, circle = 'smart', thick = 1/6, **kwargs):
+    def draw(self, circle = 'smart', **kwargs):
         """
         The method draw the entire L-System.
         It's possible to draw also circles at every free end of the system in
@@ -221,8 +222,8 @@ class L_System:
         Free end branches as 'Branch.generate == []'.
         """
         for br in self.branches:
-            if thick:
-                br.thick_draw(thick,**kwargs)
+            if self.thick:
+                br.thick_draw(self.thick,**kwargs)
             else: br.draw(**kwargs)
 
             if br.generate == []: #Drawing circles at free ends
@@ -231,7 +232,7 @@ class L_System:
                     plt.gca().add_artist(plt.Circle((br.head.real,br.head.imag),radius ))
 
                 elif circle == 'smart':
-                    radius = self._max_radius(br, thick)
+                    radius = self._max_radius(br)
                     plt.gca().add_artist(plt.Circle((br.head.real,br.head.imag),radius , color=kwargs['c']))
 
                 elif circle == 'no_circles':
@@ -247,9 +248,12 @@ class L_System:
     def savefig(self, name,**kwargs):
         self.figure.savefig(name, **kwargs)
 
+    def radii_distribution(self):
+        # radii = [_max_radius(br, self.thick)]
+        pass
 #%%
 ls = L_System()
 ls.start()
 alpha = 85
-ls.multiple_iterations(3, rule = [( + alpha/180*np.pi, 1.5), (-alpha/180*np.pi, 1.5)], noise = True)
-ls.draw(c = 'r', circle = 'smart', thick = 1/100)
+ls.multiple_iterations(9, rule = [( + alpha/180*np.pi, 1.5), (-alpha/180*np.pi, 1.5)], noise = True)
+ls.draw(c = 'r', circle = 'smart')
