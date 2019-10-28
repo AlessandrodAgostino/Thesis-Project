@@ -57,7 +57,7 @@ class L_System:
                     l0, theta0 =cmath.polar(br.head - br.tail)
                     for gen in rule:
                         #The first iterations are made completely
-                        if self.n_iter < 7:
+                        if self.n_iter < 3:
                             ang_noise = noise*br.iter_lev*gen[0]/20
                             l1 = l0/gen[1]
                             theta1 = theta0 + gen[0]
@@ -70,8 +70,7 @@ class L_System:
                             br.generate.append(new_branch)
                             self.branches.append(new_branch)
                         #Further iterations are subjected to variations
-                    else:
-                        if np.random.uniform()> 0.5:
+                        elif np.random.uniform()> 0.1:
                             ang_noise = noise*br.iter_lev*gen[0]/20
                             l1 = l0/gen[1]
                             theta1 = theta0 + gen[0]
@@ -92,7 +91,7 @@ class L_System:
         """
         This method simply execute n times the itaration.
         """
-        if n<=10:
+        if n<=12:
             for _ in range(n):
                 self.iteration(rule)
         else: raise Exception('n is too high. It may take too much time')
@@ -178,14 +177,14 @@ class L_System:
         n° siblings are all the free ends descending from the common anchestor found climbing back the tree by n steps from `br`.
         """
         sib_lev = self.n_iter - 2
-        com_des = br
-        if sib_lev < self.n_iter:
-            for lev in range(sib_lev):
-                com_des = com_des.origin
-        else: raise Exception("`sib_lev` parameter's too high. Max possible value is {}".format(n_iter -1))
-
-        siblings = [sb for sb in self._return_descent(com_des)]
-        # siblings = self.branches
+        # com_des = br
+        # if sib_lev < self.n_iter:
+        #     for lev in range(sib_lev):
+        #         com_des = com_des.origin
+        # else: raise Exception("`sib_lev` parameter's too high. Max possible value is {}".format(n_iter -1))
+        #
+        # siblings = [sb for sb in self._return_descent(com_des)]
+        siblings = self.branches.copy()
         siblings.remove(br) #Removing the calling branch from siblings
         return siblings
 
@@ -278,5 +277,6 @@ class L_System:
 ls = L_System( )
 ls.start()
 alpha = 85
-ls.multiple_iterations(9)
+ls.multiple_iterations(7)
 ls.draw(c = 'r', circle = 'smart')
+ls.figure.savefig("ramification_different_level.png", dpi= 100)
