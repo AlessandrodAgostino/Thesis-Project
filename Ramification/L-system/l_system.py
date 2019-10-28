@@ -3,6 +3,7 @@ import cmath
 import numpy as np
 from numpy import random
 import matplotlib.pyplot as plt
+import seaborn as sns
 from branch import Branch
 
 class L_System:
@@ -55,17 +56,33 @@ class L_System:
                 if br.iter_lev == self.n_iter:
                     l0, theta0 =cmath.polar(br.head - br.tail)
                     for gen in rule:
-                        ang_noise = noise*br.iter_lev*gen[0]/20
-                        l1 = l0/gen[1]
-                        theta1 = theta0 + gen[0]
-                        theta1 = theta1 + random.uniform(-ang_noise, ang_noise)  #Adding noise
-                        travel = cmath.rect(l1, theta1)
-                        new_branch = Branch(tail = br.head,
-                                            head = br.head + travel,
-                                            iter_lev = self.n_iter + 1,
-                                            origin = br)
-                        br.generate.append(new_branch)
-                        self.branches.append(new_branch)
+                        #The first iterations are made completely
+                        if self.n_iter < 7:
+                            ang_noise = noise*br.iter_lev*gen[0]/20
+                            l1 = l0/gen[1]
+                            theta1 = theta0 + gen[0]
+                            theta1 = theta1 + random.uniform(-ang_noise, ang_noise)  #Adding noise
+                            travel = cmath.rect(l1, theta1)
+                            new_branch = Branch(tail = br.head,
+                                                head = br.head + travel,
+                                                iter_lev = self.n_iter + 1,
+                                                origin = br)
+                            br.generate.append(new_branch)
+                            self.branches.append(new_branch)
+                        #Further iterations are subjected to variations
+                    else:
+                        if np.random.uniform()> 0.5:
+                            ang_noise = noise*br.iter_lev*gen[0]/20
+                            l1 = l0/gen[1]
+                            theta1 = theta0 + gen[0]
+                            theta1 = theta1 + random.uniform(-ang_noise, ang_noise)  #Adding noise
+                            travel = cmath.rect(l1, theta1)
+                            new_branch = Branch(tail = br.head,
+                                                head = br.head + travel,
+                                                iter_lev = self.n_iter + 1,
+                                                origin = br)
+                            br.generate.append(new_branch)
+                            self.branches.append(new_branch)
 
             self.n_iter += 1 #updating n_iter
         else:
@@ -125,7 +142,10 @@ class L_System:
             den = np.abs(br.head - br.tail)
             if self.thick: #If `thick` the distance should be decreased by the branch's thickness
                 thickness = np.abs(br.head - br.tail) * self.thick
-                return abs/den-thickness/2
+                dist = abs/den-thickness/2
+                if dist > 0: return dist
+                else: return 0
+
             else:
                 return abs/den
         else:
@@ -136,9 +156,9 @@ class L_System:
     def _spline_point_dist(self, dinasty, fe_br):
 
         if len(dinasty) > 1:
-            dist = np.min([self._line_point_dist(br, fe_br, self.thick) for br in dinasty])
+            dist = np.min([self._line_point_dist(br, fe_br) for br in dinasty])
         else:
-            dist = self._line_point_dist(dinasty, fe_br, self.thick)
+            dist = self._line_point_dist(dinasty, fe_br)
         return dist
 
     def _return_descent(self,br):
@@ -152,6 +172,7 @@ class L_System:
                 yield from self._return_descent(gen)
 
     def _find_siblings(self, br):
+        #This way the method is completely useless!
         """
         Returns a list with all the siblings of the fixed degree = n_iter -2
         n° siblings are all the free ends descending from the common anchestor found climbing back the tree by n steps from `br`.
@@ -164,6 +185,7 @@ class L_System:
         else: raise Exception("`sib_lev` parameter's too high. Max possible value is {}".format(n_iter -1))
 
         siblings = [sb for sb in self._return_descent(com_des)]
+        # siblings = self.branches
         siblings.remove(br) #Removing the calling branch from siblings
         return siblings
 
@@ -249,11 +271,12 @@ class L_System:
         self.figure.savefig(name, **kwargs)
 
     def radii_distribution(self):
-        # radii = [_max_radius(br, self.thick)]
-        pass
+        radii = [self._max_radius(br) for br in self.branches if not br.generate]
+        return radii
+
 #%%
-ls = L_System()
+ls = L_System( )
 ls.start()
 alpha = 85
-ls.multiple_iterations(9, rule = [( + alpha/180*np.pi, 1.5), (-alpha/180*np.pi, 1.5)], noise = True)
+ls.multiple_iterations(9)
 ls.draw(c = 'r', circle = 'smart')
