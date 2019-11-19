@@ -279,4 +279,5 @@ ls.start()
 alpha = 85
 ls.multiple_iterations(7)
 ls.draw(c = 'r', circle = 'smart')
-ls.figure.savefig("ramification_different_level.png", dpi= 100)
+#%%
+ls.figure.savefig("ramification_different_level2.png", dpi= 100)
