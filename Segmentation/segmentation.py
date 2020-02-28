@@ -78,7 +78,8 @@ image[:,:,2] = image[:,:,2] + cells_lab
 lumes = io.imread('selections/142_170.00_selection.png')
 l = 20
 selem = np.resize(np.array([1]*l**2), (l, l))
-lumes = filters.median(lumes, selem=selem, out=None, mask=None, shift_x=False, shift_y=False, mode='nearest', cval=0.0, behavior='ndimage')
+lumes = filters.median(lumes, selem=selem, out=None, mask=None, shift_x=False,
+                       shift_y=False, mode='nearest', cval=0.0, behavior='ndimage')
 lumes = morphology.binary_fill_holes(lumes)
 io.imsave('lumes.png',img_as_ubyte((lumes>0).astype(float)))
 
@@ -92,7 +93,8 @@ image[:,:,3] = image[:,:,3] + lumes_lab
 bounds = io.imread('selections/57_85.00_selection.png')
 l = 20
 selem = np.resize(np.array([1]*l**2), (l, l))
-bounds = filters.median(bounds, selem=selem, out=None, mask=None, shift_x=False, shift_y=False, mode='nearest', cval=0.0, behavior='ndimage')
+bounds = filters.median(bounds, selem=selem, out=None, mask=None, shift_x=False,
+                        shift_y=False, mode='nearest', cval=0.0, behavior='ndimage')
 io.imsave('bounds.png',img_as_ubyte((bounds>0).astype(float)))
 
 bounds_lab, n_bounds = label(bounds, structure = s)
