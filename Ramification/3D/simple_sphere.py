@@ -1,7 +1,6 @@
 import numpy as np
 import time
 from sympy import Plane
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 import matplotlib.pyplot as plt
 from scipy.spatial import Voronoi, ConvexHull
 from SALib.sample import saltelli
@@ -44,6 +43,7 @@ vor = Voronoi(low_points)
 # ax = fig.add_subplot(111, projection='3d')
 #
 # for p in low_points:
+
 #   ax.scatter(*p, color = 'g')
 #
 # for p in vor.vertices:

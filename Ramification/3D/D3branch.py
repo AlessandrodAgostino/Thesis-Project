@@ -1,14 +1,17 @@
 from pyquaternion import Quaternion
 from math import radians
 import numpy as np
-from vpython import cylinder, sphere, vector, color, canvas
+from vpython import cylinder, sphere, vector, color, canvas, triangle, vertex
+
+#Create the Canvas into which draw
+scene = canvas(width=1500, height=900, center=vector(5,5,0))
 
 class D3Branch(object):
     """docstring for 3DBranch."""
 
     l = 10 #Length
     r = 1 #Radius
-    a = 75 #Angle
+    a = 75 #Ramification angle
     rt = 0.7 #Ratio
     qx = Quaternion(axis=np.array([1,0,0]), angle=radians(a)) #Quaternion for rotation around x of a
     qz = Quaternion(axis=np.array([0,0,1]), angle=radians(a)) #Quaternion for rotation around z of a
@@ -47,8 +50,12 @@ def drawSphereFreeEnds(tree):
         if br.iter_lev == max_iter:
             SphereList.append(sphere(pos=br.pos + vector(*br.drct*br.length), radius=br.length))
 
-def main():
-    scene2 = canvas(width=1500, height=900, center=vector(5,5,0))
+def drawPoints(points_list, rad = 0.1, color = vector(1,0,0)):
+    PointList = []
+    for pt in points_list:
+        PointList.append(sphere(pos= pt , radius= rad, color = color))
+
+def createTree(iterations = 9):
     st_br = D3Branch()
     tree = [st_br]
     for it in range(9):
@@ -57,11 +64,23 @@ def main():
             for br in tree:
                 if br.iter_lev == it:
                     add_tree = add_tree + br.biforcation_quat(br.qx)
+
         else:
             for br in tree:
                 if br.iter_lev == it:
                     add_tree = add_tree + br.biforcation_quat(br.qz)
         tree = tree + add_tree
+
+    #Return the tree as a list of D3Branch objects
+    return tree
+
+    #USEFUL: Array containing the centers of free end's spheres
+    #centers = [br.pos + vector(*(br.length * br.drct)) for br in tree ]
+
+def main():
+    tree = createTree()
+
+    #DRAWING METHODS:
     drawListBranch(tree)
     drawSphereFreeEnds(tree)
 

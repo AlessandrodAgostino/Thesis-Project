@@ -9,7 +9,7 @@ from SALib.sample import saltelli
 from skimage import io, morphology, img_as_uint, img_as_ubyte, filters, color
 from skimage import util
 
-scipy.ndimage.morphology.binary_fill_holes
+
 
 #structure elements for recognizing features
 s = [[1,1,1],
