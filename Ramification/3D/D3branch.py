@@ -4,7 +4,6 @@ import numpy as np
 from vpython import cylinder, sphere, vector, color, canvas, triangle, vertex
 
 #Create the Canvas into which draw
-scene = canvas(width=1500, height=900, center=vector(5,5,0))
 
 class D3Branch(object):
     """docstring for 3DBranch."""
@@ -55,10 +54,10 @@ def drawPoints(points_list, rad = 0.1, color = vector(1,0,0)):
     for pt in points_list:
         PointList.append(sphere(pos= pt , radius= rad, color = color))
 
-def createTree(iterations = 9):
+def createTree(iter = 9):
     st_br = D3Branch()
     tree = [st_br]
-    for it in range(9):
+    for it in range(iter):
         add_tree = []
         if (it%2):
             for br in tree:
@@ -74,13 +73,11 @@ def createTree(iterations = 9):
     #Return the tree as a list of D3Branch objects
     return tree
 
-    #USEFUL: Array containing the centers of free end's spheres
-    #centers = [br.pos + vector(*(br.length * br.drct)) for br in tree ]
-
 def main():
     tree = createTree()
 
     #DRAWING METHODS:
+    scene = canvas(width=1500, height=900, center=vector(5,5,0))
     drawListBranch(tree)
     drawSphereFreeEnds(tree)
 
