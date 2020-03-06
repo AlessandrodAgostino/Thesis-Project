@@ -7,6 +7,20 @@ from D3branch import *
 
 #RUN THIS SCRIPT FORM TERMINAL - it'll open a browser with Vpython GUI
 
+def inside_bounds(reg, bounds):
+    """
+    This function check if a region, hence a list of vertices, lies inside some 'boundaries'.
+    """
+    if -1 in reg: return False
+    if len(reg)>1:
+        reg = np.asarray([vor.vertices[pt] for pt in reg])
+        if all(reg[:,0] > bounds[0][0]) and all(reg[:,0] < bounds[0][1]):
+            if all(reg[:,1] > bounds[1][0]) and all(reg[:,1] < bounds[1][1]):
+                if all(reg[:,2] > bounds[2][0]) and all(reg[:,2] < bounds[2][1]):
+                    return True
+        return False
+    else: return False
+
 #------------------------------------------------------------------------------#
 #%% VORONOI PREPARATION
 #Create the ramification
@@ -44,19 +58,6 @@ vor_points = saltelli.sample(problem, N)
 #%% VORONOI CREATION
 vor = Voronoi(vor_points)
 
-def inside_bounds(reg, bounds):
-    """
-    This function check if a region, hence a list of vertices, lies inside some 'boundaries'.
-    """
-    if -1 in reg: return False
-    if len(reg)>1:
-        reg = np.asarray([vor.vertices[pt] for pt in reg])
-        if all(reg[:,0] > bounds[0][0]) and all(reg[:,0] < bounds[0][1]):
-            if all(reg[:,1] > bounds[1][0]) and all(reg[:,1] < bounds[1][1]):
-                if all(reg[:,2] > bounds[2][0]) and all(reg[:,2] < bounds[2][1]):
-                    return True
-        return False
-    else: return False #RANDOM
 
 crop_reg = [ reg for reg in vor.regions if inside_bounds(reg, bounds)]
 
