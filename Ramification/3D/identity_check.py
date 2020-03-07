@@ -43,9 +43,8 @@ N_spheres = 1
 tree = cKDTree(vor.vertices)
 inside_indexes = tree.query_ball_point([0,0,0], 5)
 vertices_truth = np.zeros((vor.vertices.shape[0], N_spheres))
-vertices_truth[inside_indexes,:] = 1
+vertices_truth[inside_indexes] = 1
 vertices_truth = vertices_truth.astype(int)
-
 
 region_id = np.zeros((len(crop_reg)))
 for n,reg in enumerate(crop_reg):
@@ -59,14 +58,14 @@ turquoise = color.hsv_to_rgb(vector(0.5,1,0.8))
 red = color.red
 white = color.white
 colors = [turquoise, red, white]
-
 Figures =  []
 
+#Central sphere
 Figures.append(sphere(pos= vector(*cord_c) , radius= r, opacity = 0.8) )
 
 vec_vertices = [vector(*ver) for ver in vor.vertices ]
 for n,ver in enumerate(vec_vertices):
-    Figures.append( sphere( pos= ver, color = red, radius = 0.01 ))
+    Figures.append( sphere( pos= ver, color = white, radius = 0.1 ))
 
 #Drawing Voronoi Cropped Region
 for n,reg in enumerate(crop_reg):
