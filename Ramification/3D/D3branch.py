@@ -36,18 +36,21 @@ class D3Branch(object):
                        iter_lev = self.iter_lev + 1)
         return [br1,br2]
 
-def drawListBranch(tree):
+def drawListBranch(tree, opacity = 0.5):
     SchindlerList = []
     for br in tree:
         SchindlerList.append(cylinder(pos = br.pos,
                                       axis = vector(*br.drct*br.length),
-                                      radius = br.radius))
-def drawSphereFreeEnds(tree):
+                                      radius = br.radius,
+                                      opacity = opacity))
+def drawSphereFreeEnds(tree, opacity = 0.5):
     SphereList = []
     max_iter = np.log2((len(tree)+1)) - 1
     for br in tree:
         if br.iter_lev == max_iter:
-            SphereList.append(sphere(pos=br.pos + vector(*br.drct*br.length), radius=br.length))
+            SphereList.append(sphere(pos=br.pos + vector(*br.drct*br.length),
+                                     radius=br.length,
+                                     opacity = 0.5))
 
 def drawPoints(points_list, rad = 0.1, color = vector(1,0,0)):
     PointList = []

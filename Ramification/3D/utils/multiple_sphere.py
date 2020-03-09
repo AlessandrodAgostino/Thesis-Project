@@ -59,7 +59,7 @@ white = color.white
 colors = [turquoise, red, white]
 Figures =  []
 
-#Central sphere
+#Central spheres
 for sph in spheres:
     Figures.append(sphere(pos= vector(*sph) , radius= radius, opacity = 0.8) )
 
