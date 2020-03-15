@@ -1,9 +1,9 @@
 import numpy as np
 import itertools
 
-from scipy.spatial import Voronoi, ConvexHull, cKDTree
+from scipy.spatial import Voronoi, ConvexHull, cKDTree, Delaunay
 from vpython import cylinder, sphere, vector, color, canvas, triangle, vertex, arrow, label
-
+from SALib.sample import saltelli
 
 def inside_bounds(vor, reg, bounds):
     """
@@ -47,23 +47,49 @@ coords[2] = np.linspace(bounds[2][0], bounds[2][1], n_sample)
 container_points = list(itertools.product([0,max_coord],[0,max_coord],[0,max_coord]))
 
 reg_points = np.asarray([ pt for pt in itertools.product(coords[0], coords[1], coords[2])])
+#%%-----------------------------------------------------------------------------
+problem = {'num_vars': 3,
+           'names': ['x', 'y', 'z'],
+           'bounds': bounds}
 
-vor = Voronoi(reg_points) #Creating the tassellation
+#Parameter that regulate the density of the sample
+N = 10 #SHOULD UNDERSTAND BETTER HOW EXACTLY WORKS
+vor_points = saltelli.sample(problem, N) #Sampling
+
+vor = Voronoi(vor_points) #Creating the tassellation
 crop_reg = [ reg for reg in vor.regions if inside_bounds(vor, reg, bounds)]
-sel_reg = crop_reg[0]
+len(crop_reg)
 #%%-----------------------------------------------------------------------------
 #The plane will be z = 7
 #I'll do everything by hand then automatize it in a second moment
+sel_reg = crop_reg[6]
+sel_z = 7
+def plane_z(x,y,z, sel_z):
+    return (z - sel_z) > 0
 
-def plane_z_7(x,y,z):
-    return (z - 7) > 0
+def plane_z_intersection(p1, p2, z):
+    x = p1[0] + (z - p1[2]) / (p2[2] - p1[2]) * (p2[0] - p1[0])
+    y = p1[1] + (z - p1[2]) / (p2[2] - p1[2]) * (p2[1] - p1[1])
+    return np.asarray((x,y,z))
 
-pt_id = [ plane_z_7(*ver) for ver in vor.vertices[sel_reg] ]
-ind_abo = [ n for n,ver in enumerate(vor.vertices[sel_reg]) if plane_z_7(*ver)]
-ind_bel = [ n for n,ver in enumerate(vor.vertices[sel_reg]) if not plane_z_7(*ver)]
+
+pt_id = [ plane_z(*ver, sel_z) for ver in vor.vertices[sel_reg] ]
+ind_abo = [ n for n,ver in enumerate(vor.vertices[sel_reg]) if plane_z(*ver, sel_z)]
+ind_bel = [ n for n,ver in enumerate(vor.vertices[sel_reg]) if not plane_z(*ver, sel_z)]
+
+#%%-----------------------------------------------------------------------------
 
 #finding every line between two points of different class
 couples = list(itertools.product(ind_abo,ind_bel))
+intersection_point = []
+for couple in couples:
+    v1 = vor.vertices[sel_reg][couple[0]]
+    v2 = vor.vertices[sel_reg][couple[1]]
+    intersection_point.append(plane_z_intersection(v1, v2, sel_z))
+intersection_point = np.asarray(intersection_point)
+intersectiong_triang = Delaunay(intersection_point[:,0:2])
+intersectiong_triang.simplices
+
 
 #%%-----------------------------------------------------------------------------
 scene     = canvas(width=1500, height=900, center=vector(5,5,0))
@@ -90,6 +116,20 @@ for ver in vor.vertices[sel_reg][ind_bel]:
                           radius = max_coord/50,
                           color = yellow,
                           opacity = 0.5))
+
+# for pt in intersection_point:
+#     Figures.append(sphere(pos = vector(*pt),
+#                           radius = max_coord/70,
+#                           color = turquoise,
+#                           opacity = 0.5))
+
+simpl = []
+for sim in intersectiong_triang.simplices:
+    pts = [intersectiong_triang.points[pt] for pt in sim]
+    simpl.append( triangle( vs=[vertex( pos     = vector(*ver, 7),
+                                        color   = turquoise,
+                                        opacity = 0.7) for ver in pts]))
+
 
 #drawing lines between couples
 for couple in couples:
