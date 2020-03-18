@@ -1,8 +1,10 @@
 import numpy as np
 import itertools
 
-from scipy.spatial import Voronoi, ConvexHull, cKDTree
+from scipy.spatial import Voronoi, ConvexHull, cKDTree, Delaunay
 from SALib.sample import saltelli
+from vpython import arrow, label
+
 
 from D3branch import *
 
@@ -30,9 +32,14 @@ def inside_bounds(vor, reg, bounds):
         return False
     else: return False
 
+def plane_z_intersection(p1, p2, z=0):
+    x = p1[0] + (0 - p1[2]) / (p2[2] - p1[2]) * (p2[0] - p1[0])
+    y = p1[1] + (0 - p1[2]) / (p2[2] - p1[2]) * (p2[1] - p1[1])
+    return np.asarray((x,y,0))
+
 #-------------------------------------------------------------------------------
 #%% VORONOI - PREPARATION
-Pancreas = createTree(iter = 1, rotation = True, seed = 30) #Ramification object
+Pancreas = createTree(iter = 1, rotation = False, seed = 4) #Ramification object
 
 #Extracting free end's spheres and radius
 spheres  = [] #List of spheres
@@ -49,15 +56,12 @@ max_box = np.max(np.asarray(spheres), axis = 0) + sph_rad*2
 min_box = np.min(np.asarray(spheres), axis = 0) - sph_rad*2
 bounds  = [ [min_box[i], max_box[i]] for i in range(3)]
 
-#Alternative boundaries for selective drawings
-partial_bounds = [ [spheres[0][i], max_box[i]] for i in range(3)] #BROKEN
-
 #Defining the problem for a low discrepancy sampling inside 'bounds'
 problem = {'num_vars': 3,
            'names': ['x', 'y', 'z'],
            'bounds': bounds}
 
-#Parameter that regulate the density of the sample
+#Parameter that regulate the sampling density
 N = 500 #SHOULD UNDERSTAND BETTER HOW EXACTLY WORKS
 vor_points = saltelli.sample(problem, N) #Sampling
 
@@ -86,46 +90,29 @@ for ind in inside_indexes:
 vertices_truth[list(out_bound_ver)] = -1
 vertices_truth = vertices_truth.astype(int) #0: Outside, 1: Inside, -1: Outside of Boundaries
 
-#Regions that lies completely/partially inside the spheres
-region_id = np.zeros((len(crop_reg))) #Array where to store identities
-for n,reg in enumerate(crop_reg):
-    region_id[n] = any(vertices_truth[reg]) + all(vertices_truth[reg])
-region_id = region_id.astype(int) #0: Outside, 1:Partially, 2:Inside
+region_id = np.zeros(len(vor.regions))
+for n,reg in enumerate(vor.regions):
+    if reg in crop_reg:
+        region_id[n] = any(vertices_truth[reg]) + all(vertices_truth[reg]) +1
+    else: region_id[n] = 0 # 0:Cropped, 1:Outside, 2:Partially, 3:Inside
+region_id = region_id.astype(int)
 
-#%%-----------------------------------------------------------------------------
-#SECTION PART
-sel_reg = crop_reg[5]
-sel_z = 0
-def plane_z(x,y,z, sel_z):
-    return (z - sel_z) > 0
+intersectiong_triang_dict = {}
+for n, reg in enumerate(vor.regions):
+    if region_id[n]:
+        # pt_id = [(ver[2] > 0)*1 for ver in vor.vertices[reg]]
+        ind_abo = [ n for n,ver in enumerate(vor.vertices[reg]) if ver[2] > 0 ]
+        ind_bel = [ n for n,ver in enumerate(vor.vertices[reg]) if ver[2] < 0 ]
 
-def plane_z_intersection(p1, p2, z):
-    x = p1[0] + (z - p1[2]) / (p2[2] - p1[2]) * (p2[0] - p1[0])
-    y = p1[1] + (z - p1[2]) / (p2[2] - p1[2]) * (p2[1] - p1[1])
-    return np.asarray((x,y,z))
-
-#I WAS HERE
-# for n,reg in enumerate(crop_reg):
-#     print(plane_z(*ver, sel_z) for ver in vor.vertices[reg])
-
-pt_id = [ plane_z(*ver, sel_z) for ver in vor.vertices[sel_reg] ]
-ind_abo = [ n for n,ver in enumerate(vor.vertices[sel_reg]) if plane_z(*ver, sel_z)]
-ind_bel = [ n for n,ver in enumerate(vor.vertices[sel_reg]) if not plane_z(*ver, sel_z)]
-
-#%%-----------------------------------------------------------------------------
-#finding every line between two points of different class
-couples = list(itertools.product(ind_abo,ind_bel))
-intersection_point = []
-for couple in couples:
-    v1 = vor.vertices[sel_reg][couple[0]]
-    v2 = vor.vertices[sel_reg][couple[1]]
-    intersection_point.append(plane_z_intersection(v1, v2, sel_z))
-intersection_point = np.asarray(intersection_point)
-intersectiong_triang = Delaunay(intersection_point[:,0:2])
-
-
-
-
+        couples = list(itertools.product(ind_abo,ind_bel))
+        intersection_point = []
+        if couples:
+            for couple in couples:
+                v1 = vor.vertices[reg][couple[0]]
+                v2 = vor.vertices[reg][couple[1]]
+                intersection_point.append(plane_z_intersection(v1, v2))
+            intersection_point = np.asarray(intersection_point)
+            intersectiong_triang_dict.update({Delaunay(intersection_point[:,0:2]) : n })
 
 #-------------------------------------------------------------------------------
 #%% DRAWING METHODS:
@@ -142,7 +129,7 @@ red       = color.red #Some colors
 white     = color.white
 orange    = color.orange
 black     = color.black
-colors    = [white, turquoise,  red, black] #[Outside, Partially, Inside, Out of Boundaries]
+colors    = [black, white, turquoise,  red, black] #[Outside, Partially, Inside, Out of Boundaries]
 Figures   =  [] #List to which append all the drawings
 
 drawListBranch(Pancreas) #Drawing ramification
@@ -157,8 +144,8 @@ for n,ver in enumerate(vor.vertices):
                               color   = colors[vertices_truth[n]]))
 
 #Drawing a Voronoi Tassels and their volumes if they're finite
-for n,reg in enumerate(crop_reg):
-    if colors[region_id[n]] == red:
+for n,reg in enumerate(vor.regions):
+    if colors[region_id[n]] == orange:
         conv_hull= ConvexHull([vor.vertices[ver] for ver in reg])
         simpl = []
         for sim in conv_hull.simplices:
@@ -166,6 +153,14 @@ for n,reg in enumerate(crop_reg):
             simpl.append( triangle( vs=[vertex( pos     = vector(*ver),
                                                 color   = colors[region_id[n]],
                                                 opacity = 0.2) for ver in pts]))
+
+for triang, n in intersectiong_triang_dict.items():
+    if colors[region_id[n]] != white :
+        for sim in triang.simplices:
+            pts = [triang.points[pt] for pt in sim]
+            Figures.append( triangle( vs=[vertex( pos     = vector(*ver, 0),
+                                                  color   = colors[region_id[n]],
+                                                  opacity = 0.7) for ver in pts]))
 
 #-------------------------------------------------------------------------------
 """

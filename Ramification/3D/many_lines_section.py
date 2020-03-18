@@ -34,8 +34,10 @@ def inside_bounds(vor, reg, bounds):
 def draw_axis(Figures, max_coord):
     Figures.append( arrow( pos=vector(0,0,0), axis=vector(0,0,max_coord), shaftwidth=0.1))
     Figures.append( label( pos=vector(0,0,max_coord/2), text='Z' ))   #Z axis
+
     Figures.append( arrow( pos=vector(0,0,0), axis=vector(0,max_coord,0), shaftwidth=0.1))
     Figures.append( label( pos=vector(0,max_coord/2,0), text='Y' ))   #Y axis
+
     Figures.append( arrow( pos=vector(0,0,0), axis=vector(max_coord,0,0), shaftwidth=0.1))
     Figures.append( label( pos=vector(max_coord/2,0,0), text='X' ))   #X axis
 
@@ -104,7 +106,6 @@ crop_reg = [ reg for reg in vor.regions if inside_bounds(vor, reg, bounds)]
 #%%-----------------------------------------------------------------------------
 #The plane will be z = 7
 #I'll do everything by hand then automatize it in a second moment
-sel_reg = crop_reg[5]
 sel_z = 0
 def plane_z(x,y,z, sel_z):
     return (z - sel_z) > 0
