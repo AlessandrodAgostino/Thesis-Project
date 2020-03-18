@@ -19,9 +19,19 @@ class D3Branch(object):
     def __init__(self,
                  pos = vector(0,0,0),
                  quat = Quaternion(axis=np.array([0,0,1]), angle=0),
+                 rotation = False,
+                 seed = None,
                  iter_lev = 0 ):
+
+
+        if seed : np.random.seed(seed)
+        if rotation:
+            pt_in_box = np.random.rand(3) * 2 -1
+            alpha = np.random.rand(1) * 2*np.pi
+            self.quat = Quaternion( axis = pt_in_box , angle=alpha)
+        else: self.quat = quat
+
         self.pos = pos
-        self.quat = quat
         self.drct = self.quat.rotate(self.st_dir)
         self.iter_lev = iter_lev
         self.length = self.l*self.rt**self.iter_lev
@@ -57,8 +67,8 @@ def drawPoints(points_list, rad = 0.1, color = vector(1,0,0)):
     for pt in points_list:
         PointList.append(sphere(pos= pt , radius= rad, color = color))
 
-def createTree(iter = 9):
-    st_br = D3Branch()
+def createTree(iter = 9, **kwargs):
+    st_br = D3Branch(**kwargs)
     tree = [st_br]
     for it in range(iter):
         add_tree = []
@@ -77,7 +87,7 @@ def createTree(iter = 9):
     return tree
 
 def main():
-    tree = createTree()
+    tree = createTree(rotation = False, seed = 30)
 
     #DRAWING METHODS:
     scene = canvas(width=1500, height=900, center=vector(5,5,0))
