@@ -32,7 +32,7 @@ def inside_bounds(vor, reg, bounds):
 
 #-------------------------------------------------------------------------------
 #%% VORONOI - PREPARATION
-Pancreas = createTree(iter = 2) #Ramification object
+Pancreas = createTree(iter = 1, rotation = True, seed = 30) #Ramification object
 
 #Extracting free end's spheres and radius
 spheres  = [] #List of spheres
@@ -50,7 +50,7 @@ min_box = np.min(np.asarray(spheres), axis = 0) - sph_rad*2
 bounds  = [ [min_box[i], max_box[i]] for i in range(3)]
 
 #Alternative boundaries for selective drawings
-partial_bounds = [ [spheres[2][i], max_box[i]] for i in range(3)]
+partial_bounds = [ [spheres[0][i], max_box[i]] for i in range(3)] #BROKEN
 
 #Defining the problem for a low discrepancy sampling inside 'bounds'
 problem = {'num_vars': 3,
@@ -58,26 +58,15 @@ problem = {'num_vars': 3,
            'bounds': bounds}
 
 #Parameter that regulate the density of the sample
-N = 100000 #SHOULD UNDERSTAND BETTER HOW EXACTLY WORKS
+N = 500 #SHOULD UNDERSTAND BETTER HOW EXACTLY WORKS
 vor_points = saltelli.sample(problem, N) #Sampling
 
-#-------------------------------------------------------------------------------
-"""
-#UTILITY
-#Alternative REGULAR VORONOI in the same boundaries
-n_sample = 30
-coords = np.zeros((3,n_sample))
-coords[0] = np.linspace(bounds[0][0], bounds[0][1], n_sample)
-coords[1] = np.linspace(bounds[1][0], bounds[1][1], n_sample)
-coords[2] = np.linspace(bounds[2][0], bounds[2][1], n_sample)
-reg_points = np.asarray([ pt for pt in itertools.product(coords[0], coords[1], coords[2])])
-"""
 #-------------------------------------------------------------------------------
 #%% VORONOI - CREATION
 vor = Voronoi(vor_points) #Creating the tassellation
 
 #Cropping the regions that lies outside the boundaries
-crop_reg = [ reg for reg in vor.regions if inside_bounds(reg, partial_bounds)]
+crop_reg = [ reg for reg in vor.regions if inside_bounds(vor, reg, bounds)]
 
 #Detecting all the vertices that lies in/outside the boundaries
 crop_ver = set()
@@ -102,6 +91,41 @@ region_id = np.zeros((len(crop_reg))) #Array where to store identities
 for n,reg in enumerate(crop_reg):
     region_id[n] = any(vertices_truth[reg]) + all(vertices_truth[reg])
 region_id = region_id.astype(int) #0: Outside, 1:Partially, 2:Inside
+
+#%%-----------------------------------------------------------------------------
+#SECTION PART
+sel_reg = crop_reg[5]
+sel_z = 0
+def plane_z(x,y,z, sel_z):
+    return (z - sel_z) > 0
+
+def plane_z_intersection(p1, p2, z):
+    x = p1[0] + (z - p1[2]) / (p2[2] - p1[2]) * (p2[0] - p1[0])
+    y = p1[1] + (z - p1[2]) / (p2[2] - p1[2]) * (p2[1] - p1[1])
+    return np.asarray((x,y,z))
+
+#I WAS HERE
+# for n,reg in enumerate(crop_reg):
+#     print(plane_z(*ver, sel_z) for ver in vor.vertices[reg])
+
+pt_id = [ plane_z(*ver, sel_z) for ver in vor.vertices[sel_reg] ]
+ind_abo = [ n for n,ver in enumerate(vor.vertices[sel_reg]) if plane_z(*ver, sel_z)]
+ind_bel = [ n for n,ver in enumerate(vor.vertices[sel_reg]) if not plane_z(*ver, sel_z)]
+
+#%%-----------------------------------------------------------------------------
+#finding every line between two points of different class
+couples = list(itertools.product(ind_abo,ind_bel))
+intersection_point = []
+for couple in couples:
+    v1 = vor.vertices[sel_reg][couple[0]]
+    v2 = vor.vertices[sel_reg][couple[1]]
+    intersection_point.append(plane_z_intersection(v1, v2, sel_z))
+intersection_point = np.asarray(intersection_point)
+intersectiong_triang = Delaunay(intersection_point[:,0:2])
+
+
+
+
 
 #-------------------------------------------------------------------------------
 #%% DRAWING METHODS:
@@ -134,7 +158,7 @@ for n,ver in enumerate(vor.vertices):
 
 #Drawing a Voronoi Tassels and their volumes if they're finite
 for n,reg in enumerate(crop_reg):
-    if colors[region_id[n]] == turquoise:
+    if colors[region_id[n]] == red:
         conv_hull= ConvexHull([vor.vertices[ver] for ver in reg])
         simpl = []
         for sim in conv_hull.simplices:
@@ -142,3 +166,15 @@ for n,reg in enumerate(crop_reg):
             simpl.append( triangle( vs=[vertex( pos     = vector(*ver),
                                                 color   = colors[region_id[n]],
                                                 opacity = 0.2) for ver in pts]))
+
+#-------------------------------------------------------------------------------
+"""
+#UTILITY
+#Alternative REGULAR VORONOI in the same boundaries
+n_sample = 30
+coords = np.zeros((3,n_sample))
+coords[0] = np.linspace(bounds[0][0], bounds[0][1], n_sample)
+coords[1] = np.linspace(bounds[1][0], bounds[1][1], n_sample)
+coords[2] = np.linspace(bounds[2][0], bounds[2][1], n_sample)
+reg_points = np.asarray([ pt for pt in itertools.product(coords[0], coords[1], coords[2])])
+"""
