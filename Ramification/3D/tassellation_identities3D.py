@@ -97,22 +97,38 @@ for n,reg in enumerate(vor.regions):
     else: region_id[n] = 0 # 0:Cropped, 1:Outside, 2:Partially, 3:Inside
 region_id = region_id.astype(int)
 
+# intersectiong_triang_dict = {}
+# for n, reg in enumerate(vor.regions):
+#     if region_id[n]:
+#         # pt_id = [(ver[2] > 0)*1 for ver in vor.vertices[reg]]
+#         ind_abo = [ n for n,ver in enumerate(vor.vertices[reg]) if ver[2] > 0 ]
+#         ind_bel = [ n for n,ver in enumerate(vor.vertices[reg]) if ver[2] < 0 ]
+#
+#         couples = list(itertools.product(ind_abo,ind_bel))
+#         intersection_point = []
+#         if couples:
+#             for couple in couples: #ver insted of index
+#                 v1 = vor.vertices[reg][couple[0]]
+#                 v2 = vor.vertices[reg][couple[1]]
+#                 intersection_point.append(plane_z_intersection(v1, v2))
+#             intersection_point = np.asarray(intersection_point)
+#             intersectiong_triang_dict.update({Delaunay(intersection_point[:,0:2]) : n })
+
 intersectiong_triang_dict = {}
 for n, reg in enumerate(vor.regions):
     if region_id[n]:
         # pt_id = [(ver[2] > 0)*1 for ver in vor.vertices[reg]]
-        ind_abo = [ n for n,ver in enumerate(vor.vertices[reg]) if ver[2] > 0 ]
-        ind_bel = [ n for n,ver in enumerate(vor.vertices[reg]) if ver[2] < 0 ]
+        ind_abo = [ ver for ver in vor.vertices[reg] if ver[2] > 0 ]
+        ind_bel = [ ver for ver in vor.vertices[reg] if ver[2] <= 0 ]
 
         couples = list(itertools.product(ind_abo,ind_bel))
         intersection_point = []
         if couples:
-            for couple in couples:
-                v1 = vor.vertices[reg][couple[0]]
-                v2 = vor.vertices[reg][couple[1]]
-                intersection_point.append(plane_z_intersection(v1, v2))
+            intersection_point = [ plane_z_intersection(v1, v2) for v1, v2 in couples]
             intersection_point = np.asarray(intersection_point)
             intersectiong_triang_dict.update({Delaunay(intersection_point[:,0:2]) : n })
+            #Convex poi Delaunay
+
 
 #-------------------------------------------------------------------------------
 #%% DRAWING METHODS:

@@ -3,6 +3,7 @@ import itertools
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
+
 from scipy.spatial import Voronoi, ConvexHull, cKDTree, Delaunay
 from SALib.sample import saltelli
 
@@ -33,13 +34,14 @@ def inside_bounds(vor, reg, bounds):
     else: return False
 
 def plane_z_intersection(p1, p2, z=0):
-    x = p1[0] + (0 - p1[2]) / (p2[2] - p1[2]) * (p2[0] - p1[0])
-    y = p1[1] + (0 - p1[2]) / (p2[2] - p1[2]) * (p2[1] - p1[1])
-    return np.asarray((x,y,0))
+    x = p1[0] + (z - p1[2]) / (p2[2] - p1[2]) * (p2[0] - p1[0])
+    y = p1[1] + (z - p1[2]) / (p2[2] - p1[2]) * (p2[1] - p1[1])
+    return np.asarray((x,y,z))
 
 #-------------------------------------------------------------------------------
 #%% VORONOI - PREPARATION
-Pancreas = createTree(iter = 1, rotation = False, seed = 4) #Ramification object
+#GOOD RESULTS seed = 32
+Pancreas = createTree(iter = 2, rotation = True, seed = 32) #Ramification object
 
 #Extracting free end's spheres and radius
 spheres  = [] #List of spheres
@@ -51,26 +53,36 @@ for br in Pancreas:
         spheres.append(np.asarray((cent.x, cent.y, cent.z)))
         if not sph_rad: sph_rad = br.length
 
+#Interesting spheres. Those around x,y-plane
+int_spheres = [sph for sph in spheres if (sph[2] > -sph_rad) & (sph[2] < sph_rad)]
+
 #Boundaries for random sampling in a volume with a padding proportional to spheres' radius
 max_box = np.max(np.asarray(spheres), axis = 0) + sph_rad*2
 min_box = np.min(np.asarray(spheres), axis = 0) - sph_rad*2
 bounds  = [ [min_box[i], max_box[i]] for i in range(3)]
+new_bounds = [ [min_box[0], max_box[0]],
+               [min_box[1], max_box[1]],
+               [-sph_rad/2
+                 , sph_rad/2
+                 ]]
 
 #Defining the problem for a low discrepancy sampling inside 'bounds'
 problem = {'num_vars': 3,
            'names': ['x', 'y', 'z'],
-           'bounds': bounds}
+           'bounds': new_bounds}
 
 #Parameter that regulate the sampling density
-N = 500 #SHOULD UNDERSTAND BETTER HOW EXACTLY WORKS
-vor_points = saltelli.sample(problem, N) #Sampling
+N = 7000 #SHOULD UNDERSTAND BETTER HOW EXACTLY WORKS
 
+vor_points = saltelli.sample(problem, N) #Sampling
+# vor_points = vor_points[(vor_points[:,2] < sph_rad) & (vor_points[:,2] > -sph_rad),:]
+# vor_points = vor_points[(vor_points[:,2]<3) & (vor_points[:,2]> -3),:]
 #-------------------------------------------------------------------------------
 #%% VORONOI - CREATION
 vor = Voronoi(vor_points) #Creating the tassellation
 
 #Cropping the regions that lies outside the boundaries
-crop_reg = [ reg for reg in vor.regions if inside_bounds(vor, reg, bounds)]
+crop_reg = [ reg for reg in vor.regions if inside_bounds(vor, reg, new_bounds)]
 
 #Detecting all the vertices that lies in/outside the boundaries
 crop_ver = set()
@@ -79,11 +91,12 @@ for reg in crop_reg:
 out_bound_ver = set(np.arange(0,len(vor.vertices))) - crop_ver
 
 #-------------------------------------------------------------------------------
-#%% IDENTITY ASSIGNMENT
+#%% IDENTITY ASSIGNMENT + DRAWING
 tree = cKDTree(vor.vertices) #Object for an improved distance computation
 
+
 #Vertices that lies inside the spheres
-inside_indexes = tree.query_ball_point(spheres, sph_rad)
+inside_indexes = tree.query_ball_point(int_spheres, sph_rad)
 vertices_truth = np.zeros((vor.vertices.shape[0])) #Array where to store identities
 for ind in inside_indexes:
     vertices_truth[ind] = 1
@@ -97,54 +110,30 @@ for n,reg in enumerate(vor.regions):
     else: region_id[n] = 0 # 0:Cropped, 1:Outside, 2:Partially, 3:Inside
 region_id = region_id.astype(int)
 
-intersectiong_triang_dict = {}
+#%%-----------------------------------------------------------------------------
+#DRAWING SETINGS
+plt.figure(figsize=(12,8))
+colors = ['k', 'w', 'c', 'r', 'y', 'k']
+
+plt.axes().set_facecolor("grey")
+useless_couples = 0
 for n, reg in enumerate(vor.regions):
     if region_id[n]:
-        # pt_id = [(ver[2] > 0)*1 for ver in vor.vertices[reg]]
-        ind_abo = [ n for n,ver in enumerate(vor.vertices[reg]) if ver[2] > 0 ]
-        ind_bel = [ n for n,ver in enumerate(vor.vertices[reg]) if ver[2] < 0 ]
+        ind_abo = [ ver for ver in vor.vertices[reg] if ver[2] > 0 ]
+        ind_bel = [ ver for ver in vor.vertices[reg] if ver[2] <= 0 ]
 
         couples = list(itertools.product(ind_abo,ind_bel))
-        intersection_point = []
+
         if couples:
-            for couple in couples:
-                v1 = vor.vertices[reg][couple[0]]
-                v2 = vor.vertices[reg][couple[1]]
-                intersection_point.append(plane_z_intersection(v1, v2))
+            intersection_point = [ plane_z_intersection(v1, v2) for v1, v2 in couples]
             intersection_point = np.asarray(intersection_point)
-            intersectiong_triang_dict.update({Delaunay(intersection_point[:,0:2]) : n })
+            drawing_hull = ConvexHull(intersection_point[:,0:2]).vertices
+            plt.gca().fill(intersection_point[drawing_hull,0],
+                           intersection_point[drawing_hull,1],
+                           colors[region_id[n]])
 
-#-------------------------------------------------------------------------------
-#%% DRAWING METHODS:
-turquoise = mcolors.hsv_to_rgb((0.5,1,0.8))
-red       = mcolors.hsv_to_rgb((0, 0, 1))
-white     = mcolors.hsv_to_rgb((1, 1, 1))
-yellow    = mcolors.hsv_to_rgb((0.75, 0.75, 0))
-black     = mcolors.hsv_to_rgb((0, 0, 0))
-colors    = [black, white, turquoise,  red, black] #[Outside, Partially, Inside, Out of Boundaries]
+        else:
+            useless_couples += 1
 
-fig = plt.figure()
-for triang, n in intersectiong_triang_dict.items():
-    if colors[region_id[n]] != black :
-        ###############################################################
-        for sim in triang.simplices:
-            pts = [triang.points[pt] for pt in sim]
-            Figures.append( triangle( vs=[vertex( pos     = vector(*ver, 0),
-                                                  color   = colors[region_id[n]],
-                                                  opacity = 0.7) for ver in pts]))
-
-for r in tassel:
-    bound = r.boundary.coords.xy
-    if any(r.intersects(circle_b) for circle_b in circles_b):
-        plt.gca().fill(bound[0], bound[1], fc=(0,0,0,0.7), ec=(0,0,0,1), lw = 0.1)
-    elif any(r.intersects(circle) for circle in circles):
-        plt.gca().fill(bound[0], bound[1], fc=(0,0,0,0.4), ec=(0,0,0,1), lw = 0.1)
-    else:
-        plt.gca().fill(bound[0], bound[1], fc=(1,1,1,0), ec=(0,0,0,1), lw = 0.1)
-
-    nucleus = (np.sum(bound[0])/len(bound[0]),np.sum(bound[1])/len(bound[1]))
-    plt.gca().scatter(*nucleus,s=2, c="k", marker = ".", linewidth = 0)
-
-
-plt.axis('off')
-fig.savefig('Ramification/3D/images/specimen1', bbox_inches='tight',dpi=1000)
+print(f'useless couple computations = {useless_couples}')
+plt.savefig(f'specimen{N}.png', bbox_inches='tight', dpi=1000)
