@@ -39,7 +39,7 @@ def plane_z_intersection(p1, p2, z=0):
 
 #-------------------------------------------------------------------------------
 #%% VORONOI - PREPARATION
-Pancreas = createTree(iter = 1, rotation = False, seed = 4) #Ramification object
+Pancreas = createTree(iter = 4, rotation = False, seed = 4) #Ramification object
 
 #Extracting free end's spheres and radius
 spheres  = [] #List of spheres
@@ -161,7 +161,7 @@ for n,ver in enumerate(vor.vertices):
 
 #Drawing a Voronoi Tassels and their volumes if they're finite
 for n,reg in enumerate(vor.regions):
-    if colors[region_id[n]] == orange:
+    if colors[region_id[n]] in [turquoise, red]:
         conv_hull= ConvexHull([vor.vertices[ver] for ver in reg])
         simpl = []
         for sim in conv_hull.simplices:
@@ -170,13 +170,13 @@ for n,reg in enumerate(vor.regions):
                                                 color   = colors[region_id[n]],
                                                 opacity = 0.2) for ver in pts]))
 
-for triang, n in intersectiong_triang_dict.items():
-    if colors[region_id[n]] != white :
-        for sim in triang.simplices:
-            pts = [triang.points[pt] for pt in sim]
-            Figures.append( triangle( vs=[vertex( pos     = vector(*ver, 0),
-                                                  color   = colors[region_id[n]],
-                                                  opacity = 0.7) for ver in pts]))
+# for triang, n in intersectiong_triang_dict.items():
+#     if colors[region_id[n]] != white :
+#         for sim in triang.simplices:
+#             pts = [triang.points[pt] for pt in sim]
+#             Figures.append( triangle( vs=[vertex( pos     = vector(*ver, 0),
+#                                                   color   = colors[region_id[n]],
+#                                                   opacity = 0.7) for ver in pts]))
 
 #-------------------------------------------------------------------------------
 """
