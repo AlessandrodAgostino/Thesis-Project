@@ -2,6 +2,7 @@ import numpy as np
 import itertools
 import matplotlib.pyplot as plt
 import time
+import pandas as pd
 
 from scipy.spatial import Voronoi, ConvexHull, cKDTree
 from SALib.sample import saltelli
@@ -65,7 +66,7 @@ def _box_and_spheres(ramification):
                    [min_box[1], max_box[1]],
                    [-sph_rad, sph_rad]]
 
-    return boundaries, spheres, sph_rad
+    return boundaries, int_spheres, sph_rad
 
 def section(iteration_level = 2, rotation = False, seed = None, N=100):
     """
@@ -73,10 +74,10 @@ def section(iteration_level = 2, rotation = False, seed = None, N=100):
     ramification.
 
     Parameters:
-    iteration_level = The # of iterative biforcation made in the ramification.
+    iteration_level = The # of iterative biforcation made in the ramification
     N               = Parameter that regulate the sampling density
     """
-
+    start = time.time()
     Pancreas = createTree(iter = iteration_level, rotation = rotation, seed = seed) #Ramification object
     boundaries, spheres, sph_rad = _box_and_spheres(Pancreas)
 
@@ -90,10 +91,11 @@ def section(iteration_level = 2, rotation = False, seed = None, N=100):
     #Cropping the regions that lies outside the boundaries
     cropped_reg = [ reg for reg in vor.regions if _inside_boundaries(vor, reg, boundaries)]
 
+    start_distances = time.time()
     tree = cKDTree(vor.vertices)
 
     #Vertices that lies inside the spheres
-    inside_indexes = tree.query_ball_point(int_spheres, sph_rad)
+    inside_indexes = tree.query_ball_point(spheres, sph_rad)
 
     vertices_truth = np.zeros(len(vor.vertices)) #Array where to store identities
     for ind in inside_indexes:
@@ -105,6 +107,7 @@ def section(iteration_level = 2, rotation = False, seed = None, N=100):
         region_id[n] = any(vertices_truth[reg]) + all(vertices_truth[reg]) # 0:Outside, 1:Partially, 2:Inside
     region_id = region_id.astype(int)
 
+    start_drawing = time.time()
     #DRAWING SETINGS
     fig = plt.figure(figsize=(12,8))
     colors = ['w', 'c', 'r']
@@ -122,10 +125,33 @@ def section(iteration_level = 2, rotation = False, seed = None, N=100):
             plt.gca().fill(intersection_point[drawing_hull,0],
                            intersection_point[drawing_hull,1],
                            colors[region_id[n]])
-    return fig, [0.0]
+    end = time.time()
+    times = {'N'         : N,
+             'iter_lev'  : iteration_level,
+             'Voronoi'   : start_distances - start,
+             'Distances' : start_drawing -  start_distances,
+             'Drawing'   : end - start_drawing }
+
+    return fig, times
 
 
-#-------------------------------------------------------------------------------
-#GOOD RESULTS seed = 32
-fig, times = section(rotation = True, seed = 32, N=1000)
-# plt.savefig(f'specimen{N}.png', bbox_inches='tight', dpi=1000)
+
+#%%-----------------------------------------------------------------------------
+if __name__ == '__main__':
+    time_measures = []
+
+    for N in np.arange(1000, 10000, 1000):
+        for n in range(10):
+            fig, times = section(rotation = True, seed = 32, N=N)
+            tic = time.time()
+            dpi = 300
+            fig.savefig(f'Times\\section_N_{N}({n}).png', bbox_inches='tight', dpi=dpi)
+            toc = time.time()
+            times.update({f'Saving figure': toc-tic,
+                          'dpi': dpi})
+            time_measures.append(times)
+            plt.close(fig)
+        print(f'N = {N}')
+
+    time_df = pd.DataFrame(time_measures)
+    time_df.to_csv('Times\\time_measures.csv')
