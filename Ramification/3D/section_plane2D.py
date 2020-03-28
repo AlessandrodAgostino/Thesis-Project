@@ -62,13 +62,17 @@ def _box_and_spheres(ramification):
     #Boundaries for random sampling in a volume with a padding proportional to spheres' radius
     max_box = np.max(np.asarray(spheres), axis = 0) + sph_rad*2
     min_box = np.min(np.asarray(spheres), axis = 0) - sph_rad*2
+
     boundaries = [ [min_box[0], max_box[0]],
                    [min_box[1], max_box[1]],
-                   [-sph_rad, sph_rad]]
+                   [min_box[2], max_box[2]]]
+    small_boundaries = [ [min_box[0], max_box[0]],
+                         [min_box[1], max_box[1]],
+                         [-sph_rad, sph_rad]]
 
-    return boundaries, int_spheres, sph_rad
+    return boundaries, small_boundaries, int_spheres, sph_rad
 
-def section(iteration_level = 2, rotation = False, seed = None, N=100):
+def section(iteration_level = 2, rotation = False, seed = None, N_points=100):
     """
     This function returns the image resulting from the virtual section of a
     ramification.
@@ -78,24 +82,34 @@ def section(iteration_level = 2, rotation = False, seed = None, N=100):
     N               = Parameter that regulate the sampling density
     """
     start = time.time()
+
     Pancreas = createTree(iter = iteration_level, rotation = rotation, seed = seed) #Ramification object
-    boundaries, spheres, sph_rad = _box_and_spheres(Pancreas)
+    boundaries, small_boundaries, int_spheres, sph_rad = _box_and_spheres(Pancreas)
 
     #Defining the problem for a low discrepancy sampling inside 'boundaries'
     problem = {'num_vars': 3,
                'names': ['x', 'y', 'z'],
                'bounds': boundaries}
-    vor_points = saltelli.sample(problem, N) #Sampling
+
+    N = 10
+    vor_points = []
+
+    while len(vor_points) < N_points:
+        N = N*2
+        vor_points = saltelli.sample(problem, N)
+        vor_points = vor_points[(vor_points[:,2] > small_boundaries[2][0]) & (vor_points[:,2] < small_boundaries[2][1])]
+        vor_points = vor_points[:N_points]
     vor = Voronoi(vor_points) #Creating the tassellation
 
+
     #Cropping the regions that lies outside the boundaries
-    cropped_reg = [ reg for reg in vor.regions if _inside_boundaries(vor, reg, boundaries)]
+    cropped_reg = [ reg for reg in vor.regions if _inside_boundaries(vor, reg, small_boundaries)]
 
     start_distances = time.time()
     tree = cKDTree(vor.vertices)
 
     #Vertices that lies inside the spheres
-    inside_indexes = tree.query_ball_point(spheres, sph_rad)
+    inside_indexes = tree.query_ball_point(int_spheres, sph_rad)
 
     vertices_truth = np.zeros(len(vor.vertices)) #Array where to store identities
     for ind in inside_indexes:
@@ -126,7 +140,7 @@ def section(iteration_level = 2, rotation = False, seed = None, N=100):
                            intersection_point[drawing_hull,1],
                            colors[region_id[n]])
     end = time.time()
-    times = {'N'         : N,
+    times = {'N'         : N_points,
              'iter_lev'  : iteration_level,
              'Voronoi'   : start_distances - start,
              'Distances' : start_drawing -  start_distances,
@@ -135,23 +149,22 @@ def section(iteration_level = 2, rotation = False, seed = None, N=100):
     return fig, times
 
 
-
 #%%-----------------------------------------------------------------------------
+
 if __name__ == '__main__':
     time_measures = []
 
-    for N in np.arange(1000, 10000, 1000):
+    for N_points in np.arange(25000, 29000, 1000):
         for n in range(10):
-            fig, times = section(rotation = True, seed = 32, N=N)
+            fig, times = section(rotation = True, seed = 32, N_points=N_points)
             tic = time.time()
             dpi = 300
-            fig.savefig(f'Times\\section_N_{N}({n}).png', bbox_inches='tight', dpi=dpi)
+            fig.savefig(f'Times\\Images\\section_N_{N_points}({n}).png', bbox_inches='tight', dpi=dpi)
             toc = time.time()
             times.update({f'Saving figure': toc-tic,
                           'dpi': dpi})
             time_measures.append(times)
             plt.close(fig)
-        print(f'N = {N}')
-
-    time_df = pd.DataFrame(time_measures)
-    time_df.to_csv('Times\\time_measures.csv')
+        time_df = pd.DataFrame(time_measures)
+        time_df.to_csv('Times\\time_measures.csv')
+        print(f'N = {N_points}')
