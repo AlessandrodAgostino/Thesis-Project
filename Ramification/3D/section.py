@@ -31,14 +31,14 @@ def _inside_boundaries(vor, reg, boundaries):
         return False
     else: return False
 
-def _plane_z_intersection(p1, p2, k=0):
+def _plane_y_intersection(p1, p2, k=0):
     """
-    Return the intersection between the plane of equation z = k and the line
+    Return the intersection between the plane of equation y = k and the line
     crossing 'p1' and 'p2'.
     """
-    x = p1[0] + (k - p1[2]) / (p2[2] - p1[2]) * (p2[0] - p1[0])
-    y = p1[1] + (k - p1[2]) / (p2[2] - p1[2]) * (p2[1] - p1[1])
-    return np.asarray((x,y,k))
+    x = p1[0] + (k - p1[1]) / (p2[1] - p1[1]) * (p2[0] - p1[0])
+    z = p1[2] + (k - p1[1]) / (p2[1] - p1[1]) * (p2[2] - p1[2])
+    return np.asarray((x,k,z))
 
 def _box_and_spheres(ramification):
     """
@@ -50,6 +50,8 @@ def _box_and_spheres(ramification):
     spheres  = [] #List of spheres
     sph_rad  = 0
     max_iter = np.log2((len(ramification)+1)) - 1
+    l = ramification[0].l
+
     for br in ramification:
         if br.iter_lev == max_iter:
             cent = br.pos + vector(*(br.length * br.drct))
@@ -57,7 +59,7 @@ def _box_and_spheres(ramification):
             if not sph_rad: sph_rad = br.length
 
     #Interesting spheres. Those around x,y-plane
-    int_spheres = [sph for sph in spheres if (sph[2] > -2*sph_rad) & (sph[2] < 2*sph_rad)]
+    int_spheres = [sph for sph in spheres if (sph[1] > l - 2*sph_rad) & (sph[1] < l + 2*sph_rad)]
 
     #Boundaries for random sampling in a volume with a padding proportional to spheres' radius
     max_box = np.max(np.asarray(spheres), axis = 0) + sph_rad*2
@@ -66,13 +68,14 @@ def _box_and_spheres(ramification):
     boundaries = [ [min_box[0], max_box[0]],
                    [min_box[1], max_box[1]],
                    [min_box[2], max_box[2]]]
+
     small_boundaries = [ [min_box[0], max_box[0]],
-                         [min_box[1], max_box[1]],
-                         [-sph_rad, sph_rad]]
+                         [l - sph_rad/2, l + sph_rad/2],
+                         [min_box[1], max_box[1]]]
 
     return boundaries, small_boundaries, int_spheres, sph_rad
 
-def section(iteration_level = 2, rotation = False, seed = None, N_points=100):
+def section(iteration_level = 3, y = 0, rotation = False, seed = None, N_points=2500):
     """
     This function returns the image resulting from the virtual section of a
     ramification.
@@ -86,6 +89,8 @@ def section(iteration_level = 2, rotation = False, seed = None, N_points=100):
     Pancreas = createTree(iter = iteration_level, rotation = rotation, seed = seed) #Ramification object
     boundaries, small_boundaries, int_spheres, sph_rad = _box_and_spheres(Pancreas)
 
+    l = Pancreas[0].l
+
     #Defining the problem for a low discrepancy sampling inside 'boundaries'
     problem = {'num_vars': 3,
                'names': ['x', 'y', 'z'],
@@ -97,7 +102,7 @@ def section(iteration_level = 2, rotation = False, seed = None, N_points=100):
     while len(vor_points) < N_points:
         N = N*2
         vor_points = saltelli.sample(problem, N)
-        vor_points = vor_points[(vor_points[:,2] > small_boundaries[2][0]) & (vor_points[:,2] < small_boundaries[2][1])]
+        vor_points = vor_points[(vor_points[:,1] > small_boundaries[1][0]) & (vor_points[:,1] < small_boundaries[1][1])]
         vor_points = vor_points[:N_points]
     vor = Voronoi(vor_points) #Creating the tassellation
 
@@ -128,16 +133,16 @@ def section(iteration_level = 2, rotation = False, seed = None, N_points=100):
 
     plt.axes().set_facecolor("grey")
     for n, reg in enumerate(cropped_reg):
-        ind_abo = [ ver for ver in vor.vertices[reg] if ver[2] > 0 ]
-        ind_bel = [ ver for ver in vor.vertices[reg] if ver[2] <= 0 ]
+        ind_abo = [ ver for ver in vor.vertices[reg] if ver[1] > l ]
+        ind_bel = [ ver for ver in vor.vertices[reg] if ver[1] <= l ]
 
         couples = list(itertools.product(ind_abo,ind_bel))
         if couples:
-            intersection_point = [ _plane_z_intersection(v1, v2) for v1, v2 in couples]
+            intersection_point = [ _plane_y_intersection(v1, v2, k = l) for v1, v2 in couples]
             intersection_point = np.asarray(intersection_point)
-            drawing_hull = ConvexHull(intersection_point[:,0:2]).vertices
+            drawing_hull = ConvexHull(intersection_point[:,[0,2]]).vertices
             plt.gca().fill(intersection_point[drawing_hull,0],
-                           intersection_point[drawing_hull,1],
+                           intersection_point[drawing_hull,2],
                            colors[region_id[n]])
     end = time.time()
     times = {'N'         : N_points,
@@ -149,22 +154,48 @@ def section(iteration_level = 2, rotation = False, seed = None, N_points=100):
     return fig, times
 
 
+
 #%%-----------------------------------------------------------------------------
+fig, times = section(iteration_level = 4, N_points = 20000)
 
-if __name__ == '__main__':
-    time_measures = []
 
-    for N_points in np.arange(25000, 29000, 1000):
-        for n in range(10):
-            fig, times = section(rotation = True, seed = 32, N_points=N_points)
-            tic = time.time()
-            dpi = 300
-            fig.savefig(f'Times\\Images\\section_N_{N_points}({n}).png', bbox_inches='tight', dpi=dpi)
-            toc = time.time()
-            times.update({f'Saving figure': toc-tic,
-                          'dpi': dpi})
-            time_measures.append(times)
-            plt.close(fig)
-        time_df = pd.DataFrame(time_measures)
-        time_df.to_csv('Times\\time_measures.csv')
-        print(f'N = {N_points}')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# if __name__ == '__main__':
+#     time_measures = []
+
+    # for N_points in np.arange(25000, 2700, 100):
+    #     for n in range(1):
+    #         fig, times = section(rotation = True, z=0, seed = 32, N_points=N_points)
+    #         tic = time.time()
+    #         dpi = 100
+    #         fig.savefig(f'Times\\Images\\section_N_{N_points}({n}).png', bbox_inches='tight', dpi=dpi)
+    #         toc = time.time()
+    #         times.update({f'Saving figure': toc-tic,
+    #                       'dpi': dpi})
+    #         time_measures.append(times)
+    #         plt.close(fig)
+    #     time_df = pd.DataFrame(time_measures)
+    #     # time_df.to_csv('Times\\time_measures.csv')
+    #     print(f'N = {N_points}')
+
+
+
+
+# dpi = 100
+# fig.savefig(f'section_N_{N_points}.png', bbox_inches='tight', dpi=dpi)

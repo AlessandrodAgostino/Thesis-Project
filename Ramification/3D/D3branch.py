@@ -1,7 +1,7 @@
 from pyquaternion import Quaternion
 from math import radians
 import numpy as np
-from vpython import cylinder, sphere, vector, color, canvas, triangle, vertex
+from vpython import cylinder, sphere, vector, color, canvas, triangle, vertex, arrow, label
 
 #Create the Canvas into which draw
 
@@ -18,6 +18,7 @@ class D3Branch(object):
 
     def __init__(self,
                  pos = vector(0,0,0),
+                 delta_y = 0,
                  quat = Quaternion(axis=np.array([0,0,1]), angle=0),
                  rotation = False,
                  seed = None,
@@ -31,7 +32,9 @@ class D3Branch(object):
             self.quat = Quaternion( axis = pt_in_box , angle=alpha)
         else: self.quat = quat
 
-        self.pos = pos
+        if delta_y: self.pos = pos + vector(0,delta_y,0)
+        else: self.pos = pos
+
         self.drct = self.quat.rotate(self.st_dir)
         self.iter_lev = iter_lev
         self.length = self.l*self.rt**self.iter_lev
@@ -67,6 +70,20 @@ def drawPoints(points_list, rad = 0.1, color = vector(1,0,0)):
     for pt in points_list:
         PointList.append(sphere(pos= pt , radius= rad, color = color))
 
+def draw_axis(max_coord = 10):
+    Figures = []
+    Figures.append( arrow( pos=vector(0,0,0), axis=vector(0,0,max_coord), shaftwidth=0.1))
+    Figures.append( label( pos=vector(0,0,max_coord/2), text='Z' ))   #Z axis
+
+    Figures.append( arrow( pos=vector(0,0,0), axis=vector(0,max_coord,0), shaftwidth=0.1))
+    Figures.append( label( pos=vector(0,max_coord/2,0), text='Y' ))   #Y axis
+
+    Figures.append( arrow( pos=vector(0,0,0), axis=vector(max_coord,0,0), shaftwidth=0.1))
+    Figures.append( label( pos=vector(max_coord/2,0,0), text='X' ))   #X axis
+    return Figures
+
+
+
 def createTree(iter = 9, **kwargs):
     st_br = D3Branch(**kwargs)
     tree = [st_br]
@@ -87,10 +104,12 @@ def createTree(iter = 9, **kwargs):
     return tree
 
 def main():
-    tree = createTree(rotation = False, seed = 30)
+    tree = createTree(iter = 4, rotation = False, seed = 30)
+
 
     #DRAWING METHODS:
     scene = canvas(width=1500, height=900, center=vector(5,5,0))
+    draw_axis(max_coord = 10)
     drawListBranch(tree)
     drawSphereFreeEnds(tree)
 
