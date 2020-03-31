@@ -70,8 +70,8 @@ def _box_and_spheres(ramification):
                    [min_box[2], max_box[2]]]
 
     small_boundaries = [ [min_box[0], max_box[0]],
-                         [l - sph_rad/2, l + sph_rad/2],
-                         [min_box[1], max_box[1]]]
+                         [l - sph_rad, l + sph_rad],
+                         [min_box[2], max_box[2]]]
 
     return boundaries, small_boundaries, int_spheres, sph_rad
 
@@ -156,9 +156,7 @@ def section(iteration_level = 3, y = 0, rotation = False, seed = None, N_points=
 
 
 #%%-----------------------------------------------------------------------------
-fig, times = section(iteration_level = 4, N_points = 20000)
-
-
+section(iteration_level = 5, y = 2, rotation = False, seed = None, N_points=10000)
 
 
 

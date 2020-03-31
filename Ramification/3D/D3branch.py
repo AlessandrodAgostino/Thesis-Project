@@ -17,7 +17,7 @@ class D3Branch(object):
     st_dir = np.array([0,1,0])
 
     def __init__(self,
-                 pos = vector(0,0,0),
+                 pos = vector(0,-l,0),
                  delta_y = 0,
                  quat = Quaternion(axis=np.array([0,0,1]), angle=0),
                  rotation = False,
@@ -109,6 +109,8 @@ def main():
 
     #DRAWING METHODS:
     scene = canvas(width=1500, height=900, center=vector(5,5,0))
+    sphere( pos = vector(0,0,0), color = vector(1,0,0))
+
     draw_axis(max_coord = 10)
     drawListBranch(tree)
     drawSphereFreeEnds(tree)
