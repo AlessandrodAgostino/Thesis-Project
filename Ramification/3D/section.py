@@ -2,6 +2,7 @@ import numpy as np
 import itertools
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolor
+import os
 
 import time
 import pandas as pd
@@ -76,6 +77,7 @@ def _box_and_spheres(ramification, y = 0):
 
     return boundaries, small_boundaries, int_spheres, sph_rad
 
+
 def section(iteration_level = 3, y = 0, n_slices = 1, rotation = False, seed = None, N_points=2500):
     """
     This function returns the image resulting from the virtual section of a
@@ -106,7 +108,6 @@ def section(iteration_level = 3, y = 0, n_slices = 1, rotation = False, seed = N
         vor_points = vor_points[:N_points]
     vor = Voronoi(vor_points) #Creating the tassellation
 
-
     #Cropping the regions that lies outside the boundaries
     cropped_reg = [ reg for reg in vor.regions if _inside_boundaries(vor, reg, small_boundaries)]
 
@@ -114,11 +115,18 @@ def section(iteration_level = 3, y = 0, n_slices = 1, rotation = False, seed = N
     tree = cKDTree(vor.vertices)
 
     #Vertices that lies inside the spheres
-    inside_indexes = tree.query_ball_point(int_spheres, sph_rad)
-
     vertices_truth = np.zeros(len(vor.vertices)) #Array where to store identities
-    for ind in inside_indexes:
-        vertices_truth[ind] = 1
+
+    try:
+        inside_indexes = tree.query_ball_point(int_spheres, sph_rad)
+
+        for ind in inside_indexes:
+            vertices_truth[ind] = 1
+        Null_Image = False
+    except:
+        Null_Image = True
+        print(f'Seed {seed} gave problems')
+
     vertices_truth = vertices_truth.astype(int) #0: Outside, 1: Inside
 
     region_id = np.zeros(len(cropped_reg))
@@ -126,23 +134,34 @@ def section(iteration_level = 3, y = 0, n_slices = 1, rotation = False, seed = N
         region_id[n] = any(vertices_truth[reg]) + all(vertices_truth[reg]) # 0:Outside, 1:Partially, 2:Inside
     region_id = region_id.astype(int)
 
-    start_drawing = time.time()
-    #DRAWING SETINGS
+    end_distances = time.time()
+
+    #DRAWING and SAVING SETINGS
 
     colors = ['w', 'c', 'r']
     palette = [[0.9254902,  0.89411765, 0.91372549],
                [0.49803922, 0.34509804, 0.58823529],
                [0.81176471, 0.62745098, 0.78039216]]
+    dpi = 100
 
-    # fig = plt.figure(figsize=(12,8))
-    # plt.axes().set_facecolor("grey")
+    times = []
+    measure = {'N'         : N_points,
+               'iter_lev'  : iteration_level,
+               'n_slices'  : n_slices,
+               'seed'      : seed,
+               'Null Image': Null_Image,
+               'Voronoi'   : start_distances - start,
+               'Distances' : end_distances -  start_distances,
+               'Drawing'   : -1,
+               'Saving'    : -1}
 
-    fig, axes = plt.subplots(1, n_slices + 1, figsize=(6*(n_slices + 1),8))
+    for n_s, dy in enumerate((np.arange(0, n_slices) - n_slices/2)*0.05):
+        start_drawing = time.time()
+        fig = plt.figure(figsize=(6,8))
+        plt.gca().get_yaxis().set_ticks([])
+        plt.gca().get_xaxis().set_ticks([])
+        plt.gca().set_facecolor("grey")
 
-    for ax, dy in zip(axes, (np.arange(0, n_slices) -n_slices/2)*0.05):
-        ax.get_yaxis().set_ticks([])
-        ax.get_xaxis().set_ticks([])
-        ax.set_facecolor("grey")
         for n, reg in enumerate(cropped_reg):
             ind_abo = [ ver for ver in vor.vertices[reg] if ver[1] > y + dy ]
             ind_bel = [ ver for ver in vor.vertices[reg] if ver[1] <= y + dy]
@@ -152,14 +171,25 @@ def section(iteration_level = 3, y = 0, n_slices = 1, rotation = False, seed = N
                 intersection_point = [ _plane_y_intersection(v1, v2, k = y + dy) for v1, v2 in couples]
                 intersection_point = np.asarray(intersection_point)
                 drawing_hull = ConvexHull(intersection_point[:,[0,2]]).vertices
-                ax.fill(intersection_point[drawing_hull,0],
+                plt.gca().fill(intersection_point[drawing_hull,0],
                         intersection_point[drawing_hull,2],
                         color = palette[region_id[n]])
+        start_saving = time.time()
+        fig.savefig( f'Times/Images/N_{N_points}_seed_{seed}_sl_{n_s}.png', bbox_inches='tight', dpi=dpi)
+        plt.close(fig)
+        end_saving = time.time()
+        measure.update({'Drawing'   : start_saving - start_drawing,
+                        'Saving'    : end_saving - start_saving})
+        times.append(measure)
 
-    ax = axes[-1]
-    ax.get_yaxis().set_ticks([])
-    ax.get_xaxis().set_ticks([])
-    ax.set_facecolor("grey")
+    #LABEL
+    start_drawing = time.time()
+
+    fig = plt.figure(figsize=(6,8))
+    plt.gca().get_yaxis().set_ticks([])
+    plt.gca().get_xaxis().set_ticks([])
+    plt.gca().set_facecolor("grey")
+
     for n, reg in enumerate(cropped_reg):
         ind_abo = [ ver for ver in vor.vertices[reg] if ver[1] > y ]
         ind_bel = [ ver for ver in vor.vertices[reg] if ver[1] <= y]
@@ -169,64 +199,40 @@ def section(iteration_level = 3, y = 0, n_slices = 1, rotation = False, seed = N
             intersection_point = [ _plane_y_intersection(v1, v2, k = y) for v1, v2 in couples]
             intersection_point = np.asarray(intersection_point)
             drawing_hull = ConvexHull(intersection_point[:,[0,2]]).vertices
-            plt.fill(intersection_point[drawing_hull,0],
-                    intersection_point[drawing_hull,2],
-                    color = colors[region_id[n]])
+            plt.gca().fill(intersection_point[drawing_hull,0], intersection_point[drawing_hull,2], color = colors[region_id[n]])
 
+    start_saving = time.time()
 
-    end = time.time()
-    times = {'N'         : N_points,
-             'iter_lev'  : iteration_level,
-             'Voronoi'   : start_distances - start,
-             'Distances' : start_drawing -  start_distances,
-             'Drawing'   : end - start_drawing }
+    fig.savefig( f'Times/Images/N_{N_points}_seed_{seed}_label.png', bbox_inches='tight', dpi=dpi)
+    plt.close(fig)
+    end_saving = time.time()
+    measure.update({'Drawing'   : start_saving - start_drawing,
+                    'Saving'    : end_saving - start_saving})
+    times.append(measure)
 
     return fig, times
-
-
-
 #%%-----------------------------------------------------------------------------
-n_slices = 1
-N_points = 5000
-fig, times = section(iteration_level = 5, y = -2, n_slices = n_slices, rotation = False, N_points= N_points)
-
-dpi = 100
-fig.savefig(f'{n_slices}_sections_on_{N_points}_N.png', bbox_inches='tight', dpi=dpi)
 
 if __name__ == '__main__':
-    time_measures = []
 
     MAX = 45000
     MIN = 5000
     STEP = 5000
     copies = 10
+    n_slices = 4
 
     seeds = (s for s in np.random.randint(1000, size= int((MAX - MIN) / STEP * copies *2)))
+    time_df = pd.DataFrame()
 
-
-    for N_points in np.arange(MAX, MIN, STEP):
+    for N_points in np.arange(MIN, MAX, STEP):
         for n in range(copies):
-            s = next(seeds)
-            fig, times = section(iteration_level = 5,
+            fig, times = section(iteration_level = 3,
                                  y = -2,
                                  n_slices = n_slices,
                                  rotation = True,
-                                 seed = s,
+                                 seed = next(seeds),
                                  N_points= N_points)
 
-#separate all the subplots in different figure and same them separately!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-            tic = time.time()
-            dpi = 100
-            fig.savefig(f'Times\\Images\\section_N_{N_points}({n}).png', bbox_inches='tight', dpi=dpi)
-            toc = time.time()
-            times.update({f'Saving figure': toc-tic,
-                          'dpi': dpi})
-            time_measures.append(times)
-            plt.close(fig)
-        time_df = pd.DataFrame(time_measures)
-        # time_df.to_csv('Times\\time_measures.csv')
-        print(f'N = {N_points}')
-
-dpi = 100
-fig.savefig(f'section_N_{N_points}.png', bbox_inches='tight', dpi=dpi)
+            time_df = pd.concat([time_df, pd.DataFrame(times)], ignore_index = True)
+            time_df.to_csv('Times/time_measures.csv')
+        print(f'{N_points} figures written.')
