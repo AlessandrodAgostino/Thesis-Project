@@ -1,6 +1,8 @@
 import numpy as np
 import itertools
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolor
+
 import time
 import pandas as pd
 
@@ -40,7 +42,7 @@ def _plane_y_intersection(p1, p2, k=0):
     z = p1[2] + (k - p1[1]) / (p2[1] - p1[1]) * (p2[2] - p1[2])
     return np.asarray((x,k,z))
 
-def _box_and_spheres(ramification):
+def _box_and_spheres(ramification, y = 0):
     """
     Given a ramification this function returns the list of free end's spheres,
     the radius of those spheres and the box that contains them all with a narrow
@@ -50,7 +52,6 @@ def _box_and_spheres(ramification):
     spheres  = [] #List of spheres
     sph_rad  = 0
     max_iter = np.log2((len(ramification)+1)) - 1
-    l = ramification[0].l
 
     for br in ramification:
         if br.iter_lev == max_iter:
@@ -59,23 +60,23 @@ def _box_and_spheres(ramification):
             if not sph_rad: sph_rad = br.length
 
     #Interesting spheres. Those around x,y-plane
-    int_spheres = [sph for sph in spheres if (sph[1] > l - 2*sph_rad) & (sph[1] < l + 2*sph_rad)]
+    int_spheres = [sph for sph in spheres if (sph[1] >  y - 2*sph_rad) & (sph[1] <  y + 2*sph_rad)]
 
     #Boundaries for random sampling in a volume with a padding proportional to spheres' radius
     max_box = np.max(np.asarray(spheres), axis = 0) + sph_rad*2
     min_box = np.min(np.asarray(spheres), axis = 0) - sph_rad*2
 
-    boundaries = [ [min_box[0], max_box[0]],
-                   [min_box[1], max_box[1]],
-                   [min_box[2], max_box[2]]]
+    boundaries = np.array([[min_box[0], max_box[0]],
+                          [min_box[1], max_box[1]],
+                          [min_box[2], max_box[2]]])
 
-    small_boundaries = [ [min_box[0], max_box[0]],
-                         [l - sph_rad, l + sph_rad],
-                         [min_box[2], max_box[2]]]
+    small_boundaries = np.array([[min_box[0], max_box[0]],
+                                [y - sph_rad,  y + sph_rad],
+                                [min_box[2], max_box[2]]])
 
     return boundaries, small_boundaries, int_spheres, sph_rad
 
-def section(iteration_level = 3, y = 0, rotation = False, seed = None, N_points=2500):
+def section(iteration_level = 3, y = 0, n_slices = 1, rotation = False, seed = None, N_points=2500):
     """
     This function returns the image resulting from the virtual section of a
     ramification.
@@ -87,9 +88,8 @@ def section(iteration_level = 3, y = 0, rotation = False, seed = None, N_points=
     start = time.time()
 
     Pancreas = createTree(iter = iteration_level, rotation = rotation, seed = seed) #Ramification object
-    boundaries, small_boundaries, int_spheres, sph_rad = _box_and_spheres(Pancreas)
+    boundaries, small_boundaries, int_spheres, sph_rad = _box_and_spheres(Pancreas, y)
 
-    l = Pancreas[0].l
 
     #Defining the problem for a low discrepancy sampling inside 'boundaries'
     problem = {'num_vars': 3,
@@ -128,22 +128,52 @@ def section(iteration_level = 3, y = 0, rotation = False, seed = None, N_points=
 
     start_drawing = time.time()
     #DRAWING SETINGS
-    fig = plt.figure(figsize=(12,8))
-    colors = ['w', 'c', 'r']
 
-    plt.axes().set_facecolor("grey")
+    colors = ['w', 'c', 'r']
+    palette = [[0.9254902,  0.89411765, 0.91372549],
+               [0.49803922, 0.34509804, 0.58823529],
+               [0.81176471, 0.62745098, 0.78039216]]
+
+    # fig = plt.figure(figsize=(12,8))
+    # plt.axes().set_facecolor("grey")
+
+    fig, axes = plt.subplots(1, n_slices + 1, figsize=(6*(n_slices + 1),8))
+
+    for ax, dy in zip(axes, (np.arange(0, n_slices) -n_slices/2)*0.05):
+        ax.get_yaxis().set_ticks([])
+        ax.get_xaxis().set_ticks([])
+        ax.set_facecolor("grey")
+        for n, reg in enumerate(cropped_reg):
+            ind_abo = [ ver for ver in vor.vertices[reg] if ver[1] > y + dy ]
+            ind_bel = [ ver for ver in vor.vertices[reg] if ver[1] <= y + dy]
+
+            couples = list(itertools.product(ind_abo,ind_bel))
+            if couples:
+                intersection_point = [ _plane_y_intersection(v1, v2, k = y + dy) for v1, v2 in couples]
+                intersection_point = np.asarray(intersection_point)
+                drawing_hull = ConvexHull(intersection_point[:,[0,2]]).vertices
+                ax.fill(intersection_point[drawing_hull,0],
+                        intersection_point[drawing_hull,2],
+                        color = palette[region_id[n]])
+
+    ax = axes[-1]
+    ax.get_yaxis().set_ticks([])
+    ax.get_xaxis().set_ticks([])
+    ax.set_facecolor("grey")
     for n, reg in enumerate(cropped_reg):
-        ind_abo = [ ver for ver in vor.vertices[reg] if ver[1] > l ]
-        ind_bel = [ ver for ver in vor.vertices[reg] if ver[1] <= l ]
+        ind_abo = [ ver for ver in vor.vertices[reg] if ver[1] > y ]
+        ind_bel = [ ver for ver in vor.vertices[reg] if ver[1] <= y]
 
         couples = list(itertools.product(ind_abo,ind_bel))
         if couples:
-            intersection_point = [ _plane_y_intersection(v1, v2, k = l) for v1, v2 in couples]
+            intersection_point = [ _plane_y_intersection(v1, v2, k = y) for v1, v2 in couples]
             intersection_point = np.asarray(intersection_point)
             drawing_hull = ConvexHull(intersection_point[:,[0,2]]).vertices
-            plt.gca().fill(intersection_point[drawing_hull,0],
-                           intersection_point[drawing_hull,2],
-                           colors[region_id[n]])
+            plt.fill(intersection_point[drawing_hull,0],
+                    intersection_point[drawing_hull,2],
+                    color = colors[region_id[n]])
+
+
     end = time.time()
     times = {'N'         : N_points,
              'iter_lev'  : iteration_level,
@@ -156,44 +186,47 @@ def section(iteration_level = 3, y = 0, rotation = False, seed = None, N_points=
 
 
 #%%-----------------------------------------------------------------------------
-section(iteration_level = 5, y = 2, rotation = False, seed = None, N_points=10000)
+n_slices = 1
+N_points = 5000
+fig, times = section(iteration_level = 5, y = -2, n_slices = n_slices, rotation = False, N_points= N_points)
+
+dpi = 100
+fig.savefig(f'{n_slices}_sections_on_{N_points}_N.png', bbox_inches='tight', dpi=dpi)
+
+if __name__ == '__main__':
+    time_measures = []
+
+    MAX = 45000
+    MIN = 5000
+    STEP = 5000
+    copies = 10
+
+    seeds = (s for s in np.random.randint(1000, size= int((MAX - MIN) / STEP * copies *2)))
 
 
+    for N_points in np.arange(MAX, MIN, STEP):
+        for n in range(copies):
+            s = next(seeds)
+            fig, times = section(iteration_level = 5,
+                                 y = -2,
+                                 n_slices = n_slices,
+                                 rotation = True,
+                                 seed = s,
+                                 N_points= N_points)
 
+#separate all the subplots in different figure and same them separately!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+            tic = time.time()
+            dpi = 100
+            fig.savefig(f'Times\\Images\\section_N_{N_points}({n}).png', bbox_inches='tight', dpi=dpi)
+            toc = time.time()
+            times.update({f'Saving figure': toc-tic,
+                          'dpi': dpi})
+            time_measures.append(times)
+            plt.close(fig)
+        time_df = pd.DataFrame(time_measures)
+        # time_df.to_csv('Times\\time_measures.csv')
+        print(f'N = {N_points}')
 
-
-
-
-
-
-
-
-
-
-
-
-
-# if __name__ == '__main__':
-#     time_measures = []
-
-    # for N_points in np.arange(25000, 2700, 100):
-    #     for n in range(1):
-    #         fig, times = section(rotation = True, z=0, seed = 32, N_points=N_points)
-    #         tic = time.time()
-    #         dpi = 100
-    #         fig.savefig(f'Times\\Images\\section_N_{N_points}({n}).png', bbox_inches='tight', dpi=dpi)
-    #         toc = time.time()
-    #         times.update({f'Saving figure': toc-tic,
-    #                       'dpi': dpi})
-    #         time_measures.append(times)
-    #         plt.close(fig)
-    #     time_df = pd.DataFrame(time_measures)
-    #     # time_df.to_csv('Times\\time_measures.csv')
-    #     print(f'N = {N_points}')
-
-
-
-
-# dpi = 100
-# fig.savefig(f'section_N_{N_points}.png', bbox_inches='tight', dpi=dpi)
+dpi = 100
+fig.savefig(f'section_N_{N_points}.png', bbox_inches='tight', dpi=dpi)
