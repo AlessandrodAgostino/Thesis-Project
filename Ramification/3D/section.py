@@ -216,7 +216,7 @@ def section(iteration_level = 3, y = 0, n_slices = 1, rotation = False, seed = N
 if __name__ == '__main__':
 
     MAX = 45000
-    MIN = 5000
+    MIN = 35000
     STEP = 5000
     copies = 10
     n_slices = 4

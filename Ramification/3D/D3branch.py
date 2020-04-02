@@ -82,8 +82,6 @@ def draw_axis(max_coord = 10):
     Figures.append( label( pos=vector(max_coord/2,0,0), text='X' ))   #X axis
     return Figures
 
-
-
 def createTree(iter = 9, **kwargs):
     st_br = D3Branch(**kwargs)
     tree = [st_br]
@@ -105,7 +103,6 @@ def createTree(iter = 9, **kwargs):
 
 def main():
     tree = createTree(iter = 4, rotation = False, seed = 30)
-
 
     #DRAWING METHODS:
     scene = canvas(width=1500, height=900, center=vector(5,5,0))
