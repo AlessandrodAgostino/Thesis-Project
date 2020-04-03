@@ -1,14 +1,12 @@
 import numpy as np
 import itertools
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolor
 import os
-
 import time
-import pandas as pd
 
 from scipy.spatial import Voronoi, ConvexHull, cKDTree
 from SALib.sample import saltelli
+from noise import pnoise2
 
 from D3branch import *
 
@@ -45,12 +43,27 @@ def _plane_y_intersection(p1, p2, k=0):
 
 def _box_and_spheres(ramification, y = 0):
     """
-    Given a ramification this function returns the list of free end's spheres,
-    the radius of those spheres and the box that contains them all with a narrow
-    padding, proportional to the spheres' radius.
+    Given a ramification this function returns a list spatial information.
+
+    Parameters:
+        ramification: The ramification to work onto.
+
+        y: Section plane's hight.
+
+    Returns a tuple with:
+        boundaries: The box interval that contains all the ramification, with an
+        empty padding proportional to free ends' spheres' radius.
+
+        small_boundaries: A smaller volume adjacent to section plane.
+        (MAYBE INSERT THICKNESS F THE VOLUME)
+
+        int_spheres: The list of the spheres that lie near the section plane.
+        Those are the interesting spheres.
+
+        sph_rad: The radius of the spheres.
     """
     #Extracting free end's spheres and radius
-    spheres  = [] #List of spheres
+    spheres  = []
     sph_rad  = 0
     max_iter = np.log2((len(ramification)+1)) - 1
 
@@ -78,72 +91,137 @@ def _box_and_spheres(ramification, y = 0):
     return boundaries, small_boundaries, int_spheres, sph_rad
 
 
-def section(iteration_level = 3, y = 0, n_slices = 1, rotation = False, seed = None, N_points=2500):
+def _get_points(boundaries, small_boundaries, N_points):
     """
-    This function returns the image resulting from the virtual section of a
-    ramification.
+    This function defines the problem for a low discrepancy random sampling
+    inside the volume defined by small_boundaries.
 
     Parameters:
-    iteration_level = The # of iterative biforcation made in the ramification
-    N               = Parameter that regulate the sampling density
+        boundaries: Volume into which make the external sampling
+
+        small_boundaries: Volume into which select points
+
+        N_points: Number of points to be filtered inside small_boundaries
+
+    Return:
+        points: All the filtered points as np.array
     """
-    start = time.time()
-
-    Pancreas = createTree(iter = iteration_level, rotation = rotation, seed = seed) #Ramification object
-    boundaries, small_boundaries, int_spheres, sph_rad = _box_and_spheres(Pancreas, y)
-
-
-    #Defining the problem for a low discrepancy sampling inside 'boundaries'
     problem = {'num_vars': 3,
                'names': ['x', 'y', 'z'],
                'bounds': boundaries}
-
     N = 10
-    vor_points = []
-
-    while len(vor_points) < N_points:
+    points = []
+    while len(points) < N_points:
         N = N*2
-        vor_points = saltelli.sample(problem, N)
-        vor_points = vor_points[(vor_points[:,1] > small_boundaries[1][0]) & (vor_points[:,1] < small_boundaries[1][1])]
-        vor_points = vor_points[:N_points]
-    vor = Voronoi(vor_points) #Creating the tassellation
+        points = saltelli.sample(problem, N)
+        points = points[(points[:,1] > small_boundaries[1][0]) & (points[:,1] < small_boundaries[1][1])]
+        points = points[:N_points]
 
-    #Cropping the regions that lies outside the boundaries
-    cropped_reg = [ reg for reg in vor.regions if _inside_boundaries(vor, reg, small_boundaries)]
+    return points
+
+def _draw_section(vor, cropped_reg, region_id, palette, h):
+    fig = plt.figure(figsize=(8,8))
+    plt.gca().get_yaxis().set_ticks([])
+    plt.gca().get_xaxis().set_ticks([])
+    plt.gca().set_facecolor("grey")
+
+    for n, reg in enumerate(cropped_reg):
+        ind_abo = [ ver for ver in vor.vertices[reg] if ver[1] > h]
+        ind_bel = [ ver for ver in vor.vertices[reg] if ver[1] <= h]
+
+        couples = list(itertools.product(ind_abo,ind_bel))
+        if couples:
+            intersection_point = [ _plane_y_intersection(v1, v2, k = h) for v1, v2 in couples]
+            intersection_point = np.asarray(intersection_point)
+            drawing_hull = ConvexHull(intersection_point[:,[0,2]]).vertices
+            plt.gca().fill(intersection_point[drawing_hull,0],
+                    intersection_point[drawing_hull,2],
+                    color = palette[region_id[n]])
+    plt.tight_layout()
+    return fig
+
+def _draw_noise(cmap, noise_density = 20):
+    #Settings
+    density = 1000
+    offset = np.random.randint(1000, size =1)
+
+    #Creating Perlin noise
+    val  = np.linspace(offset, noise_density + offset, density)
+    x, y = np.meshgrid(val, val, sparse = False)
+    vec_noise = np.vectorize(pnoise2)
+    z = vec_noise(x, y) * 128 + 128
+
+    #Drawing contour
+    fig = plt.figure(figsize=(8,8))
+    plt.contourf(x, y, z, cmap = cmap)
+    plt.gca().get_yaxis().set_ticks([])
+    plt.gca().get_xaxis().set_ticks([])
+    plt.gca().set_facecolor("grey")
+    plt.tight_layout()
+    return fig
+
+def section(iteration_level = 3,
+            rotation = False,
+            seed = None,
+            y = 0,
+            N_points = 2500,
+            n_slices = 1,
+            saving = True,
+            saving_path = None,
+            noise_density = 20 ):
+    """
+    This function draws and saves the images resulting from the slicing of a ramification.
+
+    Parameters:
+    iteration_level: The # of iterative biforcation made in the ramification
+    rotation: If the Tree has to be rotated or not in a random direction
+    seed: The seed for the random direction
+    y: The hight on the y axis for the section
+    N_points: # of points in the volme adjacent to the section plane, hence the density on points.
+    n_slices: # of slices to be made around the section plane
+    saving: If save or not the images
+    saving_path: Where to store images
+    noise_density: Parameter that regulates Perlin noise density
+
+    Returns:
+    times: The complete time report for the section process.
+    """
+    start = time.time()
+    Ramification = createTree(iter = iteration_level, rotation = rotation, seed = seed) #Creating the ramification object
+    boundaries, small_boundaries, int_spheres, sph_rad = _box_and_spheres(Ramification, y) #Getting spatial informations
+    #(# TODO: Those points shall be the nuclei)
+    vor_points = _get_vor_points(boundaries, small_boundaries, N_points) #Getting point for creating Voronoi tassellation
+    vor = Voronoi(vor_points) #Creating the tassellation
+    cropped_reg = [ reg for reg in vor.regions if _inside_boundaries(vor, reg, small_boundaries)] #Cropping out the regions that lies outside the boundaries
 
     start_distances = time.time()
-    tree = cKDTree(vor.vertices)
-
-    #Vertices that lies inside the spheres
+    tree = cKDTree(vor.vertices) #Creating a Tree object for fast distances computation
+    #Vertices identity
     vertices_truth = np.zeros(len(vor.vertices)) #Array where to store identities
-
     try:
         inside_indexes = tree.query_ball_point(int_spheres, sph_rad)
-
         for ind in inside_indexes:
             vertices_truth[ind] = 1
         Null_Image = False
     except:
         Null_Image = True
-        print(f'Seed {seed} gave problems')
-
+        print(f'Seed {seed} gave uninterseting section')
     vertices_truth = vertices_truth.astype(int) #0: Outside, 1: Inside
-
+    #Region identity
     region_id = np.zeros(len(cropped_reg))
     for n, reg in enumerate(cropped_reg):
-        region_id[n] = any(vertices_truth[reg]) + all(vertices_truth[reg]) # 0:Outside, 1:Partially, 2:Inside
-    region_id = region_id.astype(int)
-
+        region_id[n] = any(vertices_truth[reg]) + all(vertices_truth[reg])
+    region_id = region_id.astype(int) # 0:Outside, 1:Partially, 2:Inside
     end_distances = time.time()
 
     #DRAWING and SAVING SETINGS
-
-    colors = ['w', 'c', 'r']
-    palette = [[0.9254902,  0.89411765, 0.91372549],
-               [0.49803922, 0.34509804, 0.58823529],
-               [0.81176471, 0.62745098, 0.78039216]]
+    #--------------------------------------------------------------------------
+    cmap = plt.get_cmap('Purples')
+    palette = [cmap(0.1)[:-1], cmap(0.8)[:-1], cmap(0.4)[:-1]]
+    lab_colors = ['w', 'c', 'r']
     dpi = 100
-
+    #Previous palette
+    # palette = [[0.9254902,  0.89411765, 0.91372549], [0.49803922, 0.34509804, 0.58823529], [0.81176471, 0.62745098, 0.78039216]]
     times = []
     measure = {'N'         : N_points,
                'iter_lev'  : iteration_level,
@@ -151,70 +229,57 @@ def section(iteration_level = 3, y = 0, n_slices = 1, rotation = False, seed = N
                'seed'      : seed,
                'Null Image': Null_Image,
                'Voronoi'   : start_distances - start,
-               'Distances' : end_distances -  start_distances,
-               'Drawing'   : -1,
-               'Saving'    : -1}
+               'Distances' : end_distances -  start_distances}
 
-    for n_s, dy in enumerate((np.arange(0, n_slices) - n_slices/2)*0.05):
+    #Loop for Drawing and Saving every SLICE
+    plane_distance = 0.05 #Arbitrary choosen
+    for n_s, dy in enumerate((np.arange(0, n_slices) - n_slices/2)*plane_distance):
         start_drawing = time.time()
-        fig = plt.figure(figsize=(6,8))
-        plt.gca().get_yaxis().set_ticks([])
-        plt.gca().get_xaxis().set_ticks([])
-        plt.gca().set_facecolor("grey")
-
-        for n, reg in enumerate(cropped_reg):
-            ind_abo = [ ver for ver in vor.vertices[reg] if ver[1] > y + dy ]
-            ind_bel = [ ver for ver in vor.vertices[reg] if ver[1] <= y + dy]
-
-            couples = list(itertools.product(ind_abo,ind_bel))
-            if couples:
-                intersection_point = [ _plane_y_intersection(v1, v2, k = y + dy) for v1, v2 in couples]
-                intersection_point = np.asarray(intersection_point)
-                drawing_hull = ConvexHull(intersection_point[:,[0,2]]).vertices
-                plt.gca().fill(intersection_point[drawing_hull,0],
-                        intersection_point[drawing_hull,2],
-                        color = palette[region_id[n]])
-        start_saving = time.time()
-        fig.savefig( f'Times/Images/N_{N_points}_seed_{seed}_sl_{n_s}.png', bbox_inches='tight', dpi=dpi)
+        fig = _draw_section(vor, cropped_reg, region_id, palette, h = y+dy)
+        end_drawing = time.time()
+        measure.update({'Drawing'   : end_drawing - start_drawing})
+        if saving:
+            start_saving = time.time()
+            if saving_path is None : saving_path = 'Times/Images'
+            fig.savefig( os.path.join(saving_path + f'N_{N_points}_seed_{seed}_sl_{n_s}.png'), bbox_inches='tight', dpi=dpi)
+            end_saving = time.time()
+            measure.update({'Saving': end_saving - start_saving})
         plt.close(fig)
-        end_saving = time.time()
-        measure.update({'Drawing'   : start_saving - start_drawing,
-                        'Saving'    : end_saving - start_saving})
         times.append(measure)
 
-    #LABEL
+    #Drawing the LABEL image
     start_drawing = time.time()
-
-    fig = plt.figure(figsize=(6,8))
-    plt.gca().get_yaxis().set_ticks([])
-    plt.gca().get_xaxis().set_ticks([])
-    plt.gca().set_facecolor("grey")
-
-    for n, reg in enumerate(cropped_reg):
-        ind_abo = [ ver for ver in vor.vertices[reg] if ver[1] > y ]
-        ind_bel = [ ver for ver in vor.vertices[reg] if ver[1] <= y]
-
-        couples = list(itertools.product(ind_abo,ind_bel))
-        if couples:
-            intersection_point = [ _plane_y_intersection(v1, v2, k = y) for v1, v2 in couples]
-            intersection_point = np.asarray(intersection_point)
-            drawing_hull = ConvexHull(intersection_point[:,[0,2]]).vertices
-            plt.gca().fill(intersection_point[drawing_hull,0], intersection_point[drawing_hull,2], color = colors[region_id[n]])
-
-    start_saving = time.time()
-
-    fig.savefig( f'Times/Images/N_{N_points}_seed_{seed}_label.png', bbox_inches='tight', dpi=dpi)
+    fig = _draw_section(vor, cropped_reg, region_id, lab_colors, h = y)
+    end_drawing = time.time()
+    measure.update({'Drawing'   : end_drawing - start_drawing})
+    if saving:
+        start_saving = time.time()
+        if saving_path is None : saving_path = 'Times/Images'
+        fig.savefig( os.path.join(saving_path + f'N_{N_points}_seed_{seed}_label.png'), bbox_inches='tight', dpi=dpi)
+        end_saving = time.time()
+        measure.update({'Saving': end_saving - start_saving})
     plt.close(fig)
-    end_saving = time.time()
-    measure.update({'Drawing'   : start_saving - start_drawing,
-                    'Saving'    : end_saving - start_saving})
     times.append(measure)
 
-    return fig, times
+    #Drawing Perlin noise image
+    start_noise = time.time()
+    fig = _draw_noise(cmap, noise_density)
+    end_noise = time.time()
+    measure.update({'Noise'   : end_noise - start_noise})
+    if saving:
+        start_saving = time.time()
+        if saving_path is None : saving_path = 'Times/Images'
+        fig.savefig( os.path.join(saving_path + f'N_{N_points}_seed_{seed}_noise.png'), bbox_inches='tight', dpi=dpi)
+        end_saving = time.time()
+        measure.update({'Saving noise': end_saving - start_saving})
+    plt.close(fig)
+    times.append(measure)
+
+    return times
+
 #%%-----------------------------------------------------------------------------
 
-if __name__ == '__main__':
-
+def different_density_benchmarks():
     MAX = 45000
     MIN = 35000
     STEP = 5000
@@ -236,3 +301,6 @@ if __name__ == '__main__':
             time_df = pd.concat([time_df, pd.DataFrame(times)], ignore_index = True)
             time_df.to_csv('Times/time_measures.csv')
         print(f'{N_points} figures written.')
+
+if __name__ == '__main__':
+    different_density_benchmarks()
