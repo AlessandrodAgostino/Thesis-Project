@@ -16,9 +16,11 @@ def _inside_boundaries(vor, reg, boundaries):
     inside some given 'boundaries'.
 
     Parameters:
-    vor    = scipy.spatial.Voronoi object
-    reg    = subset of vor.vertices to check
-    boundaries = [ [min_x, max_x], [min_y, max_y], [min_z, max_z] ]
+        vor    : scipy.spatial.Voronoi object
+
+        reg    : subset of vor.vertices to check
+
+        boundaries : [ [min_x, max_x], [min_y, max_y], [min_z, max_z] ]
 
     Return: True if 'all' the verticies lies inside the region. False otherwise.
     """
@@ -48,7 +50,7 @@ def _box_and_spheres(ramification, y = 0):
     Parameters:
         ramification: The ramification to work onto.
 
-        y: Section plane's hight.
+        y:            Section plane's height.
 
     Returns a tuple with:
         boundaries: The box interval that contains all the ramification, with an
@@ -91,7 +93,7 @@ def _box_and_spheres(ramification, y = 0):
     return boundaries, small_boundaries, int_spheres, sph_rad
 
 
-def _get_points(boundaries, small_boundaries, N_points):
+def _get_vor_points(boundaries, small_boundaries, N_points):
     """
     This function defines the problem for a low discrepancy random sampling
     inside the volume defined by small_boundaries.
@@ -120,6 +122,24 @@ def _get_points(boundaries, small_boundaries, N_points):
     return points
 
 def _draw_section(vor, cropped_reg, region_id, palette, h):
+    """
+    This auxiliary funtion creates the plt.figure of a section of a certain Voronoi
+    tassellation at an height of h.
+
+    Parametrs:
+        vor: Voronoi tasselation to section off.
+
+        cropped_reg: regions of interest
+
+        region_id: identity of the interesting regions
+
+        palette: color map for the identity
+
+        h: height of the section
+
+    Returns:
+        plt.figure representing the section
+    """
     fig = plt.figure(figsize=(8,8))
     plt.gca().get_yaxis().set_ticks([])
     plt.gca().get_xaxis().set_ticks([])
@@ -141,6 +161,17 @@ def _draw_section(vor, cropped_reg, region_id, palette, h):
     return fig
 
 def _draw_noise(cmap, noise_density = 20):
+    """
+    This funtion produces a random Perlin noise image
+
+    Parameters:
+        cmap: color map for noise values
+        noise_density: determines the fineness of the noise
+
+    Return:
+        plt.figure objet of noise
+    """
+
     #Settings
     density = 1000
     offset = np.random.randint(1000, size =1)
@@ -164,27 +195,36 @@ def section(iteration_level = 3,
             rotation = False,
             seed = None,
             y = 0,
-            N_points = 2500,
+            N_points = 5000,
             n_slices = 1,
             saving = True,
             saving_path = None,
-            noise_density = 20 ):
+            noise_density = 20,
+            plane_distance = 0.05):
     """
     This function draws and saves the images resulting from the slicing of a ramification.
 
     Parameters:
-    iteration_level: The # of iterative biforcation made in the ramification
-    rotation: If the Tree has to be rotated or not in a random direction
-    seed: The seed for the random direction
-    y: The hight on the y axis for the section
-    N_points: # of points in the volme adjacent to the section plane, hence the density on points.
-    n_slices: # of slices to be made around the section plane
-    saving: If save or not the images
-    saving_path: Where to store images
-    noise_density: Parameter that regulates Perlin noise density
+        iteration_level: The # of iterative biforcation made in the ramification
+
+        rotation: If the Tree has to be rotated or not in a random direction
+
+        seed: The seed for the random direction
+
+        y: The height on the y axis for the section
+
+        N_points: # of points in the volme adjacent to the section plane, hence the density on points. N_points > 5000 is suggested
+
+        n_slices: # of slices to be made around the section plane
+
+        saving: If save or not the images
+
+        saving_path: Where to store images
+
+        noise_density: Parameter that regulates Perlin noise density
 
     Returns:
-    times: The complete time report for the section process.
+        times: The complete time report for the section process.
     """
     start = time.time()
     Ramification = createTree(iter = iteration_level, rotation = rotation, seed = seed) #Creating the ramification object
@@ -232,13 +272,14 @@ def section(iteration_level = 3,
                'Distances' : end_distances -  start_distances}
 
     #Loop for Drawing and Saving every SLICE
-    plane_distance = 0.05 #Arbitrary choosen
-    for n_s, dy in enumerate((np.arange(0, n_slices) - n_slices/2)*plane_distance):
+    for n_s in [i - round(n_slices/2) for i in range(n_slices)]:
+        #TO DO LABEL IMAGE COULD BE GENERATED WHILE DRAWING n_s = 0 SLICE.
         start_drawing = time.time()
+        dy = plane_distance * n_s
         fig = _draw_section(vor, cropped_reg, region_id, palette, h = y+dy)
         end_drawing = time.time()
         measure.update({'Drawing'   : end_drawing - start_drawing})
-        if saving:
+        if saving or saving_path:
             start_saving = time.time()
             if saving_path is None : saving_path = 'Times/Images'
             fig.savefig( os.path.join(saving_path + f'N_{N_points}_seed_{seed}_sl_{n_s}.png'), bbox_inches='tight', dpi=dpi)
@@ -252,7 +293,7 @@ def section(iteration_level = 3,
     fig = _draw_section(vor, cropped_reg, region_id, lab_colors, h = y)
     end_drawing = time.time()
     measure.update({'Drawing'   : end_drawing - start_drawing})
-    if saving:
+    if saving or saving_path:
         start_saving = time.time()
         if saving_path is None : saving_path = 'Times/Images'
         fig.savefig( os.path.join(saving_path + f'N_{N_points}_seed_{seed}_label.png'), bbox_inches='tight', dpi=dpi)
@@ -266,7 +307,7 @@ def section(iteration_level = 3,
     fig = _draw_noise(cmap, noise_density)
     end_noise = time.time()
     measure.update({'Noise'   : end_noise - start_noise})
-    if saving:
+    if saving or saving_path:
         start_saving = time.time()
         if saving_path is None : saving_path = 'Times/Images'
         fig.savefig( os.path.join(saving_path + f'N_{N_points}_seed_{seed}_noise.png'), bbox_inches='tight', dpi=dpi)
@@ -296,7 +337,8 @@ def different_density_benchmarks():
                                  n_slices = n_slices,
                                  rotation = True,
                                  seed = next(seeds),
-                                 N_points= N_points)
+                                 N_points = N_points,
+                                 saving_path = '')
 
             time_df = pd.concat([time_df, pd.DataFrame(times)], ignore_index = True)
             time_df.to_csv('Times/time_measures.csv')
