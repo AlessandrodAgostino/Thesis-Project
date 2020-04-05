@@ -7,6 +7,8 @@ from section import section, _draw_noise
 
 section(n_slices = 4, rotation = True, N_points = 25000, seed = 290, saving_path = '', noise_density=50)
 
+
+
 files = os.listdir('.')
 sl_files = [ f for f in files if 'sl' in f]
 images = np.array([plt.imread(f) for f in sl_files])
