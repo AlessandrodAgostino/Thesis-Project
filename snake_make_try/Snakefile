@@ -1,6 +1,0 @@
-
-rule all:
-    output:
-        "result.txt"
-    shell:
-        "echo 'hello world' > {output}"
