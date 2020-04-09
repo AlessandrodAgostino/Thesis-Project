@@ -12,9 +12,17 @@ offset = 50
 x_val  = np.linspace(offset, 3*x_max + offset, 3*n_pts)
 y_val  = np.linspace(offset, y_max + offset, n_pts)
 xx, yy = np.meshgrid(x_val, y_val, sparse = False)
-vec_noise = np.vectorize(pnoise2)
-zz = vec_noise(xx, yy) * 128 + 128
 
+vec_noise = np.vectorize(pnoise2)
+#%%
+zz = vec_noise(xx, yy) * 127/16 + 127
+
+zz_stack = np.dstack([zz[:,:200], zz[:,200:400], zz[:,400:]]).astype('int8')
+fig, ax = plt.subplots(figsize=(8,8))
+ax.imshow(zz_stack)
+#%%
+zz = zz.T.reshape((200,200,3)).astype('int8')
+plt.imshow(zz[:,:,0], cmap='Reds')
 #%%-------------------------------------------------------------------------------
 #2D Plotting
 maps = ['Reds', 'Greens', 'Blues' ]

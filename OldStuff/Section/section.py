@@ -174,7 +174,7 @@ def _draw_noise(cmap, noise_density = 20):
 
     #Settings
     density = 1000
-    offset = np.random.randint(1000, size =1)
+    offset = np.random.randint(10000, size =1)
 
     #Creating Perlin noise
     val  = np.linspace(offset, noise_density + offset, density)
@@ -319,6 +319,9 @@ def section(iteration_level = 3,
     return times
 
 #%%-----------------------------------------------------------------------------
+
+_draw_noise(plt.get_cmap('Purples'))
+
 
 def different_density_benchmarks():
     MAX = 45000
