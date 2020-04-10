@@ -23,6 +23,7 @@ ax.imshow(zz_stack)
 #%%
 zz = zz.T.reshape((200,200,3)).astype('int8')
 plt.imshow(zz[:,:,0], cmap='Reds')
+
 #%%-------------------------------------------------------------------------------
 #2D Plotting
 maps = ['Reds', 'Greens', 'Blues' ]

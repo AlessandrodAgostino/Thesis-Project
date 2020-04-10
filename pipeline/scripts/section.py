@@ -157,10 +157,10 @@ def _draw_section(vor, cropped_reg, region_id, palette, h):
             plt.gca().fill(intersection_point[drawing_hull,0],
                     intersection_point[drawing_hull,2],
                     color = palette[region_id[n]])
-    plt.tight_layout()
+    # plt.tight_layout()
     return fig
 
-def _draw_noise(cmap, noise_density = 20):
+def _draw_noise(cmap = 'Purples', noise_density = 20):
     """
     This funtion produces a random Perlin noise image
 
@@ -171,7 +171,6 @@ def _draw_noise(cmap, noise_density = 20):
     Return:
         plt.figure objet of noise
     """
-
     #Settings
     density = 1000
     offset = np.random.randint(1000, size =1)
@@ -196,8 +195,7 @@ def section(iteration_level = 3,
             seed = None,
             y = 0,
             N_points = 5000,
-            n_slices = 1,
-            saving = True,
+            n_slices = [-1, 0, 1],
             saving_path = None,
             noise_density = 20,
             plane_distance = 0.05):
@@ -217,24 +215,23 @@ def section(iteration_level = 3,
 
         n_slices: # of slices to be made around the section plane
 
-        saving: If save or not the images
-
         saving_path: Where to store images
 
         noise_density: Parameter that regulates Perlin noise density
 
+        plane_distance: Distance between different section planes
+
+
     Returns:
         times: The complete time report for the section process.
     """
-    start = time.time()
     Ramification = createTree(iter = iteration_level, rotation = rotation, seed = seed) #Creating the ramification object
     boundaries, small_boundaries, int_spheres, sph_rad = _box_and_spheres(Ramification, y) #Getting spatial informations
-    #(# TODO: Those points shall be the nuclei)
+    #(TODO: Those points shall be the nuclei)
     vor_points = _get_vor_points(boundaries, small_boundaries, N_points) #Getting point for creating Voronoi tassellation
     vor = Voronoi(vor_points) #Creating the tassellation
     cropped_reg = [ reg for reg in vor.regions if _inside_boundaries(vor, reg, small_boundaries)] #Cropping out the regions that lies outside the boundaries
 
-    start_distances = time.time()
     tree = cKDTree(vor.vertices) #Creating a Tree object for fast distances computation
     #Vertices identity
     vertices_truth = np.zeros(len(vor.vertices)) #Array where to store identities
@@ -247,12 +244,12 @@ def section(iteration_level = 3,
         Null_Image = True
         print(f'Seed {seed} gave uninterseting section')
     vertices_truth = vertices_truth.astype(int) #0: Outside, 1: Inside
+
     #Region identity
     region_id = np.zeros(len(cropped_reg))
     for n, reg in enumerate(cropped_reg):
         region_id[n] = any(vertices_truth[reg]) + all(vertices_truth[reg])
     region_id = region_id.astype(int) # 0:Outside, 1:Partially, 2:Inside
-    end_distances = time.time()
 
     #DRAWING and SAVING SETINGS
     #--------------------------------------------------------------------------
@@ -262,64 +259,24 @@ def section(iteration_level = 3,
     dpi = 100
     #Previous palette
     # palette = [[0.9254902,  0.89411765, 0.91372549], [0.49803922, 0.34509804, 0.58823529], [0.81176471, 0.62745098, 0.78039216]]
-    times = []
-    measure = {'N'         : N_points,
-               'iter_lev'  : iteration_level,
-               'n_slices'  : n_slices,
-               'seed'      : seed,
-               'Null Image': Null_Image,
-               'Voronoi'   : start_distances - start,
-               'Distances' : end_distances -  start_distances}
 
     #Loop for Drawing and Saving every SLICE
-    for n_s in [i - round(n_slices/2) for i in range(n_slices)]:
-        #TO DO LABEL IMAGE COULD BE GENERATED WHILE DRAWING n_s = 0 SLICE.
-        start_drawing = time.time()
+    for n_s in n_slices:
         dy = plane_distance * n_s
         fig = _draw_section(vor, cropped_reg, region_id, palette, h = y+dy)
-        end_drawing = time.time()
-        measure.update({'Drawing'   : end_drawing - start_drawing})
-        if saving or saving_path:
-            start_saving = time.time()
-            if saving_path is None : saving_path = 'Times/Images'
-            fig.savefig( os.path.join(saving_path + f'N_{N_points}_seed_{seed}_sl_{n_s}.png'), bbox_inches='tight', dpi=dpi)
-            end_saving = time.time()
-            measure.update({'Saving': end_saving - start_saving})
+        fig.savefig(os.path.join(saving_path + f'N_{N_points}_seed_{seed}_sl_{n_s}.png'),
+                    bbox_inches='tight',
+                    dpi=dpi)
         plt.close(fig)
-        times.append(measure)
 
     #Drawing the LABEL image
-    start_drawing = time.time()
     fig = _draw_section(vor, cropped_reg, region_id, lab_colors, h = y)
-    end_drawing = time.time()
-    measure.update({'Drawing'   : end_drawing - start_drawing})
-    if saving or saving_path:
-        start_saving = time.time()
-        if saving_path is None : saving_path = 'Times/Images'
-        fig.savefig( os.path.join(saving_path + f'N_{N_points}_seed_{seed}_label.png'), bbox_inches='tight', dpi=dpi)
-        end_saving = time.time()
-        measure.update({'Saving': end_saving - start_saving})
+    fig.savefig(os.path.join(saving_path + f'N_{N_points}_seed_{seed}_label.png'),
+                bbox_inches='tight',
+                dpi=dpi)
     plt.close(fig)
-    times.append(measure)
 
-    #Drawing Perlin noise image
-    start_noise = time.time()
-    fig = _draw_noise(cmap, noise_density)
-    end_noise = time.time()
-    measure.update({'Noise'   : end_noise - start_noise})
-    if saving or saving_path:
-        start_saving = time.time()
-        if saving_path is None : saving_path = 'Times/Images'
-        fig.savefig( os.path.join(saving_path + f'N_{N_points}_seed_{seed}_noise.png'), bbox_inches='tight', dpi=dpi)
-        end_saving = time.time()
-        measure.update({'Saving noise': end_saving - start_saving})
-    plt.close(fig)
-    times.append(measure)
-
-    return times
-
-#%%-----------------------------------------------------------------------------
-
+#%%
 def different_density_benchmarks():
     MAX = 45000
     MIN = 35000

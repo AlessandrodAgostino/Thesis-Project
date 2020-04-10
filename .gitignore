@@ -124,4 +124,6 @@ venv.bak/
 [Bb]uild/
 [Dd]ata/
 .hypothesis/
-Section/Times/Images
+OldStuff/Section/Times/Images
+
+pipeline/.snakemake*

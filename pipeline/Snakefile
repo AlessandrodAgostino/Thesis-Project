@@ -1,0 +1,41 @@
+SEEDS=[42]
+
+rule all:
+    input:
+        expand("N_6000_seed_{seed}_average+noise.png", seed=SEEDS)
+    output:
+        "END-OF-PIPELINE.txt"
+
+rule add_noise:
+    input:
+        "N_{N_points}_seed_{seed}_average.png",
+        "N_{N_points}_seed_{seed}_noise.png"
+    output:
+        "N_{N_points}_seed_{seed}_average+noise.png"
+    script:
+        "scripts/add_noise.py"
+
+rule make_average:
+    input:
+        "N_{N_points}_seed_{seed}_sl_-1.png",
+        "N_{N_points}_seed_{seed}_sl_0.png",
+        "N_{N_points}_seed_{seed}_sl_1.png"
+    output:
+        "N_{N_points}_seed_{seed}_average.png"
+    script:
+        "scripts/make_average.py"
+
+rule make_sections:
+    output:
+        "N_{N_points}_seed_{seed}_sl_-1.png",
+        "N_{N_points}_seed_{seed}_sl_0.png",
+        "N_{N_points}_seed_{seed}_sl_1.png",
+        "N_{N_points}_seed_{seed}_label.png"
+    script:
+        "scripts/make_sections.py"
+
+rule make_noise:
+    output:
+        "N_{N_points}_seed_{seed}_noise.png"
+    script:
+        "scripts/make_noise.py"
