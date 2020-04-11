@@ -157,7 +157,6 @@ def _draw_section(vor, cropped_reg, region_id, palette, h):
             plt.gca().fill(intersection_point[drawing_hull,0],
                     intersection_point[drawing_hull,2],
                     color = palette[region_id[n]])
-    # plt.tight_layout()
     return fig
 
 def _draw_noise(cmap = 'Purples', noise_density = 20):
@@ -196,7 +195,7 @@ def section(iteration_level = 3,
             y = 0,
             N_points = 5000,
             n_slices = [-1, 0, 1],
-            saving_path = None,
+            saving_path = '',
             noise_density = 20,
             plane_distance = 0.05):
     """
@@ -254,25 +253,25 @@ def section(iteration_level = 3,
     #DRAWING and SAVING SETINGS
     #--------------------------------------------------------------------------
     cmap = plt.get_cmap('Purples')
-    palette = [cmap(0.1)[:-1], cmap(0.8)[:-1], cmap(0.4)[:-1]]
+    #palette = [cmap(0.1)[:-1], cmap(0.8)[:-1], cmap(0.4)[:-1]]
     lab_colors = ['w', 'c', 'r']
     dpi = 100
     #Previous palette
-    # palette = [[0.9254902,  0.89411765, 0.91372549], [0.49803922, 0.34509804, 0.58823529], [0.81176471, 0.62745098, 0.78039216]]
+    palette = [[0.9254902,  0.89411765, 0.91372549], [0.49803922, 0.34509804, 0.58823529], [0.81176471, 0.62745098, 0.78039216]]
 
     #Loop for Drawing and Saving every SLICE
     for n_s in n_slices:
         dy = plane_distance * n_s
         fig = _draw_section(vor, cropped_reg, region_id, palette, h = y+dy)
         fig.savefig(os.path.join(saving_path + f'N_{N_points}_seed_{seed}_sl_{n_s}.png'),
-                    bbox_inches='tight',
+                    #bbox_inches='tight',
                     dpi=dpi)
         plt.close(fig)
 
     #Drawing the LABEL image
     fig = _draw_section(vor, cropped_reg, region_id, lab_colors, h = y)
-    fig.savefig(os.path.join(saving_path + f'N_{N_points}_seed_{seed}_label.png'),
-                bbox_inches='tight',
+    fig.savefig(os.path.join(saving_path + f'N_{N_points}_seed_{seed}_label_uncropped.png'),
+                #bbox_inches='tight',
                 dpi=dpi)
     plt.close(fig)
 

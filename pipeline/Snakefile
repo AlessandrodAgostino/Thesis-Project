@@ -2,10 +2,20 @@ SEEDS=[42]
 
 rule all:
     input:
-        expand("N_6000_seed_{seed}_average+noise.png", seed=SEEDS)
+        expand(["N_6000_seed_{seed}_label.png","N_6000_seed_{seed}_average+noise.png"], seed=SEEDS)
     output:
         "END-OF-PIPELINE.txt"
+    shell:
+        "touch {output}"
 
+rule crop_label:
+    input:
+        "N_{N_points}_seed_{seed}_label_uncropped.png"
+    output:
+        "N_{N_points}_seed_{seed}_label.png"
+    script:
+        "scripts/crop_label.py"
+        
 rule add_noise:
     input:
         "N_{N_points}_seed_{seed}_average.png",
@@ -30,7 +40,7 @@ rule make_sections:
         "N_{N_points}_seed_{seed}_sl_-1.png",
         "N_{N_points}_seed_{seed}_sl_0.png",
         "N_{N_points}_seed_{seed}_sl_1.png",
-        "N_{N_points}_seed_{seed}_label.png"
+        "N_{N_points}_seed_{seed}_label_uncropped.png"
     script:
         "scripts/make_sections.py"
 
