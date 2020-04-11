@@ -63,7 +63,9 @@ vor_points = saltelli.sample(problem, N) #Sampling
 
 vor = Voronoi(vor_points) #Creating the tassellation
 crop_reg = [ reg for reg in vor.regions if inside_bounds(vor, reg, bounds)]
+#%%
 
+#%%
 # #%%-----------------------------------------------------------------------------
 # random.seed(30)
 # collinear = True

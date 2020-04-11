@@ -92,6 +92,15 @@ def _box_and_spheres(ramification, y = 0):
 
     return boundaries, small_boundaries, int_spheres, sph_rad
 
+def _get_nuclei_radius(boundaries, N_points):
+    """
+    Returns the estimate nuclei's radius.
+    """
+    box_volume = np.prod([ max - min for min, max in boundaries])
+    cell_dim = np.cbrt(box_volume/N_points)
+    nuclei_rad = cell_dim/8
+    return nuclei_rad
+
 
 def _get_vor_points(boundaries, small_boundaries, N_points):
     """
@@ -121,7 +130,7 @@ def _get_vor_points(boundaries, small_boundaries, N_points):
 
     return points
 
-def _draw_section(vor, cropped_reg, region_id, palette, h):
+def _draw_section(vor, cropped_reg, region_id, palette, h, nuclei_rad, draw_nuclei):
     """
     This auxiliary funtion creates the plt.figure of a section of a certain Voronoi
     tassellation at an height of h.
@@ -144,6 +153,14 @@ def _draw_section(vor, cropped_reg, region_id, palette, h):
     plt.gca().get_yaxis().set_ticks([])
     plt.gca().get_xaxis().set_ticks([])
     plt.gca().set_facecolor("grey")
+    #Nuclei projection
+    if draw_nuclei:
+        projectable_nuclei = [pt for pt in vor.points if (np.abs(pt[1] - h) <  nuclei_rad) ]
+        circles = [(pt[0], pt[2], np.sqrt( nuclei_rad**2 - (nuclei_rad - np.abs(pt[1] - h ))**2)) for pt in projectable_nuclei]
+
+        for circ in circles:
+            circle = plt.Circle((circ[0], circ[1]), circ[2], color = palette[3], alpha = 0.9)
+            plt.gca().add_artist(circle)
 
     for n, reg in enumerate(cropped_reg):
         ind_abo = [ ver for ver in vor.vertices[reg] if ver[1] > h]
@@ -208,7 +225,8 @@ def section(iteration_level = 3,
             n_slices = [-1, 0, 1],
             saving_path = '',
             noise_density = 20,
-            plane_distance = 0.05):
+            plane_distance = 0.05,
+            draw_nuclei = True):
     """
     This function draws and saves the images resulting from the slicing of a ramification.
 
@@ -242,6 +260,8 @@ def section(iteration_level = 3,
     vor = Voronoi(vor_points) #Creating the tassellation
     cropped_reg = [ reg for reg in vor.regions if _inside_boundaries(vor, reg, small_boundaries)] #Cropping out the regions that lies outside the boundaries
 
+    nuclei_rad = _get_nuclei_radius(boundaries, N_points)
+
     tree = cKDTree(vor.vertices) #Creating a Tree object for fast distances computation
     #Vertices identity
     vertices_truth = np.zeros(len(vor.vertices)) #Array where to store identities
@@ -265,26 +285,32 @@ def section(iteration_level = 3,
     #--------------------------------------------------------------------------
     cmap = plt.get_cmap('Purples')
     #palette = [cmap(0.1)[:-1], cmap(0.8)[:-1], cmap(0.4)[:-1]]
-    lab_colors = ['w', 'c', 'r']
+    lab_colors = ['w', 'c', 'r', 'y']
     dpi = 100
     #Previous palette
-    palette = [[0.9254902,  0.89411765, 0.91372549], [0.49803922, 0.34509804, 0.58823529], [0.81176471, 0.62745098, 0.78039216]]
+    palette = [[0.9254902,  0.89411765, 0.91372549],
+               [0.49803922, 0.34509804, 0.58823529],
+               [0.81176471, 0.62745098, 0.78039216],
+               [0.34,       0.19,       0.63]]
 
     #Loop for Drawing and Saving every SLICE
     for n_s in n_slices:
         dy = plane_distance * n_s
-        fig = _draw_section(vor, cropped_reg, region_id, palette, h = y+dy)
+        fig = _draw_section(vor, cropped_reg, region_id, palette, draw_nuclei = draw_nuclei, h = y+dy, nuclei_rad = nuclei_rad)
         fig.savefig(os.path.join(saving_path + f'N_{N_points}_seed_{seed}_sl_{n_s}.png'),
                     #bbox_inches='tight',
                     dpi=dpi)
         plt.close(fig)
 
     #Drawing the LABEL image
-    fig = _draw_section(vor, cropped_reg, region_id, lab_colors, h = y)
+    fig = _draw_section(vor, cropped_reg, region_id, lab_colors, draw_nuclei = draw_nuclei, h = y, nuclei_rad = nuclei_rad)
     fig.savefig(os.path.join(saving_path + f'N_{N_points}_seed_{seed}_label_uncropped.png'),
                 #bbox_inches='tight',
                 dpi=dpi)
     plt.close(fig)
+
+#%%
+#section(N_points = 5000, n_slices = [0])
 
 #%%
 def different_density_benchmarks():

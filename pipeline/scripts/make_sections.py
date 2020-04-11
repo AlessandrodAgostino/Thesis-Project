@@ -1,7 +1,7 @@
 from section import section
 
-section(rotation = False,
+section(rotation = True,
         N_points = int(snakemake.wildcards.N_points),
         seed = int(snakemake.wildcards.seed),
         saving_path = '',
-        n_slices = [-1,0,1])
+        n_slices = snakemake.config['SLICES'])

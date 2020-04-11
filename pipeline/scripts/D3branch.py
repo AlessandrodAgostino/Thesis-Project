@@ -18,7 +18,6 @@ class D3Branch(object):
 
     def __init__(self,
                  pos = vector(0,-l,0),
-                 delta_y = 0,
                  quat = Quaternion(axis=np.array([0,0,1]), angle=0),
                  rotation = False,
                  seed = None,
@@ -28,14 +27,17 @@ class D3Branch(object):
         if seed : np.random.seed(seed)
         if rotation:
             pt_in_box = np.random.rand(3) * 2 -1
-            alpha = np.random.rand(1) * 2*np.pi
+            alpha = np.random.rand(1) * np.pi
             self.quat = Quaternion( axis = pt_in_box , angle=alpha)
         else: self.quat = quat
 
-        if delta_y: self.pos = pos + vector(0,delta_y,0)
-        else: self.pos = pos
-
         self.drct = self.quat.rotate(self.st_dir)
+
+        if rotation:
+            self.pos = vector(*self.drct)*self.l*(-1)
+        else:
+            self.pos = pos
+
         self.iter_lev = iter_lev
         self.length = self.l*self.rt**self.iter_lev
         self.radius = self.r*self.rt**self.iter_lev

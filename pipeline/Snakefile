@@ -1,8 +1,12 @@
 SEEDS=[42]
+N_POINTS = [6000]
+#TO DO: add n_slices as parameter that section() takes in input [-1,0,1]
+
+configfile: "config/config.yaml"
 
 rule all:
     input:
-        expand(["N_6000_seed_{seed}_label.png","N_6000_seed_{seed}_average+noise.png"], seed=SEEDS)
+        expand(["N_{N_points}_seed_{seed}_label.png","N_{N_points}_seed_{seed}_average+noise.png"], N_points=N_POINTS, seed=SEEDS)
     output:
         "END-OF-PIPELINE.txt"
     shell:
@@ -15,7 +19,7 @@ rule crop_label:
         "N_{N_points}_seed_{seed}_label.png"
     script:
         "scripts/crop_label.py"
-        
+
 rule add_noise:
     input:
         "N_{N_points}_seed_{seed}_average.png",
@@ -27,25 +31,23 @@ rule add_noise:
 
 rule make_average:
     input:
-        "N_{N_points}_seed_{seed}_sl_-1.png",
-        "N_{N_points}_seed_{seed}_sl_0.png",
-        "N_{N_points}_seed_{seed}_sl_1.png"
+        expand("N_{{N_points}}_seed_{{seed}}_sl_{sl}.png", sl = config['SLICES'])
     output:
-        "N_{N_points}_seed_{seed}_average.png"
+        temp("N_{N_points}_seed_{seed}_average.png")
     script:
         "scripts/make_average.py"
 
 rule make_sections:
     output:
-        "N_{N_points}_seed_{seed}_sl_-1.png",
-        "N_{N_points}_seed_{seed}_sl_0.png",
-        "N_{N_points}_seed_{seed}_sl_1.png",
-        "N_{N_points}_seed_{seed}_label_uncropped.png"
+        expand("N_{{N_points}}_seed_{{seed}}_sl_{sl}.png", sl = config['SLICES'])
+        temp("N_{N_points}_seed_{seed}_label_uncropped.png")
+    benchmark:
+        "benchmarks/N_{N_points}_seed_{seed}3_sections_benchmark.txt"
     script:
         "scripts/make_sections.py"
 
 rule make_noise:
     output:
-        "N_{N_points}_seed_{seed}_noise.png"
+        temp("N_{N_points}_seed_{seed}_noise.png")
     script:
         "scripts/make_noise.py"
