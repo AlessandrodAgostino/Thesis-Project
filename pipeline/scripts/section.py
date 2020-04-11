@@ -159,7 +159,7 @@ def _draw_section(vor, cropped_reg, region_id, palette, h):
                     color = palette[region_id[n]])
     return fig
 
-def _draw_noise(cmap = 'Purples', noise_density = 20):
+def _draw_noise(RGB = True, cmap = 'Purples', noise_density = 20):
     """
     This funtion produces a random Perlin noise image
 
@@ -174,19 +174,30 @@ def _draw_noise(cmap = 'Purples', noise_density = 20):
     density = 1000
     offset = np.random.randint(1000, size =1)
 
-    #Creating Perlin noise
-    val  = np.linspace(offset, noise_density + offset, density)
-    x, y = np.meshgrid(val, val, sparse = False)
     vec_noise = np.vectorize(pnoise2)
-    z = vec_noise(x, y) * 128 + 128
 
-    #Drawing contour
     fig = plt.figure(figsize=(8,8))
-    plt.contourf(x, y, z, cmap = cmap)
     plt.gca().get_yaxis().set_ticks([])
     plt.gca().get_xaxis().set_ticks([])
     plt.gca().set_facecolor("grey")
     plt.tight_layout()
+
+    if RGB:
+        x_val  = np.linspace(offset, 3*noise_density + offset, 3*density)
+        y_val  = np.linspace(0, noise_density, density)
+        x, y = np.meshgrid(x_val, y_val, sparse = False)
+        z = vec_noise(x, y) * 1/6 + 1/2
+        z_stack = np.dstack([z[:,:density], z[:,density:2*density], z[:,2*density:]])
+        plt.imshow(z_stack)
+
+    else:
+        #Creating Perlin noise
+        val  = np.linspace(offset, noise_density + offset, density)
+        x, y = np.meshgrid(val, val, sparse = False)
+        z = vec_noise(x, y) * 128 + 128
+        #Drawing contour
+        plt.contourf(x, y, z, cmap = cmap)
+
     return fig
 
 def section(iteration_level = 3,

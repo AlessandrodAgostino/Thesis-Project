@@ -4,22 +4,24 @@ import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib as mpl
 
-x_max = 15
-y_max = 15
+x_max = 20
+y_max = 20
 n_pts = 200
 offset = 50
 
 x_val  = np.linspace(offset, 3*x_max + offset, 3*n_pts)
-y_val  = np.linspace(offset, y_max + offset, n_pts)
+y_val  = np.linspace(0, y_max, n_pts)
 xx, yy = np.meshgrid(x_val, y_val, sparse = False)
 
 vec_noise = np.vectorize(pnoise2)
 #%%
-zz = vec_noise(xx, yy) * 127/16 + 127
+zz = vec_noise(xx, yy) * 1/6 + 1/2
+zz_stack = np.dstack([zz[:,:200], zz[:,200:400], zz[:,400:]])
 
-zz_stack = np.dstack([zz[:,:200], zz[:,200:400], zz[:,400:]]).astype('int8')
+zz_stack[100:200, 100, :]
+
 fig, ax = plt.subplots(figsize=(8,8))
-ax.imshow(zz_stack)
+plt.imshow(zz_stack)
 #%%
 zz = zz.T.reshape((200,200,3)).astype('int8')
 plt.imshow(zz[:,:,0], cmap='Reds')
