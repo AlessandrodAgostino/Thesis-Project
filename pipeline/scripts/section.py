@@ -153,15 +153,17 @@ def _draw_section(vor, cropped_reg, region_id, palette, h, nuclei_rad, draw_nucl
     plt.gca().get_yaxis().set_ticks([])
     plt.gca().get_xaxis().set_ticks([])
     plt.gca().set_facecolor("grey")
-    #Nuclei projection
+
+    #Nuclei Projection
     if draw_nuclei:
         projectable_nuclei = [pt for pt in vor.points if (np.abs(pt[1] - h) <  nuclei_rad) ]
-        circles = [(pt[0], pt[2], np.sqrt( nuclei_rad**2 - (nuclei_rad - np.abs(pt[1] - h ))**2)) for pt in projectable_nuclei]
+        circles = [(pt[0], pt[2], np.sqrt(nuclei_rad**2 - (np.abs(pt[1] - h ))**2)) for pt in projectable_nuclei]
 
         for circ in circles:
             circle = plt.Circle((circ[0], circ[1]), circ[2], color = palette[3], alpha = 0.9)
             plt.gca().add_artist(circle)
 
+    #Draw Cells
     for n, reg in enumerate(cropped_reg):
         ind_abo = [ ver for ver in vor.vertices[reg] if ver[1] > h]
         ind_bel = [ ver for ver in vor.vertices[reg] if ver[1] <= h]
@@ -222,7 +224,7 @@ def section(iteration_level = 3,
             seed = None,
             y = 0,
             N_points = 5000,
-            n_slices = [-1, 0, 1],
+            n_slices = 3,
             saving_path = '',
             noise_density = 20,
             plane_distance = 0.05,
@@ -293,8 +295,10 @@ def section(iteration_level = 3,
                [0.81176471, 0.62745098, 0.78039216],
                [0.34,       0.19,       0.63]]
 
+    l = np.arange(0,n_slices)
+    slices = (l - np.floor(len(l)/2)).astype('int8')
     #Loop for Drawing and Saving every SLICE
-    for n_s in n_slices:
+    for n_s in slices:
         dy = plane_distance * n_s
         fig = _draw_section(vor, cropped_reg, region_id, palette, draw_nuclei = draw_nuclei, h = y+dy, nuclei_rad = nuclei_rad)
         fig.savefig(os.path.join(saving_path + f'N_{N_points}_seed_{seed}_sl_{n_s}.png'),
@@ -308,9 +312,6 @@ def section(iteration_level = 3,
                 #bbox_inches='tight',
                 dpi=dpi)
     plt.close(fig)
-
-#%%
-#section(N_points = 5000, n_slices = [0])
 
 #%%
 def different_density_benchmarks():
