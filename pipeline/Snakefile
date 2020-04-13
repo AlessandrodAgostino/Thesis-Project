@@ -21,7 +21,7 @@ rule crop_label:
     output:
         "N_{N_points}_seed_{seed}_label.png"
     script:
-        "scripts/crop_label.py"
+        "scripts/rule_crop_label.py"
 
 rule add_noise:
     input:
@@ -30,7 +30,7 @@ rule add_noise:
     output:
         "N_{N_points}_seed_{seed}_average+noise.png"
     script:
-        "scripts/add_noise.py"
+        "scripts/rule_add_noise.py"
 
 rule make_average:
     input:
@@ -38,7 +38,7 @@ rule make_average:
     output:
         temp("N_{N_points}_seed_{seed}_average.png")
     script:
-        "scripts/make_average.py"
+        "scripts/rule_make_average.py"
 
 rule make_sections:
     output:
@@ -47,10 +47,10 @@ rule make_sections:
     benchmark:
         "benchmarks/N_{N_points}_seed_{seed}3_sections_benchmark.txt"
     script:
-        "scripts/make_sections.py"
+        "scripts/rule_make_sections.py"
 
 rule make_noise:
     output:
         temp("N_{N_points}_seed_{seed}_noise.png")
     script:
-        "scripts/make_noise.py"
+        "scripts/rule_make_noise.py"

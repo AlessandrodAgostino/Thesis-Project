@@ -127,3 +127,7 @@ venv.bak/
 OldStuff/Section/Times/Images
 
 pipeline/.snakemake*
+pipeline/benchmarks
+My_utils/Segmentation/selections
+My_utils/Segmentation/Zoom
+My_utils/Segmentation/*.png
