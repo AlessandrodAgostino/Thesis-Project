@@ -172,7 +172,7 @@ for n,reg in enumerate(vor.regions):
 
 #Drawing the section at z=0
 for triang, n in intersectiong_triang_dict.items():
-    if colors[region_id[n]] in [red, turquise]:
+    if colors[region_id[n]] in [red, turquoise]:
         for sim in triang.simplices:
             pts = [triang.points[pt] for pt in sim]
             Figures.append( triangle( vs=[vertex( pos     = vector(*ver, 0),

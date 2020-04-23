@@ -25,7 +25,7 @@ rule crop_label:
 
 rule add_noise:
     input:
-        "N_{N_points}_seed_{seed}_average.png",
+        "N_{N_points}_seed_{seed}_average_blurr.png",
         "N_{N_points}_seed_{seed}_noise.png"
     output:
         "N_{N_points}_seed_{seed}_average+noise.png"
@@ -36,7 +36,7 @@ rule make_average:
     input:
         expand("N_{{N_points}}_seed_{{seed}}_sl_{sl}.png", sl = SLICES)
     output:
-        temp("N_{N_points}_seed_{seed}_average.png")
+        "N_{N_points}_seed_{seed}_average.png"
     script:
         "scripts/rule_make_average.py"
 
@@ -51,6 +51,14 @@ rule make_sections:
 
 rule make_noise:
     output:
-        temp("N_{N_points}_seed_{seed}_noise.png")
+        "N_{N_points}_seed_{seed}_noise.png"
     script:
         "scripts/rule_make_noise.py"
+
+rule gauss_filter:
+    input:
+        "N_{N_points}_seed_{seed}_average.png"
+    output:
+        "N_{N_points}_seed_{seed}_average_blurr.png"
+    script:
+        "scripts/rule_gauss_filter.py"

@@ -98,7 +98,7 @@ def _get_nuclei_radius(boundaries, N_points):
     """
     box_volume = np.prod([ max - min for min, max in boundaries])
     cell_dim = np.cbrt(box_volume/N_points)
-    nuclei_rad = cell_dim/8
+    nuclei_rad = cell_dim/20
     return nuclei_rad
 
 
@@ -156,11 +156,14 @@ def _draw_section(vor, cropped_reg, region_id, palette, h, nuclei_rad, draw_nucl
 
     #Nuclei Projection
     if draw_nuclei:
-        projectable_nuclei = [pt for pt in vor.points if (np.abs(pt[1] - h) <  nuclei_rad) ]
-        circles = [(pt[0], pt[2], np.sqrt(nuclei_rad**2 - (np.abs(pt[1] - h ))**2)) for pt in projectable_nuclei]
+        projectable_nuclei = [pt for pt in vor.points if (np.abs(pt[1] - h) <  nuclei_rad*30) ]
+        circles = [(pt[0], pt[2], nuclei_rad) for pt in projectable_nuclei]
+
+        # projectable_nuclei = [pt for pt in vor.points if (np.abs(pt[1] - h) <  nuclei_rad) ]
+        # circles = [(pt[0], pt[2], np.sqrt(nuclei_rad**2 - (np.abs(pt[1] - h ))**2)) for pt in projectable_nuclei]
 
         for circ in circles:
-            circle = plt.Circle((circ[0], circ[1]), circ[2], color = palette[3], alpha = 0.9)
+            circle = plt.Circle((circ[0], circ[1]), circ[2], color = palette[3], alpha = 0.7)
             plt.gca().add_artist(circle)
 
     #Draw Cells
