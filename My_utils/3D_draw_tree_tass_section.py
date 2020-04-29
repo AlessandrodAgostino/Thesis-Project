@@ -73,6 +73,28 @@ problem = {'num_vars': 3,
 #Parameter that regulate the sampling density
 N = 1000 #SHOULD UNDERSTAND BETTER HOW EXACTLY WORKS
 vor_points = saltelli.sample(problem, N) #Sampling
+vor_points.shape
+
+
+#%%-----------------------------------------------------------------------------
+#Alternative: Generating points through a recurrence-rule
+N_points = 8000
+d = 3
+s_0 = 0.5
+x=2.0000
+for i in range(10):
+    x = pow(1+x,1/(d+1))
+g = x
+
+alphas = np.power(1/g, np.arange(1,d+1))
+points = np.mod(np.outer(alphas,np.arange(1, N_points+1)) + s_0, 1)
+boundaries = np.asarray(bounds)
+#Mapping the points to the Boundaries
+# lengths = small_boundaries[:,1] - small_boundaries[:,0]
+# points = ((points.T * lengths) - small_boundaries[:,0])
+lengths = boundaries[:,1] - boundaries[:,0]
+rec_points = ((points.T * lengths) + boundaries[:,0])
+rec_points.shape
 
 #Alternative REGULAR VORONOI in the same boundaries
 """
@@ -89,7 +111,6 @@ vor = Voronoi(vor_points) #Creating the tassellation
 
 #Cropping the regions that lies outside the boundaries
 crop_reg = [ reg for reg in vor.regions if inside_bounds(vor, reg, bounds)]
-
 #Detecting all the vertices that lies in/outside the boundaries
 crop_ver = set()
 for reg in crop_reg:
