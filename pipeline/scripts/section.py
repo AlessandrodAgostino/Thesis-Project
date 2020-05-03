@@ -98,11 +98,11 @@ def _get_nuclei_radius(boundaries, N_points):
     """
     box_volume = np.prod([ max - min for min, max in boundaries])
     cell_dim = np.cbrt(box_volume/N_points)
-    nuclei_rad = cell_dim/8
+    nuclei_rad = cell_dim/20
     return nuclei_rad
 
 
-def _get_vor_points(boundaries, small_boundaries, N_points):
+def _get_vor_points(boundaries, small_boundaries, N_points, method = 'saltelli'):
     """
     This function defines the problem for a low discrepancy random sampling
     inside the volume defined by small_boundaries.
@@ -117,16 +117,40 @@ def _get_vor_points(boundaries, small_boundaries, N_points):
     Return:
         points: All the filtered points as np.array
     """
-    problem = {'num_vars': 3,
-               'names': ['x', 'y', 'z'],
-               'bounds': boundaries}
-    N = 10
-    points = []
-    while len(points) < N_points:
-        N = N*2
-        points = saltelli.sample(problem, N)
-        points = points[(points[:,1] > small_boundaries[1][0]) & (points[:,1] < small_boundaries[1][1])]
-        points = points[:N_points]
+        #Mapping the points to the Boundaries
+    if method == 'saltelli':
+        problem = {'num_vars': 3,
+                   'names': ['x', 'y', 'z'],
+                   'bounds': boundaries}
+        N = 10
+        points = []
+        while len(points) < N_points:
+            N = N*2
+            points = saltelli.sample(problem, N)
+            points = points[(points[:,1] > small_boundaries[1][0]) & (points[:,1] < small_boundaries[1][1])]
+            points = points[:N_points]
+
+    elif method == 'r-sequence':
+        #Generating points through a recurrence-rule
+        d = 3
+        s_0 = 0.5
+        x=2.0000
+        for i in range(10):
+            x = pow(1+x,1/(d+1))
+        g = x
+
+        alphas = np.power(1/g, np.arange(1,d+1))
+        points = np.mod(np.outer(alphas,np.arange(1, N_points+1)) + s_0, 1)
+
+        #Mapping the points to the Boundaries
+        lengths = small_boundaries[:,1] - small_boundaries[:,0]
+        points = ((points.T * lengths) + small_boundaries[:,0])
+
+
+
+    elif method == 'lattice':
+        pass
+    else: print('Unknow method')
 
     return points
 
@@ -156,11 +180,14 @@ def _draw_section(vor, cropped_reg, region_id, palette, h, nuclei_rad, draw_nucl
 
     #Nuclei Projection
     if draw_nuclei:
-        projectable_nuclei = [pt for pt in vor.points if (np.abs(pt[1] - h) <  nuclei_rad) ]
-        circles = [(pt[0], pt[2], np.sqrt(nuclei_rad**2 - (np.abs(pt[1] - h ))**2)) for pt in projectable_nuclei]
+        projectable_nuclei = [pt for pt in vor.points if (np.abs(pt[1] - h) <  nuclei_rad*10) ]
+        circles = [(pt[0], pt[2], nuclei_rad) for pt in projectable_nuclei]
+
+        # projectable_nuclei = [pt for pt in vor.points if (np.abs(pt[1] - h) <  nuclei_rad) ]
+        # circles = [(pt[0], pt[2], np.sqrt(nuclei_rad**2 - (np.abs(pt[1] - h ))**2)) for pt in projectable_nuclei]
 
         for circ in circles:
-            circle = plt.Circle((circ[0], circ[1]), circ[2], color = palette[3], alpha = 0.9)
+            circle = plt.Circle((circ[0], circ[1]), circ[2], color = palette[3], alpha = 0.7)
             plt.gca().add_artist(circle)
 
     #Draw Cells
@@ -228,7 +255,8 @@ def section(iteration_level = 3,
             saving_path = '',
             noise_density = 20,
             plane_distance = 0.05,
-            draw_nuclei = True):
+            draw_nuclei = True,
+            sampling_method = 'saltelli'):
     """
     This function draws and saves the images resulting from the slicing of a ramification.
 
@@ -257,11 +285,10 @@ def section(iteration_level = 3,
     """
     Ramification = createTree(iter = iteration_level, rotation = rotation, seed = seed) #Creating the ramification object
     boundaries, small_boundaries, int_spheres, sph_rad = _box_and_spheres(Ramification, y) #Getting spatial informations
-    #(TODO: Those points shall be the nuclei)
-    vor_points = _get_vor_points(boundaries, small_boundaries, N_points) #Getting point for creating Voronoi tassellation
+    vor_points = _get_vor_points(boundaries, small_boundaries, N_points, method = sampling_method) #Getting point for creating Voronoi tassellation
+
     vor = Voronoi(vor_points) #Creating the tassellation
     cropped_reg = [ reg for reg in vor.regions if _inside_boundaries(vor, reg, small_boundaries)] #Cropping out the regions that lies outside the boundaries
-
     nuclei_rad = _get_nuclei_radius(boundaries, N_points)
 
     tree = cKDTree(vor.vertices) #Creating a Tree object for fast distances computation
@@ -312,6 +339,9 @@ def section(iteration_level = 3,
                 #bbox_inches='tight',
                 dpi=dpi)
     plt.close(fig)
+#%%
+section(N_points=7000, seed = 42, n_slices=1, rotation = True, sampling_method = 'r-sequence')
+
 
 #%%
 def different_density_benchmarks():
