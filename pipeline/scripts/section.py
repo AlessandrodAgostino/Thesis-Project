@@ -180,7 +180,7 @@ def _draw_section(vor, cropped_reg, region_id, palette, h, nuclei_rad, draw_nucl
 
     #Nuclei Projection
     if draw_nuclei:
-        projectable_nuclei = [pt for pt in vor.points if (np.abs(pt[1] - h) <  nuclei_rad*20) ]
+        projectable_nuclei = [pt for pt in vor.points if (np.abs(pt[1] - h) <  nuclei_rad*10) ]
         circles = [(pt[0], pt[2], nuclei_rad) for pt in projectable_nuclei]
 
         # projectable_nuclei = [pt for pt in vor.points if (np.abs(pt[1] - h) <  nuclei_rad) ]
@@ -340,7 +340,7 @@ def section(iteration_level = 3,
                 dpi=dpi)
     plt.close(fig)
 #%%
-section(N_points=7000, seed = 42, n_slices=0, rotation = True, sampling_method = 'r-sequence')
+section(N_points=7000, seed = 42, n_slices=1, rotation = True, sampling_method = 'r-sequence')
 
 
 #%%
