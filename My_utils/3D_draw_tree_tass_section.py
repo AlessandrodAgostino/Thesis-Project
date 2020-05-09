@@ -48,7 +48,7 @@ def plane_z_intersection(p1, p2, z=0):
 
 #-------------------------------------------------------------------------------
 #%% VORONOI - PREPARATION
-Pancreas = createTree(iter = 2, rotation = True, seed = 49) #Ramification object
+Pancreas = createTree(iter = 1, rotation = False, seed = 49) #Ramification object
 
 #Extracting free end's spheres and radius
 spheres  = [] #List of spheres
@@ -60,10 +60,16 @@ for br in Pancreas:
         spheres.append(np.asarray((cent.x, cent.y, cent.z)))
         if not sph_rad: sph_rad = br.length
 
+
+
 #Boundaries for random sampling in a volume with a padding proportional to spheres' radius
 max_box = np.max(np.asarray(spheres), axis = 0) + sph_rad*2
 min_box = np.min(np.asarray(spheres), axis = 0) - sph_rad*2
 bounds  = [ [min_box[i], max_box[i]] for i in range(3)]
+shooting_boundaries = [ [ min_box[0]                , 0          ],
+                        [ min_box[1]                , max_box[1] ],
+                        [ min_box[2], spheres[1][2] - sph_rad/2] ]
+# bounds = shooting_boundaries
 
 #Defining the problem for a low discrepancy sampling inside 'bounds'
 problem = {'num_vars': 3,
@@ -71,7 +77,7 @@ problem = {'num_vars': 3,
            'bounds': bounds}
 
 #Parameter that regulate the sampling density
-N = 1000 #SHOULD UNDERSTAND BETTER HOW EXACTLY WORKS
+N = 200 #SHOULD UNDERSTAND BETTER HOW EXACTLY WORKS
 vor_points = saltelli.sample(problem, N) #Sampling
 vor_points.shape
 
@@ -97,20 +103,20 @@ rec_points = ((points.T * lengths) + boundaries[:,0])
 rec_points.shape
 
 #Alternative REGULAR VORONOI in the same boundaries
-"""
+# """
 n_sample = 30
 coords = np.zeros((3,n_sample))
 coords[0] = np.linspace(bounds[0][0], bounds[0][1], n_sample)
 coords[1] = np.linspace(bounds[1][0], bounds[1][1], n_sample)
 coords[2] = np.linspace(bounds[2][0], bounds[2][1], n_sample)
 reg_points = np.asarray([ pt for pt in itertools.product(coords[0], coords[1], coords[2])])
-"""
+# """
 #-------------------------------------------------------------------------------
 #%% VORONOI - CREATION
 vor = Voronoi(vor_points) #Creating the tassellation
 
 #Cropping the regions that lies outside the boundaries
-crop_reg = [ reg for reg in vor.regions if inside_bounds(vor, reg, bounds)]
+crop_reg = [ reg for reg in vor.regions if inside_bounds(vor, reg, boundaries)]
 #Detecting all the vertices that lies in/outside the boundaries
 crop_ver = set()
 for reg in crop_reg:
@@ -159,11 +165,10 @@ The filtering is done by deciding the color of the region to draw.
 Should be implemented in a more sensitive way.
 """
 #Preliminary graphic settings
-scene     = canvas(width=800, height=600, center=vector(5,5,0))
+scene     = canvas(width=800, height=600, center=vector(5,5,0), background=color.gray(0.6))
 turquoise = color.hsv_to_rgb(vector(0.5,1,0.8))
 red       = color.red #Some colors
 white     = color.white
-orange    = color.orange
 black     = color.black
 colors    = [black, white, turquoise,  red, black] #[Outside, Partially, Inside, Out of Boundaries]
 Figures   =  [] #List to which append all the drawings
@@ -171,10 +176,13 @@ Figures   =  [] #List to which append all the drawings
 drawListBranch(Pancreas) #Drawing ramification
 drawSphereFreeEnds(Pancreas) #Drawing free ends' spheres
 draw_axis(Figures, 10)
+zoom=0.75
+scene.camera.pos = vector(-20*zoom,10*zoom,-20*zoom)
+scene.camera.axis = vector(2,-1,2)
 
 #Drawing Vor vertices depending on the color
 for n,ver in enumerate(vor.vertices):
-    if colors[vertices_truth[n]] in [orange]: #[white, turquoise] or [orange] for nothing
+    if colors[vertices_truth[n]] in []: #[white, turquoise] or [orange] for nothing
         Figures.append(sphere(pos     = vector(*ver),
                               radius  = sph_rad/50,
                               opacity = 0.4,
@@ -182,7 +190,7 @@ for n,ver in enumerate(vor.vertices):
 
 #Drawing a Voronoi Tassels and their volumes if they're finite
 for n,reg in enumerate(vor.regions):
-    if colors[region_id[n]] in [orange]: #[red, turquoise] or [orange] for nothing
+    if colors[region_id[n]] in []: #[red, turquoise] or [orange] for nothing
         conv_hull= ConvexHull([vor.vertices[ver] for ver in reg])
         simpl = []
         for sim in conv_hull.simplices:
