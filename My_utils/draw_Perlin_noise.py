@@ -72,7 +72,7 @@ fig.tight_layout()
 
 #%%-----------------------------------------------------------------------------
 #3D Plotting
-fig = plt.figure(figsize=(12,8))
+fig = plt.figure(figsize=(15,10))
 ax = fig.gca(projection='3d')
 ax.plot_trisurf(xx.flatten(), yy.flatten(), zz.flatten(), label='parametric curve')
 ax.set_title("Perlin Noise", fontsize=20)

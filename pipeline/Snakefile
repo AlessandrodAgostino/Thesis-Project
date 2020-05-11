@@ -15,6 +15,24 @@ rule all:
     shell:
         "touch {output}"
 
+# rule all:
+#     input:
+#         expand(["reduced/N_{N_points}_seed_{seed}_label_reduced.png","reduced/N_{N_points}_seed_{seed}_average+noise_reduced.png"],
+#                N_points=config['N_POINTS'],
+#                seed=config['SEEDS'])
+#     output:
+#         "END-OF-PIPELINE.txt"
+#     shell:
+#         "touch {output}"
+
+rule reduce_dim:
+    input:
+        "{something}.png"
+    output:
+        "reduced/{something}_reduced.png"
+    script:
+        "scripts/rule_reduce_dim.py"
+
 rule crop_label:
     input:
         "N_{N_points}_seed_{seed}_label_uncropped.png"
