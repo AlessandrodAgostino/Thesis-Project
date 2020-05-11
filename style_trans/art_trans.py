@@ -217,34 +217,13 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
     input_img.data.clamp_(0, 1)
 
     return input_img
-
 #%%
-from glob import glob
+# from glob import glob
 
-image_dir = './images/'
-input_images = glob(image_dir + 'styles/*.jpg')
-# for in_im in input_images:
-#     im = Image.open(image_dir + in_im + '.png')
-#     im.convert('RGB').save(image_dir + in_im + '.jpg', 'JPEG')
+image_dir = './images/comparison_sampling/'
+# input_images = glob(image_dir + 'styles/*.jpg')
 
-# for in_im in input_images:
-#     content_img = image_loader(image_dir + 'nuclei.jpg')
-#     style_img = image_loader( image_dir + 'style_pancreatite.jpg' )
-#     input_img = content_img.clone()
-#
-#     assert style_img.size() == content_img.size(), \
-#         "we need to import style and content images of the same size"
-#
-#     output = run_style_transfer(cnn, cnn_normalization_mean, cnn_normalization_std,
-#                                 content_img, style_img, input_img)
-#
-#     image = output.cpu().clone()  # we clone the tensor to not do changes on it
-#     image = image.squeeze(0)      # remove the fake batch dimension
-#     image = unloader(image)
-#     #image.save(image_dir + 'styled/' + in_im.split('/')[-1].split('.')[0]+ '_st'+ '.jpg')
-#     image.save(image_dir + 'try.jpg')
-#
-content_img = image_loader('./images/N_7000_seed_42_sl_0.jpg')
+content_img = image_loader(image_dir + 'N_20000_seed_42_sl_0_reg.jpg')
 style_img = image_loader( f'./images/styles/style_pancreatite.jpg' )
 
 input_img = content_img.clone()
@@ -257,4 +236,4 @@ image = output.cpu().clone()  # we clone the tensor to not do changes on it
 image = image.squeeze(0)      # remove the fake batch dimension
 image = unloader(image)
 #image.save(image_dir + 'styled/' + in_im.split('/')[-1].split('.')[0]+ '_st'+ '.jpg')
-image.save(f'./images/styled/recurrence_st.jpg')
+image.save(image_dir + 'styled_reg.jpg')

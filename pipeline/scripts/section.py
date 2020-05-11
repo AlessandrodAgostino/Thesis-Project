@@ -146,10 +146,29 @@ def _get_vor_points(boundaries, small_boundaries, N_points, method = 'saltelli')
         lengths = small_boundaries[:,1] - small_boundaries[:,0]
         points = ((points.T * lengths) + small_boundaries[:,0])
 
-
-
     elif method == 'lattice':
-        pass
+        n_sample = np.floor(np.power(N_points, 1/3)).astype(int)
+        coords = np.zeros((3,n_sample))
+        coords[0] = np.linspace(small_boundaries[0][0], small_boundaries[0][1], n_sample)
+        coords[1] = np.linspace(small_boundaries[1][0], small_boundaries[1][1], n_sample)
+        coords[2] = np.linspace(small_boundaries[2][0], small_boundaries[2][1], n_sample)
+        points = np.asarray([ pt for pt in itertools.product(coords[0], coords[1], coords[2])])
+
+    elif method == 'uniform':
+        points = np.random.uniform(size = N_points*3)
+        points = points.reshape(-1,3)
+
+        lengths = small_boundaries[:,1] - small_boundaries[:,0]
+        points = ((points * lengths) + small_boundaries[:,0])
+
+
+        # n_sample = np.floor(np.power(N_points, 1/3)).astype(int)
+        # coords = np.zeros((3,n_sample))
+        # coords[0] = np.random.uniform(small_boundaries[0][0], small_boundaries[0][1], n_sample)
+        # coords[1] = np.random.uniform(small_boundaries[1][0], small_boundaries[1][1], n_sample)
+        # coords[2] = np.random.uniform(small_boundaries[2][0], small_boundaries[2][1], n_sample)
+        # points = np.asarray([ pt for pt in itertools.product(coords[0], coords[1], coords[2])])
+
     else: print('Unknow method')
 
     return points
@@ -340,7 +359,7 @@ def section(iteration_level = 3,
                 dpi=dpi)
     plt.close(fig)
 #%%
-section(N_points=7000, seed = 42, n_slices=1, rotation = True, sampling_method = 'r-sequence')
+section(N_points=7000, seed = 42, n_slices=1, rotation = True, sampling_method = 'uniform')
 
 
 #%%
