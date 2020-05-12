@@ -359,7 +359,7 @@ def section(iteration_level = 3,
                 dpi=dpi)
     plt.close(fig)
 #%%
-section(N_points=7000, seed = 42, n_slices=1, rotation = True, sampling_method = 'uniform')
+section(N_points=7000, seed = 13, n_slices=1, rotation = True, sampling_method = 'saltelli')
 
 
 #%%
