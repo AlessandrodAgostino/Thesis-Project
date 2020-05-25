@@ -116,11 +116,7 @@ reg_points = np.asarray([ pt for pt in itertools.product(coords[0], coords[1], c
 vor = Voronoi(vor_points) #Creating the tassellation
 
 #Cropping the regions that lies outside the boundaries
-<<<<<<< HEAD
-crop_reg = [ reg for reg in vor.regions if inside_bounds(vor, reg, boundaries)]
-=======
 crop_reg = [ reg for reg in vor.regions if inside_bounds(vor, reg, bounds)]
->>>>>>> 2875225c8b2b2fd45538ed7c3c7efae584552ab9
 #Detecting all the vertices that lies in/outside the boundaries
 crop_ver = set()
 for reg in crop_reg:
@@ -205,11 +201,7 @@ for n,reg in enumerate(vor.regions):
 
 #Drawing the section at z=0
 for triang, n in intersectiong_triang_dict.items():
-<<<<<<< HEAD
-    if colors[region_id[n]] in []:
-=======
     if colors[region_id[n]] in [red, turquoise]:
->>>>>>> 2875225c8b2b2fd45538ed7c3c7efae584552ab9
         for sim in triang.simplices:
             pts = [triang.points[pt] for pt in sim]
             Figures.append( triangle( vs=[vertex( pos     = vector(*ver, 0),

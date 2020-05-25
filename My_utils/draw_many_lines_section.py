@@ -67,7 +67,7 @@ vor = Voronoi(vor_points) #Creating the tassellation w/sampled points
 crop_reg = [ reg for reg in vor.regions if inside_bounds(vor, reg, bounds)]
 
 #%%-----------------------------------------------------------------------------
-sel_z = 7
+sel_z = 6
 def plane_z(x,y,z, sel_z):
     return (z - sel_z) > 0
 
@@ -96,6 +96,9 @@ intersectiong_triang = Delaunay(intersection_point[:,0:2])
 
 #%%-----------------------------------------------------------------------------
 scene     = canvas(width=900, height=700, center=vector(5,5,0))
+# scene.camera.pos = vector(0,5,sel_z)
+# scene.camera.axis = vector(5,0,0)
+
 turquoise = color.hsv_to_rgb(vector(0.5,1,0.8))
 red       = color.red #Some colors
 white     = color.white
@@ -129,9 +132,9 @@ for ver in vor.vertices[sel_reg][ind_bel]:
 simpl = []
 for sim in intersectiong_triang.simplices:
     pts = [intersectiong_triang.points[pt] for pt in sim]
-    simpl.append( triangle( vs=[vertex( pos     = vector(*ver, 7),
+    simpl.append( triangle( vs=[vertex( pos     = vector(*ver, sel_z),
                                         color   = turquoise,
-                                        opacity = 0.7) for ver in pts]))
+                                        opacity = 0.9) for ver in pts]))
 
 #drawing lines between couples
 for couple in couples:
@@ -147,5 +150,23 @@ for pt in container_points:
                           radius = max_coord/50,
                           color = red,
                           opacity = 0.5))
+
+
+import time
+
+dtheta = 0.01
+theta = 0
+# vec = vector(0, 5, sel_z)
+center = vector(5, 5, sel_z)
+dist = 7
+
+while (True):
+    time.sleep(1/60)
+    pos = center + vector( dist*np.cos(theta), 0, dist*np.sin(theta))
+    scene.camera.pos = pos
+    scene.camera.axis = center - pos
+    #vec += vector( np.cos(theta), 0, np.sin(theta))
+    #scene.camera.pos = vector(5*np.cos(theta), 5*np.sin(theta), sel_z)
+    theta = theta + dtheta
 
 #%%-----------------------------------------------------------------------------
