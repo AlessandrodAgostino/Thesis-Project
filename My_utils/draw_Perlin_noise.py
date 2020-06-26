@@ -8,7 +8,6 @@ import matplotlib as mpl
 this script compute and plots the Perlin noise in different ways
 """
 
-
 x_max = 20
 y_max = 20
 n_pts = 200
@@ -27,10 +26,6 @@ zz_stack[100:200, 100, :]
 
 fig, ax = plt.subplots(figsize=(8,8))
 plt.imshow(zz_stack)
-#%%
-zz = zz.T.reshape((200,200,3)).astype('int8')
-plt.imshow(zz[:,:,0], cmap='Reds')
-
 #%%-------------------------------------------------------------------------------
 #2D Plotting
 maps = ['Reds', 'Greens', 'Blues' ]

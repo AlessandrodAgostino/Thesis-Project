@@ -7,6 +7,8 @@ import time
 from scipy.spatial import Voronoi, ConvexHull, cKDTree
 from SALib.sample import saltelli
 from noise import pnoise2
+from mpl_toolkits.mplot3d import Axes3D
+
 
 from D3branch import *
 
@@ -92,17 +94,16 @@ def _box_and_spheres(ramification, y = 0):
 
     return boundaries, small_boundaries, int_spheres, sph_rad
 
-def _get_nuclei_radius(boundaries, N_points):
+def _get_nuclei_radius(boundaries, N_points, nuclei_scale = 20):
     """
     Returns the estimate nuclei's radius.
     """
     box_volume = np.prod([ max - min for min, max in boundaries])
     cell_dim = np.cbrt(box_volume/N_points)
-    nuclei_rad = cell_dim/20
+    nuclei_rad = cell_dim/nuclei_scale
     return nuclei_rad
 
-
-def _get_vor_points(boundaries, small_boundaries, N_points, method = 'saltelli'):
+def _get_vor_points(boundaries,  N_points, small_boundaries = None, method = 'saltelli'):
     """
     This function defines the problem for a low discrepancy random sampling
     inside the volume defined by small_boundaries.
@@ -119,6 +120,9 @@ def _get_vor_points(boundaries, small_boundaries, N_points, method = 'saltelli')
     """
         #Mapping the points to the Boundaries
     if method == 'saltelli':
+        if small_boundaries == None:
+            small_boundaries = boundaries
+
         problem = {'num_vars': 3,
                    'names': ['x', 'y', 'z'],
                    'bounds': boundaries}
@@ -160,14 +164,6 @@ def _get_vor_points(boundaries, small_boundaries, N_points, method = 'saltelli')
 
         lengths = small_boundaries[:,1] - small_boundaries[:,0]
         points = ((points * lengths) + small_boundaries[:,0])
-
-
-        # n_sample = np.floor(np.power(N_points, 1/3)).astype(int)
-        # coords = np.zeros((3,n_sample))
-        # coords[0] = np.random.uniform(small_boundaries[0][0], small_boundaries[0][1], n_sample)
-        # coords[1] = np.random.uniform(small_boundaries[1][0], small_boundaries[1][1], n_sample)
-        # coords[2] = np.random.uniform(small_boundaries[2][0], small_boundaries[2][1], n_sample)
-        # points = np.asarray([ pt for pt in itertools.product(coords[0], coords[1], coords[2])])
 
     else: print('Unknow method')
 
@@ -265,17 +261,90 @@ def _draw_noise(RGB = True, cmap = 'Purples', noise_density = 20):
 
     return fig
 
-def section(iteration_level = 3,
-            rotation = False,
-            seed = None,
-            y = 0,
-            N_points = 5000,
-            n_slices = 3,
-            saving_path = '',
-            noise_density = 20,
-            plane_distance = 0.05,
-            draw_nuclei = True,
-            sampling_method = 'saltelli'):
+def _create_surf():
+    x_max = 1
+    y_max = 1
+    n_pts = 200
+    scale = 7 #Delicate Parameter
+    offset = 10 #Acts like a seed
+    ED_height = 100
+    EK_height = 20
+    E_thick = 100
+    vec_noise = np.vectorize(pnoise2)
+
+    x_val  = np.linspace(offset, x_max + offset, n_pts)
+    y_val  = np.linspace(offset, y_max + offset, n_pts)
+    xx, yy = np.meshgrid(x_val, y_val, sparse = False)
+    zz = vec_noise(xx, yy) * EK_height + E_thick
+
+    xx = (xx - offset) * scale + offset
+    yy = (yy - offset) * scale + offset
+    zz1 = vec_noise(xx, yy) * ED_height
+
+    zz.shape
+
+    x_grain = np.unique(xx)[1] - np.unique(xx)[0]
+    y_grain = np.unique(yy)[1] - np.unique(yy)[0]
+
+    disc_grain = (x_grain, y_grain)
+
+    EK_bound = zz
+    ED_bound = zz1
+    K_bound = None #TODO: Future iplementation
+
+    max_z = 2 * EK_height + E_thick
+    min_z = -ED_height*2
+
+    boundaries = np.array([[offset, offset + x_max],
+                           [offset, offset + y_max],
+                           [min_z , max_z       ]])
+
+    # fig = plt.figure(figsize=(15,10))
+    # ax = fig.gca(projection='3d')
+    # surf = ax.plot_trisurf(*(cc.flatten() for cc in ED_bound), label='Epid - Derm')
+    # surf1 = ax.plot_trisurf(*(cc.flatten() for cc in EK_bound), label='Kera - Epid')
+    # surf._facecolors2d=surf._facecolors3d
+    # surf._edgecolors2d=surf._edgecolors3d
+    # surf1._facecolors2d=surf1._facecolors3d
+    # surf1._edgecolors2d=surf1._edgecolors3d
+    # leg = ax.legend()
+    # ax.set_title("Perlin Noise", fontsize=20)
+
+    return boundaries, ED_bound, EK_bound, K_bound, disc_grain
+
+def derma_section(N_points):
+    N_points = 300
+    boundaries, ED_bound, EK_bound, K_bound, disc_grain= _create_surf()
+    vor_points = _get_vor_points(boundaries, N_points) #Getting point for creating Voronoi tassellation
+    vor = Voronoi(vor_points) #Creating the tassellation
+    cropped_reg = [ reg for reg in vor.regions if _inside_boundaries(vor, reg, boundaries)] #Cropping out the regions that lies outside the boundaries
+    nuclei_rad = _get_nuclei_radius(boundaries, N_points)
+    nuclei = np.copy(vor.points)
+
+    #SOME problem here and there!!!!!!
+
+    #Discretize nuclei coordinates
+    #TODO: do this computation in a smarter way!!!!!!
+    nuclei[:,0:2] = nuclei[:,0:2] - np.array(np.unique(ED_bound[0])[0], np.unique(ED_bound[1])[0])
+    x_grain = np.unique(ED_bound[0])[1] - np.unique(ED_bound[0])[0]
+    y_grain = np.unique(ED_bound[1])[1] - np.unique(ED_bound[1])[0]
+    nuclei[:,0:2] = np.floor_divide(nuclei[:,0:2], np.array(x_grain, y_grain))
+    nuclei
+    #HERE
+
+
+
+def pancr_section(iteration_level = 3,
+                  rotation = False,
+                  seed = None,
+                  y = 0,
+                  N_points = 5000,
+                  n_slices = 3,
+                  saving_path = '',
+                  noise_density = 20,
+                  plane_distance = 0.05,
+                  draw_nuclei = True,
+                  sampling_method = 'saltelli'):
     """
     This function draws and saves the images resulting from the slicing of a ramification.
 
@@ -359,7 +428,8 @@ def section(iteration_level = 3,
                 dpi=dpi)
     plt.close(fig)
 #%%
-section(N_points=7000, seed = 13, n_slices=1, rotation = True, sampling_method = 'saltelli')
+N_points = 200
+derma_section(N_points)
 
 
 #%%
