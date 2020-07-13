@@ -9,7 +9,6 @@ from SALib.sample import saltelli
 from noise import pnoise2
 from mpl_toolkits.mplot3d import Axes3D
 
-
 from D3branch import *
 
 def _inside_boundaries(vor, reg, boundaries):
@@ -220,6 +219,67 @@ def _draw_section(vor, cropped_reg, region_id, palette, h, nuclei_rad, draw_nucl
                     color = palette[region_id[n]])
     return fig
 
+def _draw_section_2(vor, cropped_reg, palette, h, nuclei_rad, draw_nuclei, bound):
+    """
+    This auxiliary funtion creates the plt.figure of a section of a certain Voronoi
+    tassellation at an height of h.
+
+    Parametrs:
+        vor: Voronoi tasselation to section off.
+
+        cropped_reg: regions of interest
+
+        region_id: identity of the interesting regions
+
+        palette: color map for the identity
+
+        h: height of the section
+
+    Returns:
+        plt.figure representing the section
+    """
+    fig = plt.figure(figsize=(8,8))
+    plt.gca().get_yaxis().set_ticks([])
+    plt.gca().get_xaxis().set_ticks([])
+    plt.gca().set_xlim(*bound[0])
+    plt.gca().set_ylim(*bound[2])
+    plt.gca().set_facecolor("grey")
+
+    circles = []
+
+    patches = []
+    for reg in cropped_reg:
+        ind_abo = [ ver for ver in reg['vertices'] if ver[1] > h]
+        ind_bel = [ ver for ver in reg['vertices'] if ver[1] <= h]
+
+        couples = list(itertools.product(ind_abo,ind_bel))
+        if couples:
+            intersection_point = [ _plane_y_intersection(v1, v2, k = h) for v1, v2 in couples]
+            intersection_point = np.asarray(intersection_point)
+            drawing_hull = ConvexHull(intersection_point[:,[0,2]]).vertices
+
+            hull_points = np.stack((intersection_point[drawing_hull,0],intersection_point[drawing_hull,2]), axis = -1)
+            from matplotlib.patches import Polygon
+            from matplotlib.collections import PatchCollection
+
+            if reg['identity'] == 2:
+                polygon = Polygon(hull_points, True, ec = palette[2], fc = (1,1,1,1), lw =1)
+
+            else:
+                polygon = Polygon(hull_points, True, fc = palette[reg['identity']])
+            plt.gca().add_artist(polygon)
+
+            #Nuclei
+            if reg['identity'] < 2:
+                circles.append((reg['nucleus'][0], reg['nucleus'][2], nuclei_rad))
+
+    if draw_nuclei:
+        for circ in circles:
+            circle = plt.Circle((circ[0], circ[1]), circ[2], color = palette[2], alpha = 0.7)
+            plt.gca().add_artist(circle)
+
+    return fig
+
 def _draw_noise(RGB = True, cmap = 'Purples', noise_density = 20):
     """
     This funtion produces a random Perlin noise image
@@ -262,14 +322,19 @@ def _draw_noise(RGB = True, cmap = 'Purples', noise_density = 20):
     return fig
 
 def _create_surf():
-    x_max = 1
-    y_max = 1
-    n_pts = 200
-    scale = 7 #Delicate Parameter
+    x_max = 1.5
+    y_max = 1.5
+    n_pts = 2000
+    scale = 5 #Delicate Parameter
     offset = 10 #Acts like a seed
-    ED_height = 100
-    EK_height = 20
-    E_thick = 100
+
+    ED_height = 1
+    EK_height = 0.2
+
+    K_thick = 0.4
+    E_thick = 0.5
+    D_thick = 0.5
+
     vec_noise = np.vectorize(pnoise2)
 
     x_val  = np.linspace(offset, x_max + offset, n_pts)
@@ -277,11 +342,12 @@ def _create_surf():
     xx, yy = np.meshgrid(x_val, y_val, sparse = False)
     zz = vec_noise(xx, yy) * EK_height + E_thick
 
+    print(f"EK surf in range [{zz.min():.2f},{zz.max():.2f}]")
+
     xx = (xx - offset) * scale + offset
     yy = (yy - offset) * scale + offset
     zz1 = vec_noise(xx, yy) * ED_height
-
-    zz.shape
+    print(f"ED surf in range [{zz1.min():.2f},{zz1.max():.2f}]")
 
     x_grain = np.unique(xx)[1] - np.unique(xx)[0]
     y_grain = np.unique(yy)[1] - np.unique(yy)[0]
@@ -290,14 +356,15 @@ def _create_surf():
 
     EK_bound = zz
     ED_bound = zz1
-    K_bound = None #TODO: Future iplementation
+    K_bound = EK_bound + K_thick
 
-    max_z = 2 * EK_height + E_thick
-    min_z = -ED_height*2
+    max_z = K_bound.max() + 2*K_thick
+    min_z = -ED_height - D_thick
 
-    boundaries = np.array([[offset, offset + x_max],
-                           [offset, offset + y_max],
-                           [min_z , max_z       ]])
+    boundaries = np.array([[0     , x_max * scale ],
+                           [0     , y_max * scale ],
+                           [min_z , max_z ]])
+
 
     # fig = plt.figure(figsize=(15,10))
     # ax = fig.gca(projection='3d')
@@ -312,39 +379,91 @@ def _create_surf():
 
     return boundaries, ED_bound, EK_bound, K_bound, disc_grain
 
-def derma_section(N_points):
-    N_points = 300
-    boundaries, ED_bound, EK_bound, K_bound, disc_grain= _create_surf()
+def _surf_identity(nuclei, bound):
+    identity  = []
+    for xn, yn, zn in nuclei:
+        x = xn.astype('int')
+        y = yn.astype('int')
+        identity.append(zn > bound[x,y]) #True: above, False: beneath
+    return identity
+
+def derma_section(N_points=600, n_slices = 1, saving_path='.', dpi = 100, draw_nuclei=True):
+    plane_distance = 0 #????
+    boundaries, ED_bound, EK_bound, K_bound, (x_grain, y_grain)= _create_surf()
     vor_points = _get_vor_points(boundaries, N_points) #Getting point for creating Voronoi tassellation
     vor = Voronoi(vor_points) #Creating the tassellation
-    cropped_reg = [ reg for reg in vor.regions if _inside_boundaries(vor, reg, boundaries)] #Cropping out the regions that lies outside the boundaries
+
     nuclei_rad = _get_nuclei_radius(boundaries, N_points)
     nuclei = np.copy(vor.points)
-
-    #SOME problem here and there!!!!!!
-
-    #Discretize nuclei coordinates
-    #TODO: do this computation in a smarter way!!!!!!
-    nuclei[:,0:2] = nuclei[:,0:2] - np.array(np.unique(ED_bound[0])[0], np.unique(ED_bound[1])[0])
-    x_grain = np.unique(ED_bound[0])[1] - np.unique(ED_bound[0])[0]
-    y_grain = np.unique(ED_bound[1])[1] - np.unique(ED_bound[1])[0]
     nuclei[:,0:2] = np.floor_divide(nuclei[:,0:2], np.array(x_grain, y_grain))
-    nuclei
-    #HERE
+
+    K_identity  = _surf_identity(nuclei, K_bound)  # Void
+    EK_identity = _surf_identity(nuclei, EK_bound) # Void - Keratine
+    ED_identity = _surf_identity(nuclei, ED_bound) # Void - Keratine - Epidermis
+
+    nuclei_id = np.asarray(ED_identity)*1 + np.asarray(EK_identity)*1 + np.asarray(K_identity)*1
+    # 0:Dermis, 1:Epidermis, 2:Keratine, 3:Void
+
+    cropped_reg = []
+    for n,pt in enumerate(vor.point_region):
+        reg = vor.regions[pt]
+        if _inside_boundaries(vor, reg, boundaries):
+            cr_reg = {'nucleus' : vor.points[n],
+                      'vertices': [vor.vertices[id] for id in reg],
+                      'identity': nuclei_id[n]}  # 0:Dermis, 1:Epidermis, 2:Keratine, 3:Void
+            cropped_reg.append(cr_reg)
+
+    l = np.arange(0,n_slices)
+    slices = (l - np.floor(len(l)/2)).astype('int8')
+
+    #Plotting settings
+    turquoise = color.hsv_to_rgb(vector(0.5,1,0.8))
+    red       = color.red #Some colors
+    white     = color.white
+    black     = color.black
+    colors    = [red, turquoise, white,  black] # 0:Dermis, 1:Epidermis, 2:Keratine, 3:Void
+
+    IDENTITIES = {'Dermis':'red', 'Epidermis':'turquoise', 'Keratine':'white', 'Void':'black'}
+    for k, v in IDENTITIES.items():
+        print(f'{k[:5]}: \t {v}')
+
+    Figures   =  [] #List to which append all the drawings
+
+    # 3D Plotting
+    # scene     = canvas(width=800, height=600, center=vector(5,5,0), background=color.gray(0.6))
+    # for reg in cropped_reg[:1000]:
+    #     conv_hull= ConvexHull(reg['vertices'])
+    #     simpl = []
+    #     for sim in conv_hull.simplices:
+    #         pts = [conv_hull.points[pt] for pt in sim]
+    #         simpl.append( triangle( vs=[vertex( pos     = vector(*ver),
+    #                                             color   = colors[reg['identity']],
+    #                                             opacity = 0.2) for ver in pts]))
+
+    #Loop for Drawing and Saving every SLICE
+    #Previous palette
+    palette = [[0.81176471, 0.62745098, 0.78039216],
+               [0.49803922, 0.34509804, 0.58823529],
+               [0.34,       0.19,       0.63],
+               [0.9254902,  0.89411765, 0.91372549]]
+    y = 0.5
+    for n_s in slices:
+        dy = plane_distance * n_s
+        fig = _draw_section_2(vor, cropped_reg, palette, draw_nuclei = draw_nuclei, h = y+dy, nuclei_rad = nuclei_rad, bound = boundaries)
+        fig.savefig(os.path.join(saving_path + f'N_{N_points}_slice.png'),
+                    #bbox_inches='tight',
+                    dpi=dpi)
+        plt.close(fig)
+
+    # #Drawing the LABEL image
+    # fig = _draw_section(vor, cropped_reg, region_id, lab_colors, draw_nuclei = draw_nuclei, h = y, nuclei_rad = nuclei_rad)
+    # fig.savefig(os.path.join(saving_path + f'N_{N_points}_slice.png'),
+    #             #bbox_inches='tight',
+    #             dpi=dpi)
+    plt.close(fig)
 
 
-
-def pancr_section(iteration_level = 3,
-                  rotation = False,
-                  seed = None,
-                  y = 0,
-                  N_points = 5000,
-                  n_slices = 3,
-                  saving_path = '',
-                  noise_density = 20,
-                  plane_distance = 0.05,
-                  draw_nuclei = True,
-                  sampling_method = 'saltelli'):
+def pancr_section( iteration_level = 3,rotation = False, seed = None, y = 0, N_points = 5000, n_slices = 3, saving_path = '', noise_density = 20, plane_distance = 0.05, draw_nuclei = True, sampling_method = 'saltelli'):
     """
     This function draws and saves the images resulting from the slicing of a ramification.
 
@@ -427,10 +546,6 @@ def pancr_section(iteration_level = 3,
                 #bbox_inches='tight',
                 dpi=dpi)
     plt.close(fig)
-#%%
-N_points = 200
-derma_section(N_points)
-
 
 #%%
 def different_density_benchmarks():
@@ -458,4 +573,4 @@ def different_density_benchmarks():
         print(f'{N_points} figures written.')
 
 if __name__ == '__main__':
-    different_density_benchmarks()
+    derma_section(N_points = 120000)
