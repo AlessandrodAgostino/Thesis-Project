@@ -450,7 +450,7 @@ def derma_section(N_points=600, n_slices = 1, saving_path='.', dpi = 100, draw_n
     for n_s in slices:
         dy = plane_distance * n_s
         fig = _draw_section_2(vor, cropped_reg, palette, draw_nuclei = draw_nuclei, h = y+dy, nuclei_rad = nuclei_rad, bound = boundaries)
-        fig.savefig(os.path.join(saving_path + f'N_{N_points}_slice.png'),
+        fig.savefig(os.path.join(saving_path + f'/N_{N_points}_slice.png'),
                     #bbox_inches='tight',
                     dpi=dpi)
         plt.close(fig)

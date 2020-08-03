@@ -8,8 +8,8 @@ import matplotlib as mpl
 this script compute and plots the Perlin noise in different ways
 """
 
-x_max = 20
-y_max = 20
+x_max = 10
+y_max = 10
 n_pts = 200
 offset = 50
 
@@ -27,23 +27,23 @@ zz_stack[100:200, 100, :]
 fig, ax = plt.subplots(figsize=(8,8))
 plt.imshow(zz_stack)
 #%%-------------------------------------------------------------------------------
-#2D Plotting
-maps = ['Reds', 'Greens', 'Blues' ]
-slices = [slice(0,200), slice(200 ,400), slice(400,None)]
-fig, axes = plt.subplots(ncols = 3, figsize = (8*3,8))
-
-for map, ax, sl in zip(maps, axes, slices):
-    ax.contourf(xx[:,sl], yy[:,sl], zz[:,sl], cmap = plt.get_cmap(map))
-    ax.get_yaxis().set_ticks([])
-    ax.get_xaxis().set_ticks([])
-    ax.set_title(f'{map[:-1]} Noise', fontsize=20)
-fig.tight_layout()
+# #2D Plotting
+# maps = ['Reds', 'Greens', 'Blues' ]
+# slices = [slice(0,200), slice(200 ,400), slice(400,None)]
+# fig, axes = plt.subplots(ncols = 3, figsize = (8*3,8))
+#
+# for map, ax, sl in zip(maps, axes, slices):
+#     ax.contourf(xx[:,sl], yy[:,sl], zz[:,sl], cmap = plt.get_cmap(map))
+#     ax.get_yaxis().set_ticks([])
+#     ax.get_xaxis().set_ticks([])
+#     ax.set_title(f'{map[:-1]} Noise', fontsize=20)
+# fig.tight_layout()
 #%%-----------------------------------------------------------------------------
 #Maybe changing the Main Palette to 'RdPu' I can just create a single square
 #noise with random 'offset'
 
-x_max = 15
-y_max = 15
+x_max = 5
+y_max = 5
 n_pts = 200
 offset = 50
 
@@ -59,11 +59,11 @@ xx, yy = np.meshgrid(x_val, y_val, sparse = False)
 vec_noise = np.vectorize(pnoise2)
 zz = vec_noise(xx, yy) * 128 + 128
 
-fig, ax = plt.subplots(1, figsize = (8,8))
-ax.contourf(xx, yy, zz, cmap = cmap)
-ax.get_yaxis().set_ticks([])
-ax.get_xaxis().set_ticks([])
-fig.tight_layout()
+# fig, ax = plt.subplots(1, figsize = (8,8))
+# ax.contourf(xx, yy, zz, cmap = cmap)
+# ax.get_yaxis().set_ticks([])
+# ax.get_xaxis().set_ticks([])
+# fig.tight_layout()
 
 #%%-----------------------------------------------------------------------------
 #3D Plotting

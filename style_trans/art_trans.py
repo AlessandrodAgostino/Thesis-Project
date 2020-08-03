@@ -220,11 +220,9 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
 #%%
 # from glob import glob
 
-image_dir = './images/comparison_sampling/'
-# input_images = glob(image_dir + 'styles/*.jpg')
-
-content_img = image_loader(image_dir + 'N_20000_seed_42_sl_0_reg.jpg')
-style_img = image_loader( f'./images/styles/style_pancreatite.jpg' )
+image_dir = './images/Derma/'
+content_img = image_loader(image_dir + 'Derma_first.jpg')
+style_img = image_loader( f'./images/styles/epidermide_style.jpg' )
 
 input_img = content_img.clone()
 assert style_img.size() == content_img.size()
@@ -236,4 +234,4 @@ image = output.cpu().clone()  # we clone the tensor to not do changes on it
 image = image.squeeze(0)      # remove the fake batch dimension
 image = unloader(image)
 #image.save(image_dir + 'styled/' + in_im.split('/')[-1].split('.')[0]+ '_st'+ '.jpg')
-image.save(image_dir + 'styled_reg.jpg')
+image.save(image_dir + 'styled_derma.jpg')

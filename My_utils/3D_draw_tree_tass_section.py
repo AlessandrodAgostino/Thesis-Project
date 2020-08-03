@@ -84,7 +84,7 @@ vor_points.shape
 
 #%%-----------------------------------------------------------------------------
 #Alternative: Generating points through a recurrence-rule
-N_points = 8000
+N_points = 4000
 d = 3
 s_0 = 0.5
 x=2.0000
@@ -165,7 +165,7 @@ The filtering is done by deciding the color of the region to draw.
 Should be implemented in a more sensitive way.
 """
 #Preliminary graphic settings
-scene     = canvas(width=800, height=600, center=vector(5,5,0), background=color.gray(0.6))
+scene     = canvas(width=1000, height=800, center=vector(5,5,0), background=color.gray(0.6))
 turquoise = color.hsv_to_rgb(vector(0.5,1,0.8))
 red       = color.red #Some colors
 white     = color.white
@@ -190,7 +190,7 @@ for n,ver in enumerate(vor.vertices):
 
 #Drawing a Voronoi Tassels and their volumes if they're finite
 for n,reg in enumerate(vor.regions):
-    if colors[region_id[n]] in [turquoise]: #[red, turquoise] or [orange] for nothing
+    if colors[region_id[n]] in [turquoise, red]: #[red, turquoise] or [orange] for nothing
         conv_hull= ConvexHull([vor.vertices[ver] for ver in reg])
         simpl = []
         for sim in conv_hull.simplices:
