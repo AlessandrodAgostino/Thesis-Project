@@ -2,11 +2,29 @@
 \usepackage[english]{babel}
 \usepackage{newlfont}
 \usepackage{color}
+\usepackage{graphicx}
+\usepackage[labelfont={bf,it},textfont=it]{caption}
+\usepackage{natbib} %biblio
+\bibliographystyle{plain}
+\usepackage[nottoc]{tocbibind} %Show bib in index
+
 \textwidth=450pt
 \oddsidemargin=0pt
 
 \begin{document}
 \input{chapters/titlepage}
+\input{chapters/acknowledgements}
+\input{chapters/abstract}
+
 \tableofcontents{}
+
 \input{chapters/introduction}
+\input{chapters/histo_images}
+\input{chapters/panc_generation}
+\input{chapters/epidermic_generation}
+\input{chapters/deep_learning}
+\input{chapters/open_problems}
+
+\bibliography{biblio}
+
 \end{document}
