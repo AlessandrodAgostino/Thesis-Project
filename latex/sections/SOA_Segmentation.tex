@@ -1,0 +1,103 @@
+\section{Deep Learning-Based Segmentation Algorithms}
+In digital image processing, image segmentation is the process of recognizing and subdividing an image into different regions of pixels that show similar features, like color, texture, or intensity. Typically, the task of segmentation is to recognize the edges and boundaries of the different objects in the image and assigning a different label to every detected region. The result of the segmentation process is an image with the same dimensions of the starting one made of solid color regions, representing the detected objects. This image is called \textit{segmentation mask}. In Figure \ref{fig:seg_example} is shown an example of segmentation of a picture of an urban landscape: different colors are linked to different classes of objects like persons in magenta and scooters in purple. This technology has a significant role in a wide variety of application fields such as scene understanding, medical image analysis, augmented reality, etc.
+
+\begin{figure}
+    \centering
+    \includegraphics[width = \textwidth]{images/seg_example}
+    \caption{Example of the resulting segmentation mask of an image of an urban landscape. Every interesting object of the image is detected and a solid color region replaces it in the segmentation mask. Every color corresponds to a different class of objects, for example, persons are highlighted in magenta and scooters in purple. The shape and the boundaries of every region should match as precisely as possible the edges of the objects.}
+    \label{fig:seg_example}
+\end{figure}
+
+A relatively easy problem and one of the first to be tackled could be distinguishing an object from the background in a grey-scale image. The easiest technique to perform segmentation in this kind of problem is based on thresholding. Thresholding is a binarization technique based on the image's grey-level histogram: to every pixel with luminosity above that threshold is assigned the color \textit{white}, and vice versa the color \textit{black}. However, this is a very primitive and fallacious yet very fast method, and it manages poorly complex images or images with un-uniformity in the background.
+
+Many other traditional techniques improve this first segmentation method. Some are based on the object's edges recognition, exploiting the sharp change in luminosity typically in correspondence of the boundary of a shape. Other techniques exploit instead a region-growing technology, according to which some \textit{seed} region markers are scattered on the image, and the regions correspondent to the objects in the image are grown incorporating adjacent pixels with similar properties.
+
+\begin{figure}
+    \centering
+    \includegraphics[width = 0.7\textwidth]{images/fingerprints}
+    \caption{Example of the resulting segmentation mask of an image of a fingeprint obtained trhough a thresholding algorithm. The result is not extremely good, but this techinque is very easy to implement and runs very quickly.}
+    \label{fig:fing_prints}
+\end{figure}
+
+\subsection{State of the Art on Deep Learning Segmentation}
+Similarly to many other traditional tasks, also for segmentation, there has been a thriving development lead by the diffusion of deep learning, that boosted the performances resulting in what many regards as
+a paradigm shift in the field \cite{deep_seg_SOA}.
+
+In further detail, image segmentation can be formulated as a classification problem of pixels with semantic labels (semantic segmentation) or partitioning of individual objects (instance segmentation). Semantic segmentation performs pixel-level labeling with a set of object categories (e.g. boat, car, person, tree) for all the pixels in the image, hence it is typically a harder task than image classification, which requires just a single label for the whole image. Instance segmentation extends semantic segmentation scope further by detecting and delineating each object of interest in the image (e.g. partitioning of individual nuclei in a histological image).
+
+There are many prominent Neural Network architectures used in the computer vision comunity nowadays, based on very differnet concepts such as convolution, recursion, dimensionality reduction and image generation. This section will provide an overview on the state of the art of this techlogy and will dwell briefly on the details behind some of those innovative architectures.
+
+\begin{description}
+    \item [Recurrent Neural Networks (RNNs) and the LSTM] \hfill \\
+        The typical application for RNN is processing sequential data, as written text, speech or video clips or any other kind of time-series signal. In this kind of data there is a strong dependece between values at a given time/position and values previously processed. Those models try implement the concept of \textit{memory} weaving connections, outside the main information flow of the network, with the previous NN input. At each time-stamp the model collects the input from the current time $X_i$ i and the hidden state from the previous step $h_{i-1}$, and outputs a target value and a new hidden state Figure \ref{fig:recNN}. Typically RNN cannot manage easily long-term dependences in long sequences of signal. There is no theoretical limitation in this direction, but often it arises vanishing (or exploding) gradient problematics. A specific type of RNN has been designed to avoid this situation, the so called Long Short Term Memory (LSTM) \cite{LSTM}. The LSTM architecture includes three gates (input gate, output gate, forget gate), which regulate the flow of information into and out from a memory cell, which stores values over arbitrary time intervals.
+
+        \begin{figure}
+            \centering
+            \includegraphics[width = 0.8\textwidth]{images/recNN}
+            \caption{Example of the structure of a simple RNN from  \cite{deep_seg_SOA}.}
+            \label{fig:recNN}
+        \end{figure}
+
+    \item [Generative Adversarial Networks (GANs)] \hfill \\
+        TO DO
+
+    \item [Encoder-Decoder and Auto-Encoder Models] \hfill \\
+            Encoder-Decoder models try to learn the relation between an input and the correspondening output with a two steps process. The first step is the so called \textit{encoding} process, in which the input $x$ is compressed in what is called the \textit{latent-space} representation $z = f(x)$. The second step is the \textit{decoding} process, where the NN make a prediction of the output starting from the latent-spece representation $ y = g(z)$. The idea underneath this approach is to capture in the latent-space representation the underlying semantic information of the input that is useful for predicting the output. ED models are widely used in image-to-image problems (where both input and output are images) and for sequential-data processing (like Natural Language Processing NLP). In Figure \ref{fig:EDNN} is shown a schematich representation of this architecture. Usually these model follow a supervised training, trying to reduce the restruction loss between the predicted output and the ground-truth output provided while training. Typical application for this technology are image enhancing techinque like de-noising or super-resolution, where the output image is an improved version of the input image.
+
+        \begin{figure}
+            \centering
+            \includegraphics[width = 0.8\textwidth]{images/EDnet}
+            \caption{Example of the structure of a simple ED NN from  \cite{deep_seg_SOA}.}
+            \label{fig:EDNN}
+        \end{figure}
+
+    \item [Convolutional Neural Networks (CNNs)] \hfill \\
+        As stated before CNNs are a staple choice in image processing DL applications. They mainly consist of three type of layers:
+
+        \begin{enumerate}[i]
+            \item convolutional layers, where a kernel window of parameters is convolved with the image pixels and produce numerical features maps.
+
+            \item nonlinear layers, which apply an activation function on feature maps (usually element-wise). This step allow the network to introduce non-linear behaviour and then increasing its modeling capabilities.
+
+            \item pooling layers, which replace a small neighborhood of a feature map with some statistical information (mean, max, etc.) about the neighborhood and reduce spatial resolution.
+        \end{enumerate}
+
+        Given the arrangment of successive layers, each unit receives weighted inputs from a small neighborhood, known as the receptive field, of units in the previous layer. The stack of layers allow the NN to perceive different resolutions: the higher-level layers learn features from increasingly wider receptive fields. The leading computational advantage given by a CNN architecture lyes in the sharing of kernels' weights within a convolutional layer. The result is a significantly smaller number of parameters than fully-connected neural networks. Some of the most notorious CNN architectures include: AlexNet \cite{AlexNet}, VGGNet \cite{1409.1556}, and U-Net \cite{U-net}.
+\end{description}
+
+For the purposes of this work the U-net architechture is particular interesting. The U-net model was initially developed for biomedical image segmentation, and in its structure reflects characteristics of both CNN and Encoder Decoder models. Ronneberger et al. [50] proposed this model for segmenting biological microscopy images. Their network and training
+% \textit{strategy relies on the use of data augmentation to learn from
+% the available annotated images more effectively. The U-Net
+% architecture (Figure 14) comprises two parts, a contracting
+% path to capture context, and a symmetric expanding path that
+% enables precise localization. The down-sampling or contract-
+% ing part has a FCN-like architecture that extracts features
+% with 3 × 3 convolutions. The up-sampling or expanding
+% part uses up-convolution (or deconvolution), reducing the
+% number of feature maps while increasing their dimensions.
+% Feature maps from the down-sampling part of the network
+% are copied to the up-sampling part to avoid losing pattern
+% information. Finally, a 1×1 convolution processes the feature
+% maps to generate a segmentation map that categorizes each
+% pixel of the input image. U-Net was trained on 30 transmitted
+% light microscopy images, and it won the ISBI cell tracking
+% challenge 2015 by a large margin.
+% Various extensions of U-Net have been developed for
+% different kinds of images. For example, Cicek [52] proposed
+% a U-Net architecture for 3D images. Zhou et al. [53] developed
+% a nested U-Net architecture. U-Net has also been applied
+% to various other problems. For example, Zhang et al. [54]
+% developed a road segmentation/extraction algorithm based
+% on U-Net.
+% V-Net (Figure 15) is another well-known, FCN-based
+% model, which was proposed by Milletari et al. [51] for
+% 3D medical image segmentation. For model training, they
+% introduced a new objective function based on the Dice
+% coefficient, enabling the model to deal with situations in
+% which there is a strong imbalance between the number of
+% voxels in the foreground and background. The network was}
+%
+%
+%
+%
+IMAGE SEGMENTATION DATASET COMMONLY USED FROM \cite{deep_seg_SOA}.

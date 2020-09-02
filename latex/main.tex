@@ -3,7 +3,9 @@
 \usepackage{newlfont}
 \usepackage{color}
 \usepackage{graphicx}
-\usepackage[labelfont={bf,it},textfont=it]{caption}
+\usepackage{amsmath}
+\usepackage{enumerate}
+\usepackage[labelfont={bf,it},textfont=it, margin=1cm]{caption}
 \usepackage{natbib} %biblio
 \bibliographystyle{plain}
 \usepackage[nottoc]{tocbibind} %Show bib in index
@@ -12,19 +14,23 @@
 \oddsidemargin=0pt
 
 \begin{document}
-\input{chapters/titlepage}
-\input{chapters/acknowledgements}
-\input{chapters/abstract}
+\input{sections/titlepage}
+\input{sections/acknowledgements}
+\input{sections/abstract}
 
 \tableofcontents{}
 
-\input{chapters/introduction}
-\input{chapters/histo_images}
-\input{chapters/panc_generation}
-\input{chapters/epidermic_generation}
-\input{chapters/deep_learning}
-\input{chapters/open_problems}
+\input{sections/introduction}
+
+\chapter{Histo \& Deep Learning \& SOA}
+    \input{sections/histo_images}
+    \input{sections/intro_deep_learning}
+    \input{sections/SOA_Segmentation}
+
+\chapter{Model Generations}
+
+\chapter{Conclusions}
+    \input{sections/conclusions}
 
 \bibliography{biblio}
-
 \end{document}
