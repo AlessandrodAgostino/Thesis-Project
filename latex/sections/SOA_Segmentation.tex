@@ -38,11 +38,8 @@ There are many prominent Neural Network architectures used in the computer visio
             \label{fig:recNN}
         \end{figure}
 
-    \item [Generative Adversarial Networks (GANs)] \hfill \\
-        TO DO
-
     \item [Encoder-Decoder and Auto-Encoder Models] \hfill \\
-            Encoder-Decoder models try to learn the relation between an input and the correspondening output with a two steps process. The first step is the so called \textit{encoding} process, in which the input $x$ is compressed in what is called the \textit{latent-space} representation $z = f(x)$. The second step is the \textit{decoding} process, where the NN make a prediction of the output starting from the latent-spece representation $ y = g(z)$. The idea underneath this approach is to capture in the latent-space representation the underlying semantic information of the input that is useful for predicting the output. ED models are widely used in image-to-image problems (where both input and output are images) and for sequential-data processing (like Natural Language Processing NLP). In Figure \ref{fig:EDNN} is shown a schematich representation of this architecture. Usually these model follow a supervised training, trying to reduce the restruction loss between the predicted output and the ground-truth output provided while training. Typical application for this technology are image enhancing techinque like de-noising or super-resolution, where the output image is an improved version of the input image.
+        Encoder-Decoder models try to learn the relation between an input and the correspondening output with a two steps process. The first step is the so called \textit{encoding} process, in which the input $x$ is compressed in what is called the \textit{latent-space} representation $z = f(x)$. The second step is the \textit{decoding} process, where the NN make a prediction of the output starting from the latent-spece representation $ y = g(z)$. The idea underneath this approach is to capture in the latent-space representation the underlying semantic information of the input that is useful for predicting the output. ED models are widely used in image-to-image problems (where both input and output are images) and for sequential-data processing (like Natural Language Processing NLP). In Figure \ref{fig:EDNN} is shown a schematich representation of this architecture. Usually these model follow a supervised training, trying to reduce the restruction loss between the predicted output and the ground-truth output provided while training. Typical application for this technology are image enhancing techinque like de-noising or super-resolution, where the output image is an improved version of the input image.
 
         \begin{figure}
             \centering
@@ -50,6 +47,20 @@ There are many prominent Neural Network architectures used in the computer visio
             \caption{Example of the structure of a simple ED NN from  \cite{deep_seg_SOA}.}
             \label{fig:EDNN}
         \end{figure}
+
+    \item [Generative Adversarial Networks (GANs)] \hfill \\
+        The peculiarity of Generative Adversarial Network lie in in its structure. It is actually made of two distinct and independent modules: a generator and a discriminator, as shown in Figure \ref{fig:GAN}. The first module $G$, responsable for generation, typically learns to map a prior random distribution of input $z$ to a target distribution $y$, as similar as possible to the objective (e.g. the generation of a new likely human face or an hybrid image from two starting sample, as we will see in section \hl{[??]}) $G = z \rightarrow y$. The second module, the discriminator $D$, instead is trained to distinguish between \textit{real} and \textit{fake} images of the target category. These two networks are trained alternatly in the same training process. The generator tries to fool the discriminator and vice versa. To this \textit{competition} within different parts of the network is due the name adversarial. The formal manner to set up this adversarial training lies in the accurate choice of a suitable loss function, that will look like: $$L_{GAN} = \mathbb{E}_{x \sim p_{data}(x)}[logD(x)] + \mathbb{E}_{z \sim p_{z}(z)}[log(1-D(G(z)))]$$
+        The GAN is thus based on a minimax game between $G$ and $D$. $D$ aims to reduce the classification error in distinguishing fake samples from real ones, adn as a consequence maximizing the $L_{GAN}$. On the other side, $G$ wants to maximize the $D$'s error, hence minimizing $L_{GAN}$. The result of the training process is the trained generator $G^*$, capable of produce an arbitrary number of new data (images, text or whatever else) $$ G^* = \operatorname*{arg\,min_Gmax_D} L_{GAN}$$
+        This peculiar architecture has yielded several interesting results and it has been developed in many different direction, with influences and contaminations with other architectures. In section \hl{[??]} will be shown a particular application of this architecture, known as \textit{style-transfer} network, which is a particular algorithm capable of implanting the visual texture of a \textit{style} image onto the content of a different image, producing interesting hybrid images.
+
+
+        \begin{figure}
+            \centering
+            \includegraphics[width = 0.6\textwidth]{images/GAN}
+            \caption{Schematical representation of a Generative Adversarial Networks, form \cite{deep_seg_SOA}.}
+            \label{fig:GAN}
+        \end{figure}
+
 
     \item [Convolutional Neural Networks (CNNs)] \hfill \\
         As stated before CNNs are a staple choice in image processing DL applications. They mainly consist of three type of layers:
@@ -65,39 +76,29 @@ There are many prominent Neural Network architectures used in the computer visio
         Given the arrangment of successive layers, each unit receives weighted inputs from a small neighborhood, known as the receptive field, of units in the previous layer. The stack of layers allow the NN to perceive different resolutions: the higher-level layers learn features from increasingly wider receptive fields. The leading computational advantage given by a CNN architecture lyes in the sharing of kernels' weights within a convolutional layer. The result is a significantly smaller number of parameters than fully-connected neural networks. Some of the most notorious CNN architectures include: AlexNet \cite{AlexNet}, VGGNet \cite{1409.1556}, and U-Net \cite{U-net}.
 \end{description}
 
-For the purposes of this work the U-net architechture is particular interesting. The U-net model was initially developed for biomedical image segmentation, and in its structure reflects characteristics of both CNN and Encoder Decoder models. Ronneberger et al. [50] proposed this model for segmenting biological microscopy images. Their network and training
-% \textit{strategy relies on the use of data augmentation to learn from
-% the available annotated images more effectively. The U-Net
-% architecture (Figure 14) comprises two parts, a contracting
-% path to capture context, and a symmetric expanding path that
-% enables precise localization. The down-sampling or contract-
-% ing part has a FCN-like architecture that extracts features
-% with 3 × 3 convolutions. The up-sampling or expanding
-% part uses up-convolution (or deconvolution), reducing the
-% number of feature maps while increasing their dimensions.
-% Feature maps from the down-sampling part of the network
-% are copied to the up-sampling part to avoid losing pattern
-% information. Finally, a 1×1 convolution processes the feature
-% maps to generate a segmentation map that categorizes each
-% pixel of the input image. U-Net was trained on 30 transmitted
-% light microscopy images, and it won the ISBI cell tracking
-% challenge 2015 by a large margin.
-% Various extensions of U-Net have been developed for
-% different kinds of images. For example, Cicek [52] proposed
-% a U-Net architecture for 3D images. Zhou et al. [53] developed
-% a nested U-Net architecture. U-Net has also been applied
-% to various other problems. For example, Zhang et al. [54]
-% developed a road segmentation/extraction algorithm based
-% on U-Net.
-% V-Net (Figure 15) is another well-known, FCN-based
-% model, which was proposed by Milletari et al. [51] for
-% 3D medical image segmentation. For model training, they
-% introduced a new objective function based on the Dice
-% coefficient, enabling the model to deal with situations in
-% which there is a strong imbalance between the number of
-% voxels in the foreground and background. The network was}
-%
-%
-%
-%
-IMAGE SEGMENTATION DATASET COMMONLY USED FROM \cite{deep_seg_SOA}.
+For the purposes of this work the U-net architechture is particular interesting. The U-net model was initially developed for biomedical image segmentation, and in its structure reflects characteristics of both CNN and Encoder Decoder models. Ronneberger et al.\cite{U-net} proposed this model for segmenting biological microscopy images in 2015. The U-Net architecture is made of two branches, a contracting path to capture context, and a symmetric expanding path that enables precise localization. The down-sampling flow is made of a Fully Convolutional Network (FCN)-like architecture that computes features with 3 $\times$ 3 kernel convolutions. On the other side, the up-sampling branch exploits up-convolution operations (or deconvolution), reducing the number of feature maps while increasing their dimensions. Another characteristic of this architecture are the direct connctions between layers of similiar level of compression in compressing and decompressing branches. Those links allow the NN to preserve spatial and pattern information. The Network flow eventually ends with a 1 $\times$ 1 convolution layer responsable of the generation of the segmentation mask of the input image.
+
+\hl{[HOW MUCH SHOULD I DEEPEN THE TECHNICAL DESCRIPTION?]}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width = 0.8\textwidth]{images/unet}
+        \caption{Scheme of the typical architecture of a U-net NN. This particular model was firstly proposed by Ronneberger \textit{et al.} in \cite{U-net}.}
+        \label{fig:EDNN}
+    \end{figure}
+
+\subsection{Image Segmentation Datasets}
+Beside the choice of the suitable architecture the most important aspect while developing a NN is the dataset on which perform the training process. Let confine the discussion only to image-to-image problems, like segmentation problems. There are a lot of widely used datasets, but I want to mention just a few of them to give the idea of their typical dimensions.
+
+A good example for segmentation is the Cityscapes dataset \cite{Cityscapes}, which is a large-scale database with a focus on semantic understanding of urban street scenes. The dataset is made of video sequences form the point of view of a car in the road traffic, from 50 different cities in the world. The clips are made of 5K frames, labeled with an extremily high quality at pixel-level and an additional set of 20K weakly-annotated frames. Each pixel in the segmentation mask contains the semantic classification, among over 30 classes of objects. An example of an image from this dataset in shown in Figure \label{fig:seg_example}.
+
+The PASCAL Visual Object Classes (VOC) \cite{PASCAL} is another of the most popular datasets in computer vision. This dataset is designed to support the training of algortihms for 5 different task: segmentation, classification, detection, person layout and action recognition. In particular, for segmentation there are over than 20 classes of labeled objects (e.g. planes, bus, car, sofa, TV, dogs, person, etc.). The dataset comes divided in two portions: training and validation, with 1,464 and 1,449 images, respectively. In Figure \ref{fig:PASCAL}is shown an example of an image and its corresponding segmentation mask.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width = 0.8\textwidth]{images/PASCAL}
+        \caption{An example image from the PASCAL dataset and its corresponding segmentation mask \cite{PASCAL}.}
+        \label{fig:PASCAL}
+    \end{figure}
+
+It is worth mentioning that in the medical image processing domain typically the availabl dataset are definetly not that rich and vast (that is actually the seed of this work) and thus many techniques of data augmentation have been devised, to get the best out of the restricted amount of material. Generally data augmentation manipulate the starting material applying a set of transformation to create new material, like rotation, reflection, scaling, cropping and shifting, etc. Data augmentation has been proven to improve the efficacy of the training, making the model less prone to over-fitting, increasing the generalization power of the model and helping the convergence to a stable solution during the training process.
