@@ -1,0 +1,42 @@
+\section{Materials and Tools for the Development}
+Before delving into the details of the development of the two histological models, which are the heart of this work, it should be convenient to dwell on every tool employed during the design phase.
+
+All the work has been done in a pure Python environment, using several already established libraries and writing on my own the missing code, for some specific applications. All the code written during the development, the images and the data produced have been collected in a devoted repository on GitHub \cite{repo}. I decided to code in Python given the thriving variety of available libraries geared toward scientific computation, image processing , data analysys and last but not least for its ease of use (compared to other programming languages).
+
+In this section it will follow a description, in no particular order, of the less common tools I used during my work.
+
+\subsection{Quaternions}
+Quaternions are, in mathematics, a number system that expands in 4 dimensions the complex numbers and they have been described for the first time by the famous mathematician William Rowan Hamilton in 1843. This number system define three independent \textit{imaginary} units $\bm{i}$, $\bm{j}$, $\bm{k}$ as in (\ref{eq:quat_rules}), and the general representation of a quaternion $q$ is (\ref{eq:quat}) where $a,b,c,d$ are real numbers:
+
+\begin{align}
+    & \bm{i}^2 = \bm{j}^2 = \bm{k}^2 = \bm{i}\bm{j}\bm{k} = -1, \label{eq:quat_rules}\\
+    & \bm{q} = a + b\bm{i} + c\bm{j} + d\bm{k}. \label{eq:quat}
+\end{align}
+
+Furthermore, the multiplication operation between quaternionn does not benefit from commutativity, hence the product between basis elements will behave as follows:
+
+\begin{align}
+    \bm{i} \cdot 1 = 1 \cdot \bm{i} = \bm{i}, & \qquad  \bm{j} \cdot 1 = 1 \cdot \bm{j} = \bm{j}, \qquad \bm{k} \cdot 1 = 1 \cdot \bm{k} = \bm{k} \\
+    & \bm{i} \cdot \bm{j}= \bm{k}, \qquad \bm{j} \cdot \bm{i}= -\bm{k} \nonumber \\
+    & \bm{k} \cdot \bm{i}= \bm{j}, \qquad \bm{i} \cdot \bm{k}= -\bm{j} \nonumber \\
+    & \bm{j} \cdot \bm{k}= \bm{i}, \qquad \bm{k} \cdot \bm{j}= -\bm{i}. \nonumber
+\end{align}
+
+For the purpose of this project quaternions are particularly interesting for their ability of representing in a very convenient way rotations in 3 dimensions. In fact, the particular subset of quaternions with vanishing real part ($a=0$) has a useful,yet redundant, correspondence with the group of rotations in tridimensional space. Every 3D rotation could be represent by a vector $\vec v$, along
+
+
+\subsection{Parametric L-Systems}
+
+\subsection{Voronoi Tassellation}
+
+\subsection{Saltelli Algorithm - Randon Number Generation}
+
+\subsection{Planar Section of a Polyhedron}
+
+\subsection{VPython - 3D Visualization}
+
+\subsection{SnakeMake}
+
+\subsection{Perlin Noise}
+
+\subsection{Style-Transfer Neural Network}\label{ssec:sttrNN}
