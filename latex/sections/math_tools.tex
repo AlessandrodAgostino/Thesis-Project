@@ -6,26 +6,46 @@ All the work has been done in a pure Python environment, using several already e
 In this section it will follow a description, in no particular order, of the less common tools I used during my work.
 
 \subsection{Quaternions}
-Quaternions are, in mathematics, a number system that expands in 4 dimensions the complex numbers and they have been described for the first time by the famous mathematician William Rowan Hamilton in 1843. This number system define three independent \textit{imaginary} units $\bm{i}$, $\bm{j}$, $\bm{k}$ as in (\ref{eq:quat_rules}), and the general representation of a quaternion $q$ is (\ref{eq:quat}) where $a,b,c,d$ are real numbers:
+Quaternions are, in mathematics, a number system that expands in four dimensions the complex numbers. They have been described for the first time by the famous mathematician William Rowan Hamilton in 1843. This number system define three independent \textit{imaginary} units $\bm{i}$, $\bm{j}$, $\bm{k}$ as in (\ref{eq:quat_rules}), which allows the general representation of a quaternion $\bm{q}$ is (\ref{eq:quat}) and its inverse $\bm{q}^{-1}$ (\ref{eq:inv_quat}) where $a,b,c,d$ are real numbers:
 
 \begin{align}
-    & \bm{i}^2 = \bm{j}^2 = \bm{k}^2 = \bm{i}\bm{j}\bm{k} = -1, \label{eq:quat_rules}\\
-    & \bm{q} = a + b\bm{i} + c\bm{j} + d\bm{k}. \label{eq:quat}
+    \bm{i}^2 & = \bm{j}^2 = \bm{k}^2 = \bm{i}\bm{j}\bm{k} = -1, \label{eq:quat_rules}\\
+    \bm{q} & = a + b\bm{i} + c\bm{j} + d\bm{k}, \label{eq:quat}\\
+    \bm{q}^{-1 } = (a + b\bm{i} + c\bm{j} + d\bm{k})^{-1} & = \frac{1}{a^2 + b^2 + c^2 +d^2}\ (a - b\bm{i} - c\bm{j} - d\bm{k}). \label{eq:inv_quat}
 \end{align}
 
 Furthermore, the multiplication operation between quaternionn does not benefit from commutativity, hence the product between basis elements will behave as follows:
 
 \begin{align}
-    \bm{i} \cdot 1 = 1 \cdot \bm{i} = \bm{i}, & \qquad  \bm{j} \cdot 1 = 1 \cdot \bm{j} = \bm{j}, \qquad \bm{k} \cdot 1 = 1 \cdot \bm{k} = \bm{k} \\
+    \bm{i} \cdot 1 = 1 \cdot \bm{i} = \bm{i}, & \qquad  \bm{j} \cdot 1 = 1 \cdot \bm{j} = \bm{j}, \qquad \bm{k} \cdot 1 = 1 \cdot \bm{k} = \bm{k} \label{eq:Ham_prod}\\
     & \bm{i} \cdot \bm{j}= \bm{k}, \qquad \bm{j} \cdot \bm{i}= -\bm{k} \nonumber \\
     & \bm{k} \cdot \bm{i}= \bm{j}, \qquad \bm{i} \cdot \bm{k}= -\bm{j} \nonumber \\
     & \bm{j} \cdot \bm{k}= \bm{i}, \qquad \bm{k} \cdot \bm{j}= -\bm{i}. \nonumber
 \end{align}
 
-For the purpose of this project quaternions are particularly interesting for their ability of representing in a very convenient way rotations in 3 dimensions. In fact, the particular subset of quaternions with vanishing real part ($a=0$) has a useful,yet redundant, correspondence with the group of rotations in tridimensional space. Every 3D rotation could be represent by a vector $\vec v$, along
+This number system has plenty of peculiar properties and application, but for the purpose of this project quaternions are important for their ability of representing in a very convenient way rotations in three dimensions. In fact, the particular subset of quaternions with vanishing real part ($a=0$) has a useful, yet redundant, correspondence with the group of rotations in tridimensional space. Every 3D rotation of an object can be represent by a 3D vector $\vec u$: the vector's direction indicates the axis of rotation and the vector magnitude $|\vec u|$ express the angular extent of rotation. However, the matricial operation which express the rotation around an arbitrary vector $\vec u$ it is quite complex and does not scale easily for multiple rotations \cite{10.1007/BFb0031048}, which brings to very heavy and entangled computations.
 
+Using quaternions for expressing rotations in space, instead, it is very convinient. Given the unit rotation vector $\vec u$ and the rotation angle $\theta$, the corresponding rotation quaternion $\bm{q}$ becomes (\ref{eq:rot_quat}):
+\begin{align}
+    \vec u & = (u_x, u_y, u_z) = u_x\bm{i} + u_y\bm{j} + u_z\bm{k}, \\
+    \bm{q} & = e^{\frac{\theta}{2}(u_x\bm{i} + u_y\bm{j} + u_z\bm{k})} = \cos{\frac{\theta}{2}} + (u_x\bm{i} + u_y\bm{j} + u_z\bm{k})\sin{\frac{\theta}{2}}, \label{eq:rot_quat}\\
+    \bm{q}^{-1} & = \cos{\frac{\theta}{2}} - (u_x\bm{i} + u_y\bm{j} + u_z\bm{k})\sin{\frac{\theta}{2}},
+\end{align}
+where in (\ref{eq:rot_quat}) we can clearly see a generalization of the Euler's formula for the exponential notation of complex numbers, which hold for quaternions. It can be shown that the application of the rotation represented by $\bm{q}$ on an arbitrary 3D vector $\vec v$ should be easily expressed as:
+\begin{equation}
+    \vec v\,' = \bm{q} \vec v \bm{q}^{-1},
+\end{equation}
+using the Hamilton product defined on quaternions (\ref{eq:Ham_prod}). This rule raises a very convinient and an extremily scalable way to compute consecutive rotations in space. Given two independent and consecutive rotations represented by the two quaternions $\bm{q}$ and $\bm{p}$ applyed on the vector $\vec v$ the resulting rotated vector $\vec v\,'$ is simply yielded as:
+\begin{equation}
+    \vec v\,' = \bm{p} ( \bm{q} \vec v \bm{q}^{-1} ) \bm{p}^{-1} = (\bm{p}\bm{q}) \vec v (\bm{q}\bm{p})^{-1},
+\end{equation}
+which essentially is the application of the rotation $\bm{r} = \bm{q}\bm{p}$ on the vector $\vec v$. This representation is completely coherent with the algebra of 3D rotations, which does not benefit from commutativity in turn.
 
-\subsection{Parametric L-Systems}
+Given this convinient property, quaternions are in deed widely used in all sort of application of digital 3D space design, as for simulations and for videogame design. The position of an object in the space in simulations is generally given by the application of several independent rotations, typically in the order of tenth of rotations, which with quaternions is given easily by the product of simple objects. Every other alternative method would imply the use of matricial representation of rotations or other rotation systems as Euler's anglse and would eventually make the computation prohibitive.
+
+The use of quaternions in this work will be justified in section \ref{ssec:Lsys} and [??], while speaking of parametric L-systems in 3D space, used to build the backbone of the ramificated structure of blood vassels in the reconstruction of a sample of pancreatic tissue.
+
+\subsection{Parametric L-Systems} \label{ssec:Lsys}
 
 \subsection{Voronoi Tassellation}
 
