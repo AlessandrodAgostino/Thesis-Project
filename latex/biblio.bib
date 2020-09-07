@@ -185,3 +185,61 @@ author = "J. Alsayednoor and P. Harrison",
 keywords = "Anisotropy, Foam, Micro-macro, RVE, Periodic",
 abstract = "This investigation evaluates various numerical algorithms; each designed to generate periodic 2-D Representative Volume Elements (RVEs) containing foam-like microstructures suitable for direct import into commercial finite element software for mechanical evaluation. The operation of each algorithm is discussed and the resulting RVEs are examined from both a mechanical and a morphological perspective. A basic Voronoi-based algorithm is found to be simple to implement but the method is shown to produce inherently anisotropic microstructures. Increasing the degree of irregularity of the microstructure reduces the anisotropy but at the cost of creating unrealistic microstructures, containing highly angular cells. A method of modifying such unrealistic microstructures using a centroidal tessellation relaxation algorithm is demonstrated, ultimately producing RVEs with relatively realistic mono-disperse microstructures. An alternative algorithm is also investigated the advantage of this algorithm is its ability to generate poly-disperse microstructures, with a controllable degree of poly-dispersity and an almost fully isotropic mechanical response."
 }
+
+@article{SOBOL2001271,
+title = "Global sensitivity indices for nonlinear mathematical models and their Monte Carlo estimates",
+journal = "Mathematics and Computers in Simulation",
+volume = "55",
+number = "1",
+pages = "271 - 280",
+year = "2001",
+note = "The Second IMACS Seminar on Monte Carlo Methods",
+issn = "0378-4754",
+doi = "https://doi.org/10.1016/S0378-4754(00)00270-6",
+url = "http://www.sciencedirect.com/science/article/pii/S0378475400002706",
+author = "I.M Sobol′",
+keywords = "Sensitivity analysis, Monte Carlo method, Quasi-Monte Carlo method, Mathematical modelling",
+abstract = "Global sensitivity indices for rather complex mathematical models can be efficiently computed by Monte Carlo (or quasi-Monte Carlo) methods. These indices are used for estimating the influence of individual variables or groups of variables on the model output."
+}
+
+@article{SOBOL1976236,
+title = "Uniformly distributed sequences with an additional uniform property",
+journal = "USSR Computational Mathematics and Mathematical Physics",
+volume = "16",
+number = "5",
+pages = "236 - 242",
+year = "1976",
+issn = "0041-5553",
+doi = "https://doi.org/10.1016/0041-5553(76)90154-3",
+url = "http://www.sciencedirect.com/science/article/pii/0041555376901543",
+author = "I.M. Sobol"
+}
+
+@article{SALTELLI2002280,
+title = "Making best use of model evaluations to compute sensitivity indices",
+journal = "Computer Physics Communications",
+volume = "145",
+number = "2",
+pages = "280 - 297",
+year = "2002",
+issn = "0010-4655",
+doi = "https://doi.org/10.1016/S0010-4655(02)00280-1",
+url = "http://www.sciencedirect.com/science/article/pii/S0010465502002801",
+author = "Andrea Saltelli",
+keywords = "Sensitivity analysis, Sensitivity measures, Sensitivity indices, Importance measures",
+abstract = "This paper deals with computations of sensitivity indices in sensitivity analysis. Given a mathematical or computational model y=f(x1,x2,…,xk), where the input factors xi's are uncorrelated with one another, one can see y as the realization of a stochastic process obtained by sampling each of the xi from its marginal distribution. The sensitivity indices are related to the decomposition of the variance of y into terms either due to each xi taken singularly (first order indices), as well as into terms due to the cooperative effects of more than one xi. In this paper we assume that one has computed the full set of first order sensitivity indices as well as the full set of total-order sensitivity indices (a fairly common strategy in sensitivity analysis), and show that in this case the same set of model evaluations can be used to compute double estimates of: &#x02022;the total effect of two factors taken together, for all such k2 couples, where k is the dimensionality of the model;&#x02022;the total effect of k−2 factors taken together, for all k2 such (k−2) ples. We further introduce a new strategy for the computation of the full sets of first plus total order sensitivity indices that is about 50% cheaper in terms of model evaluations with respect to previously published works. We discuss separately the case where the input factors xi's are not independent from each other."
+}
+
+@article{SALTELLI2010259,
+title = "Variance based sensitivity analysis of model output. Design and estimator for the total sensitivity index",
+journal = "Computer Physics Communications",
+volume = "181",
+number = "2",
+pages = "259 - 270",
+year = "2010",
+issn = "0010-4655",
+doi = "https://doi.org/10.1016/j.cpc.2009.09.018",
+url = "http://www.sciencedirect.com/science/article/pii/S0010465509003087",
+author = "Andrea Saltelli and Paola Annoni and Ivano Azzini and Francesca Campolongo and Marco Ratto and Stefano Tarantola",
+abstract = "Variance based methods have assessed themselves as versatile and effective among the various available techniques for sensitivity analysis of model output. Practitioners can in principle describe the sensitivity pattern of a model Y=f(X1,X2,…,Xk) with k uncertain input factors via a full decomposition of the variance V of Y into terms depending on the factors and their interactions. More often practitioners are satisfied with computing just k first order effects and k total effects, the latter describing synthetically interactions among input factors. In sensitivity analysis a key concern is the computational cost of the analysis, defined in terms of number of evaluations of f(X1,X2,…,Xk) needed to complete the analysis, as f(X1,X2,…,Xk) is often in the form of a numerical model which may take long processing time. While the computational cost is relatively cheap and weakly dependent on k for estimating first order effects, it remains expensive and strictly k-dependent for total effect indices. In the present note we compare existing and new practices for this index and offer recommendations on which to use."
+}
