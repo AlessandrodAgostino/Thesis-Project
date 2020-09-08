@@ -10,7 +10,7 @@ this script compute and plots the Perlin noise in different ways
 
 x_max = 10
 y_max = 10
-n_pts = 200
+n_pts = 100
 offset = 50
 
 x_val  = np.linspace(offset, 3*x_max + offset, 3*n_pts)

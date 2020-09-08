@@ -201,10 +201,53 @@ The result of the algorithm is then a convex hull, which in geometry is defined 
 
 In \texttt{Python}, the most convinient way to work with convex hulls was to use the submodule \texttt{spatial.ConvexHull} from the \texttt{SciPy} library. This module allows also a convinient way for plotting images with \texttt{MatPlotLib}, which is the point of refernce for plotting and images formation in \texttt{Python}.
 
-\subsection{VPython - 3D Visualization}
-
-\subsection{SnakeMake}
-
 \subsection{Perlin Noise}
+Perlin noise is a widely used form of noise in computer graphics, which mimics very well natural and smooth fluctuations around a constant value. It has been developed by Ken Perlin in 1983, and it is now the staple tool for giving texture to object in virtual modelization, often considered the \textit{salt} of computer graphics texturization.
+The Perlin noise is a gradient-based algorithm defined on grid discretization of a $n$-dimensional space. The algorithm involves three subsequent steps:
+
+    \begin{figure}
+        \centering
+        \begin{subfigure}[b]{0.4\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/grid_grad}
+             \caption{}
+             \label{fig:grid_grad}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.4\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/PerlinNoiseDotProducts}
+             \caption{}
+             \label{fig:dot_prod}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.4\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/PerlinNoiseInterpolated}
+             \caption{}
+             \label{fig:interp}
+        \end{subfigure}
+        \caption{The three main steps of the algorithm to produce Perlin noise. In \ref{fig:grid_grad} the plane discretization and the assignment of a gradient vector to every node of the grid. In \ref{fig:dot_prod} the computation of the dot product with all the points inside the discretization and in \ref{fig:interp} the interpolation of the values to create the final function.}
+        \label{fig:perlin_alg}
+    \end{figure}
+
+\begin{enumerate}
+    \item The first step is to discretize the $n$-dimensional space in a regular lattice: the dimension of the grid will impact heavily on the scale of the noise. As in Figure \ref{fig:grid_grad} at every node of the grid is assigned a randomly oriented $n$-dimensional unitary gradient vector. This is the preliminary setup which will allow the computation of the actual noise function in every point of the space.
+
+    \item Given the candidate point $\vec x$ in the grid onto which evaluate the noise there are $2^n$ nearest grid nodes. For each one of these $2^n$ nodes it is evaluated the distance vector from $\vec x$ as the offset between the two points. Then it is computed the dot product between every pair made of a gradient vector and the offset vector. This operation should be tought as made on every point in the lattice, as in Figure \ref{fig:dot_prod}, where at every point of the grid is represented just one of the $2^2 = 4$ series of dot products.
+
+    \item The final step is the interpolation between the $2^n$ series of dot. To perform the interpolation usually is used a function with vanishing first degree (and preferably also second degree) derivative in correspondence of the $2^n$ grid nodes \footnote{Usually are used functions with a sigmoidal behaviour, like any smoothstep function, which are a family of very common items in computer graphics.}. This means that the noise function will pass through zero at every node and have a gradient equal to the precomputed grid node gradient. These properties give Perlin noise its characteristic spatial scale and smoothness.
+\end{enumerate}
+
+In general the final result of the algorithm is a smooth function with a random-like behaviour that mimics really well an organic appearance, like in Figure \ref{fig:my_perlin}, with fluctuation around the value 0, with amplituted $ \in [ 0;1] $. The surface in Figure \ref{fig:my_perlin} has been produced plotting in 3D the results of the function \texttt{pnoise2} from the library \texttt{noise}, which offers a good and intuitive tool for the production of different type of noise.
+
+\begin{figure}
+    \centering
+    \includegraphics[width = 0.6\textwidth]{images/perlin}
+    \caption{Example of Perlin noise 2D funciton produced while working on this project. This surface offers a smooth variation around the value 0 with amplituded $ \in [ 0;1] $.}
+    \label{fig:my_perlin}
+\end{figure}
+
+% citation to url - https://web.archive.org/web/20071011035810/http://noisemachine.com/talk1/
 
 \subsection{Style-Transfer Neural Network}\label{ssec:sttrNN}
