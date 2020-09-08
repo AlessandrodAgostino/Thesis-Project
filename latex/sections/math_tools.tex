@@ -175,26 +175,31 @@ Given a convex polyhedron with $n$ vertices and the a sectioning plane $p$, let 
         A = \{ v \in V \ |\ f_p(v)\geq 0\} \label{eq:ab_bel} \\
         B = \{ v \in V \ |\ f_p(v)\leq 0\} \nonumber
     \end{align}
-    If any of the two subsets tourns out to be empty the plane $p$ does not intersect the polyhedron, and the section is empty. $A$ and $B$ are represented in different colors in Figure \ref{fig:pol_sec}.
+    If any of the two subsets tourns out to be empty the plane $p$ does not intersect the polyhedron, and the section is empty. $A$ and $B$ are represented in different colors in Figure \ref{fig:sec_pol}.
 
-    \item Detect, and \textit{draw}, any possible line that crosses two points respectively from $A$ and $B$. If $n_A$ and $n_B$ are the number of points above and below the plane then there will be $n_A \times n_B$ possible lines. In Figure \ref{fig:pol_sec} all the lines between the two classes of point are drawn in white.
+    \item Detect, and \textit{draw}, any possible line that crosses two points respectively from $A$ and $B$. If $n_A$ and $n_B$ are the number of points above and below the plane then there will be $n_A \times n_B$ possible lines. In Figure \ref{fig:sec_pol} all the lines between the two classes of point are drawn in white.
 
     \item Detect all the points $P$ from the intersection between the $n_A \times n_B$ lines from the previous step and the sectioning plane $p$. All these points will lie on the same plane, within the boundaries of the polygonal section.
 
     \item The final polygon, is then yielded by computing the convex hull of the points in $P$. The convexity of the starting polyhedron in fact ensure the convexity of any section of the solid.
 \end{enumerate}
+\begin{figure}
+    \centering
+    \includegraphics[width = 0.6\textwidth]{images/sec_pol}
+    \caption{In this picture is shown an example of application of the algoritm for the planar section on a polyhedrion. The vertices are divided into two groups, with different colors yellow and green. All the possible lines between any couple of vertices picked from the two classes is drawn in black. In Turquoise the resulting planar section, obtained as the convex hull containing all the intersections between the lines and the plane.}
+    \label{fig:sec_pol}
+\end{figure}
 
-
-
+The result of the algorithm is then a convex hull, which in geometry is defined as the smallest convex envelope or convex closure of a set of points. In 2 dimensions is the smallest convex polygon containing a certain set of points in a plane (Figure \ref{fig:conv_hull}), and in 3 dimensions it is the smallest convex polyhedron containing a set of points in the space.
 
 \begin{figure}
     \centering
-    \includegraphics[width = 0.7\textwidth]{images/pol_sec}
-    \caption{....}
-    \label{fig:pol_sec}
+    \includegraphics[width = 0.3\textwidth]{images/conv_hull}
+    \caption{Representation of the convex hull of a bounded planar set.}
+    \label{fig:conv_hull}
 \end{figure}
 
-
+In \texttt{Python}, the most convinient way to work with convex hulls was to use the submodule \texttt{spatial.ConvexHull} from the \texttt{SciPy} library. This module allows also a convinient way for plotting images with \texttt{MatPlotLib}, which is the point of refernce for plotting and images formation in \texttt{Python}.
 
 \subsection{VPython - 3D Visualization}
 

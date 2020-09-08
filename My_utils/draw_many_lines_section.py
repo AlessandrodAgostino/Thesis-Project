@@ -95,7 +95,7 @@ intersection_point
 intersectiong_triang = Delaunay(intersection_point[:,0:2])
 
 #%%-----------------------------------------------------------------------------
-scene     = canvas(width=900, height=700, center=vector(5,5,0))
+scene     = canvas(width=900, height=700, center=vector(5,5,0), background=color.gray(1))
 # scene.camera.pos = vector(0,5,sel_z)
 # scene.camera.axis = vector(5,0,0)
 
@@ -114,14 +114,14 @@ for ver in vor.vertices[sel_reg][ind_abo]:
     Figures.append(sphere(pos = vector(*ver),
                           radius = max_coord/50,
                           color = green,
-                          opacity = 0.5))
+                          opacity = 0.9))
 
 #drawing points BELOW
 for ver in vor.vertices[sel_reg][ind_bel]:
     Figures.append(sphere(pos = vector(*ver),
                           radius = max_coord/50,
                           color = yellow,
-                          opacity = 0.5))
+                          opacity = 0.9))
 
 # for pt in intersection_point:
 #     Figures.append(sphere(pos = vector(*pt),
@@ -143,7 +143,8 @@ for couple in couples:
     Figures.append(cylinder(pos = v1,
                             axis = v2 - v1,
                             radius = 0.01,
-                            opacity  =0.5))
+                            opacity  =0.5,
+                            color = color.gray(0.2)))
 
 for pt in container_points:
     Figures.append(sphere(pos = vector(*pt),
@@ -152,6 +153,8 @@ for pt in container_points:
                           opacity = 0.5))
 
 
+#%%
+#Camera rotation
 import time
 
 dtheta = 0.01
