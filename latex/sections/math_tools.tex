@@ -248,22 +248,31 @@ In general, the final result of the algorithm is a smooth function with a random
     \label{fig:my_perlin}
 \end{figure}
 
+% [??]
 % citation to url - https://web.archive.org/web/20071011035810/http://noisemachine.com/talk1/
 
 \subsection{Style-Transfer Neural Network}
 \label{ssec:sttrNN}
 Style-Transfer Neural Networks are common models, able of creating new hybrid images implanting the visual style from an image preserving the visual content of another image. The two images necessary for the algorithm are called \textit{style} image $S$ and \textit{content} image $C$, and the resulting \textit{styled} picture $X$, as in Figure \ref{fig:ex_st_tr}.
 
+There are many different tested and comparable architectures to compute this kind of algorithm. In my work I decided to use in particular the procedure described in \cite{1508.06576}, using the \textit{PyTorch} ecosystem to implement the necessary code.
+
 \begin{figure}
     \centering
-    \includegraphics[width = \textwidth]{images/st_trasf_ex}
-    \caption{Different examples of application of a style-transfer NN on the same content image, with different style images, from \cite{1508.06576}}
+    \includegraphics[width = 0.9\textwidth]{images/st_trasf_ex}
+    \caption{Different examples of application of a style-transfer NN on the same content image, with different style images, from \cite{1508.06576}. The
+original picture depicts the Neckarfront in Tübingen, Germany (TOP-LEFT). The painting used as style image shown in the bottom left corner of each panel are in clockwise order: $\bullet$ The Shipwreck of the Minotaur by J.M.W. Turner, 1805 $\bullet$ Femme nue assise by Pablo Picasso, 1910 $\bullet$ Composition VII by Wassily Kandinsky, 1913 $\bullet$ Der Schrei by Edvard Munch, 1893 $\bullet$ The Starry Night by Vincent van Gogh, 1889.}
     \label{fig:ex_st_tr}
 \end{figure}
 
-There are many different tested and comparable architectures to compute this kind of algorithm. In my work I decided to use in particular the procedure described in \cite{1508.06576}, using the \textit{PyTorch} ecosystem to implement the necessary code.
+The backbone of the architecture is the VGG-19 network, which s a convolutional neural network 19 layers deep, as in figure \ref{fig:vgg19}. This huge model has been pre-trained on over a million images from the ImageNet database \cite{imagenet_cvpr09}, for the classification into over than 1000 classes of objects. As a result, the network has learned rich feature representations for a wide range of images. The best (and conceptually the only) way to load a pre-trained model is to load the ordered set of weights that define the network and to initialize an empty module with those values. This is the perfect start for creating a style transfer network, which requires a further and briefer training phase, to completely customize the network.
 
-The backbone of the architecture is the VGG-19 network, which s a convolutional neural network 19 layers deep. This huge model has been pre-trained on over a million images from the ImageNet database \cite{imagenet_cvpr09}, for the classification into over than 1000 classes of objects. As a result, the network has learned rich feature representations for a wide range of images. The best (and conceptually the only) way to load a pre-trained model is to load the ordered set of weights that define the network and to initialize an empty module with those values. This is the perfect start for creating a style transfer network, which requires a further and briefer training phase, to completely customize the network.
+\begin{figure}
+    \centering
+    \includegraphics[width = 0.9\textwidth]{images/vgg19_str}
+    \caption{The structure of the VGG 19 network. It is for its most a convolutional NN with $224 \times 224$ input size and with some downsampling layers which reduce the first two dimensions of the tensors along with the information flux of the network. At the very end of the architecture, there are three subsequent fully connected layers, responsible for the actual classification based on the features extracted from the previous layers.}
+    \label{fig:vgg19}
+\end{figure}
 
 The key ingredient for finalizing the model is to insert some little but fundamental modifications and to extend the training on the pair of input images. This final training should be aware of the \textit{concepts} of the visual style and visual content of the image, and the operation should try to preserve them both. This is usually done minimizing two new loss function, computed between the staring image and the produced image:
 
@@ -286,5 +295,8 @@ The key ingredient for finalizing the model is to insert some little but fundame
         L_{Style} = \norm{G_{XL}−G_{SL}}^2
         \label{eq:styl_loss}
     \end{equation}
-
 \end{description}
+
+After the appropriate insertion of the loss-function evaluator layers, one last piece for finalizing the model is the right choice of the gradient descent optimizer. As in \cite{1508.06576} and according to the Deep Learning community the optimizer which suite best this role is the Limited Memory-BFGS \cite{10.1093/imamat/6.1.76},\cite{shanno1970conditioning}. L-BFGS is an iterative algorithm in the family of quasi-Newton methods that approximates the Broyden–Fletcher–Goldfarb–Shanno algorithm (BFGS) using a limited amount of computer memory, and it is a popular choice when estimating parameters of a non-linear differentiable scalar function.
+
+The final phase of the training process thus makes run the optimizer hundreds of times on $X$, $C$, and $S$, and reduce the two loss functions values acting on the network's parameters. After the fine-tuning of the weights, the hybrid image is produced, as in Figure \ref{fig:ex_st_tr}.
