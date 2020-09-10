@@ -5,7 +5,7 @@ All the work has been done in a pure \texttt{Python} environment, using several 
 
 In this section, it will follow a description, in no particular order, of the less common tools I used during my work.
 
-\subsection{Quaternions}
+\subsection{Quaternions} \label{ssec:quat}
 Quaternions are, in mathematics, a number system that expands in four dimensions the complex numbers. They have been described for the first time by the famous mathematician William Rowan Hamilton in 1843. This number system define three independent \textit{imaginary} units $\bm{i}$, $\bm{j}$, $\bm{k}$ as in (\ref{eq:quat_rules}), which allows the general representation of a quaternion $\bm{q}$ is (\ref{eq:quat}) and its inverse $\bm{q}^{-1}$ (\ref{eq:inv_quat}) where $a,b,c,d$ are real numbers:
 
 \begin{align}
@@ -121,7 +121,7 @@ In addition to the choice of the distance function, another fundamental factor i
 
 The Voronoi Decomposition has been of great interest in this project for the division of a 3D space in subregions, to recreate the spatial distribution of cells in a sample of human tissue, as will be shown in section \ref{ssec:panc_tis_mod}. The formal definition of Voronoi regions \ref{eq:formal_Vor_def} ensure the convexity of each decomposition's tassel, which in three-dimensional space would be adjacent convex polyhedrons. Every tassel of the decomposition will be represented by a bounded 3-dimensional convex hull \footnote{See section \ref{ssec:pol_sec} for further details.}, with except for those most external cells which are unbounded and requires special attention while using.
 
-The most widespread tool for the computation of Voronoi decompositions in \texttt{Python} is contained in the \texttt{spatial} submodule of the famous library \texttt{SciPy}, which is a staple tool for an incredible variety of scientific algorithms. The \texttt{Voronoi} object from \texttt{Scipy} library offers a very efficient algorithm for space-partitioning, and it has been one of the pillars for the modelization of tissues.
+The most widespread tool for the computation of Voronoi decompositions in \texttt{Python} is contained in the \texttt{spatial} submodule of the famous library \texttt{SciPy} \cite{2020SciPy-NMeth}, which is a staple tool for an incredible variety of scientific algorithms. The \texttt{Voronoi} object from \texttt{Scipy} library offers a very efficient algorithm for space-partitioning, and it has been one of the pillars for the modelization of tissues.
 
 \subsection{Saltelli Algorithm - Randon Number Generation}
 \begin{figure}
@@ -199,7 +199,7 @@ The result of the algorithm is then a convex hull, which in geometry is defined 
     \label{fig:conv_hull}
 \end{figure}
 
-In \texttt{Python}, the most convenient way to work with convex hulls was to use the submodule \texttt{spatial.ConvexHull} from the \texttt{SciPy} library. This module allows also a convenient way for plotting images with \texttt{MatPlotLib}, which is the point of reference for plotting and image formation in \texttt{Python}.
+In \texttt{Python}, the most convenient way to work with convex hulls was to use the submodule \texttt{spatial.ConvexHull} from the \texttt{SciPy} library \cite{2020SciPy-NMeth}. This module allows also a convenient way for plotting images with \texttt{MatPlotLib}, which is the point of reference for plotting and image formation in \texttt{Python}.
 
 \subsection{Perlin Noise}
 Perlin noise is a widely used form of noise in computer graphics, which mimics very well natural and smooth fluctuations around a constant value. It has been developed by Ken Perlin in 1983, and it is now the staple tool for giving texture to object in virtual modelization, often considered the \textit{salt} of computer graphics texturization.

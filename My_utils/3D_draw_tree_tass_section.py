@@ -48,7 +48,7 @@ def plane_z_intersection(p1, p2, z=0):
 
 #-------------------------------------------------------------------------------
 #%% VORONOI - PREPARATION
-Pancreas = createTree(iter = 2, rotation = False, seed = 49) #Ramification object
+Pancreas = createTree(iter = 6, rotation = False, seed = 49) #Ramification object
 
 #Extracting free end's spheres and radius
 spheres  = [] #List of spheres
@@ -165,7 +165,7 @@ The filtering is done by deciding the color of the region to draw.
 Should be implemented in a more sensitive way.
 """
 #Preliminary graphic settings
-scene     = canvas(width=1000, height=800, center=vector(5,5,0), background=color.gray(0.6))
+scene     = canvas(width=1000, height=800, center=vector(5,5,0), background=color.gray(1))
 turquoise = color.hsv_to_rgb(vector(0.5,1,0.8))
 red       = color.red #Some colors
 white     = color.white
@@ -173,8 +173,8 @@ black     = color.black
 colors    = [black, white, turquoise,  red, black] #[Outside, Partially, Inside, Out of Boundaries]
 Figures   =  [] #List to which append all the drawings
 
-drawListBranch(Pancreas) #Drawing ramification
-drawSphereFreeEnds(Pancreas) #Drawing free ends' spheres
+drawListBranch(Pancreas, color = color.red, opacity = 1) #Drawing ramification
+drawSphereFreeEnds(Pancreas, color = color.red, opacity = 1) #Drawing free ends' spheres
 draw_axis(Figures, 10)
 zoom=0.75
 # scene.camera.pos = vector(-20*zoom,10*zoom,-20*zoom)
@@ -190,7 +190,7 @@ for n,ver in enumerate(vor.vertices):
 
 #Drawing a Voronoi Tassels and their volumes if they're finite
 for n,reg in enumerate(vor.regions):
-    if colors[region_id[n]] in [turquoise, red]: #[red, turquoise] or [orange] for nothing
+    if colors[region_id[n]] in []: #[red, turquoise] or [orange] for nothing
         conv_hull= ConvexHull([vor.vertices[ver] for ver in reg])
         simpl = []
         for sim in conv_hull.simplices:
@@ -201,7 +201,7 @@ for n,reg in enumerate(vor.regions):
 
 #Drawing the section at z=0
 for triang, n in intersectiong_triang_dict.items():
-    if colors[region_id[n]] in [red, turquoise]:
+    if colors[region_id[n]] in []:
         for sim in triang.simplices:
             pts = [triang.points[pt] for pt in sim]
             Figures.append( triangle( vs=[vertex( pos     = vector(*ver, 0),

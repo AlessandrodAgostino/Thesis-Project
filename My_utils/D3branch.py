@@ -59,7 +59,7 @@ def drawListBranch(tree, opacity = 0.5, color = color.white):
                                       radius = br.radius,
                                       opacity = opacity,
                                       color = color))
-                                      
+
 def drawSphereFreeEnds(tree, opacity = 0.5, color = color.white):
     SphereList = []
     max_iter = np.log2((len(tree)+1)) - 1
@@ -67,7 +67,7 @@ def drawSphereFreeEnds(tree, opacity = 0.5, color = color.white):
         if br.iter_lev == max_iter:
             SphereList.append(sphere(pos=br.pos + vector(*br.drct*br.length),
                                      radius=br.length,
-                                     opacity = 0.5,
+                                     opacity = opacity,
                                      color = color))
 
 
