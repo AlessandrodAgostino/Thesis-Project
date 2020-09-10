@@ -1,4 +1,4 @@
-\section{Technical Tools for the Development}
+\section{Technical Tools for the Development} \label{sec:tech_tool}
 Before delving into the details of the development of the two histological models, which are the heart of this work, it should be convenient to dwell on every tool employed during the design phase.
 
 All the work has been done in a pure \texttt{Python} environment, using several already established libraries and writing by my self the missing code, for some specific applications. All the code produced during the development, the images, and the data produced have been collected in a devoted repository on GitHub \cite{repo}. I decided to code in \texttt{Python} given the thriving variety of available libraries geared toward scientific computation, image processing, data analysis, and last but not least for its ease of use (compared to other programming languages).
@@ -43,7 +43,7 @@ which essentially is the application of the rotation $\bm{r} = \bm{q}\bm{p}$ on 
 
 Given this convenient property, quaternions are indeed widely used in all sorts of applications of digital 3D space design, as for simulations and videogame design. The position of an object in the space in simulations is generally given by the application of several independent rotations, typically in the order of a tenth of rotations, which with quaternions is given easily by the product of simple objects. Every other alternative method would imply the use of matrix representation of rotations or other rotation systems as Euler's angles and would eventually make the computation prohibitive.
 
-The use of quaternions in this work will be justified in section [??], while speaking of parametric L-systems in 3D space, used to build the backbone of the ramified structure of blood vessels in the reconstruction of a sample of pancreatic tissue.
+The use of quaternions in this work will be justified in section \ref{ssec:panc_tis_mod}, while speaking of parametric L-systems in 3D space, used to build the backbone of the ramified structure of blood vessels in the reconstruction of a sample of pancreatic tissue.
 
 I was able to find many useful \texttt{Python} libraries for computation with quaternions, but the one I appreciated the most for its interface and ease of use was the \texttt{pyquaternion}. With this library, it's almost immediate the definition of a quaternion by its correspondent rotation vector, and the multiplication between quaternions is very reliable.
 
@@ -67,12 +67,12 @@ where $A$ and $B$ could be any two different patterns in the morphology of an al
     n = 7 &\ : ABAABABAABAABABAABABAABAABABAABAAB\,. \nonumber
 \end{align}
 
-This kind of tool, as will be shown also in [??], is particularly suited for the creation of structures with fractal behavior, and it has been used in this work to create the backbone of the entangled bifurcation in blood vessels in the modelization of pancreatic tissue. In particular, there was the need for a fractal-like space-filling ramification as the one shown in Figures \ref{fig:bf_ls}. %and \ref{fig:full_ram}.
+This kind of tool, as will be shown also in \ref{ssec:panc_tis_mod}, is particularly suited for the creation of structures with fractal behavior, and it has been used in this work to create the backbone of the entangled bifurcation in blood vessels in the modelization of pancreatic tissue. In particular, there was the need for a fractal-like space-filling ramification as the one shown in Figures \ref{fig:bf_ls}. %and \ref{fig:full_ram}.
 
 \begin{figure}
     \centering
     \includegraphics[width = 0.7\textwidth]{images/bf_ls}
-    \caption{Growth pattern for the space-filling fract-like system, used to mimic the blood vassel bifurcations in sec [??]}
+    \caption{Growth pattern for the space-filling fract-like system, used to mimic the blood vassel bifurcations in sec \ref{ssec:panc_tis_mod}.}
     \label{fig:bf_ls}
 \end{figure}
 
@@ -110,7 +110,7 @@ More precisely, let $X$ be a metric space and $d$ the distance defined on it. Le
 \end{equation}
 depending on the notion of distance defined on the space $X$ the final redistribution in subregions will look very differently.
 
-In addition to the choice of the distance function, another fundamental factor is the distribution of sites in the space to be divided. If the points are chosen equally and homogenously distributed the final distribution will appear as a simple regular lattice, while a completely random distribution of points in the space will provide a decomposition in cells with very different shapes and volumes, as shown in Figure \ref{fig:diff_pt}. Interesting results concerning points from a semi-random distribution will be shown in section [??], which leads to decomposition with a good richness in shapes but with the desired homogeneity in volumes.
+In addition to the choice of the distance function, another fundamental factor is the distribution of sites in the space to be divided. If the points are chosen equally and homogenously distributed the final distribution will appear as a simple regular lattice, while a completely random distribution of points in the space will provide a decomposition in cells with very different shapes and volumes, as shown in Figure \ref{fig:diff_pt}. Interesting results concerning points from a semi-random distribution will be shown in section \ref{ssec:panc_tis_mod}, which leads to decomposition with a good richness in shapes but with the desired homogeneity in volumes.
 \begin{figure}
     \centering
     \includegraphics[width = 0.4\textwidth]{images/reg_pt}
@@ -119,7 +119,7 @@ In addition to the choice of the distance function, another fundamental factor i
     \label{fig:diff_pt}
 \end{figure}
 
-The Voronoi Decomposition has been of great interest in this project for the division of a 3D space in subregions, to recreate the spatial distribution of cells in a sample of human tissue, as will be shown in section [??]. The formal definition of Voronoi regions \ref{eq:formal_Vor_def} ensure the convexity of each decomposition's tassel, which in three-dimensional space would be adjacent convex polyhedrons. Every tassel of the decomposition will be represented by a bounded 3-dimensional convex hull \footnote{See section \ref{ssec:pol_sec} for further details.}, with except for those most external cells which are unbounded and requires special attention while using.
+The Voronoi Decomposition has been of great interest in this project for the division of a 3D space in subregions, to recreate the spatial distribution of cells in a sample of human tissue, as will be shown in section \ref{ssec:panc_tis_mod}. The formal definition of Voronoi regions \ref{eq:formal_Vor_def} ensure the convexity of each decomposition's tassel, which in three-dimensional space would be adjacent convex polyhedrons. Every tassel of the decomposition will be represented by a bounded 3-dimensional convex hull \footnote{See section \ref{ssec:pol_sec} for further details.}, with except for those most external cells which are unbounded and requires special attention while using.
 
 The most widespread tool for the computation of Voronoi decompositions in \texttt{Python} is contained in the \texttt{spatial} submodule of the famous library \texttt{SciPy}, which is a staple tool for an incredible variety of scientific algorithms. The \texttt{Voronoi} object from \texttt{Scipy} library offers a very efficient algorithm for space-partitioning, and it has been one of the pillars for the modelization of tissues.
 
@@ -166,7 +166,7 @@ Sobol in his article described in particular $(t,m,s)$-net and $(t,s)$-sequence 
 In order to perform the actual sampling during the modelization, it has been used the \texttt{saltelli} module from the \texttt{SALib} library, which performs sampling in an $s$-dimensional space following the Saltelli algorithm, which is a specific improved version of the Sobol algorithms oriented toward the parameter sensitivity analysis \cite{SALTELLI2002280}, \cite{SALTELLI2010259}.
 
 \subsection{Planar Section of a Polyhedron} \label{ssec:pol_sec}
-As will be shown in section [??] a fundamental step for the functioning of the modelization is the planar section of a three-dimensional polyhedron. It turned out that there is no general rule to perform a planar section of a convex polyhedron with an arbitrary number of faces, respect to an arbitrary sectioning plane. Hence, I devised an algorithm to handle this task. In the general case, the result of the sectioning process of a polyhedron is a polygonal surface in the case of a full intersection. Otherwise, it could be an empty set of points or a segment in case of particular tangency, but those two cases are not of interest to the model.
+As will be shown in section \ref{ssec:panc_tis_mod} a fundamental step for the functioning of the modelization is the planar section of a three-dimensional polyhedron. It turned out that there is no general rule to perform a planar section of a convex polyhedron with an arbitrary number of faces, respect to an arbitrary sectioning plane. Hence, I devised an algorithm to handle this task. In the general case, the result of the sectioning process of a polyhedron is a polygonal surface in the case of a full intersection. Otherwise, it could be an empty set of points or a segment in case of particular tangency, but those two cases are not of interest to the model.
 
 Given a convex polyhedron with $n$ vertices and the a sectioning plane $p$, let $V$ be the set of all the vertices and $f_p(\vec x)$ the equation defining the plane. The algorithm is defined by the following steps:
 \begin{enumerate}
@@ -297,6 +297,8 @@ The key ingredient for finalizing the model is to insert some little but fundame
     \end{equation}
 \end{description}
 
-After the appropriate insertion of the loss-function evaluator layers, one last piece for finalizing the model is the right choice of the gradient descent optimizer. As in \cite{1508.06576} and according to the Deep Learning community the optimizer which suite best this role is the Limited Memory-BFGS \cite{10.1093/imamat/6.1.76},\cite{shanno1970conditioning}. L-BFGS is an iterative algorithm in the family of quasi-Newton methods that approximates the Broyden–Fletcher–Goldfarb–Shanno algorithm (BFGS) using a limited amount of computer memory, and it is a popular choice when estimating parameters of a non-linear differentiable scalar function.
+After the appropriate insertion of the loss-function evaluator layers, one last piece for finalizing the model is the right choice of the gradient descent optimizer. As in \cite{1508.06576} and according to the Deep Learning community the optimizer which suite best this role is the Limited Memory-BFGS \cite{10.1093/imamat/6.1.76},\cite{shanno1970conditioning}. L-BFGS is an iterative algorithm in the family of quasi-Newton methods that approximates the Broyden-Fletcher-Goldfarb-Shanno algorithm (BFGS) using a limited amount of computer memory, and it is a popular choice when estimating parameters of a non-linear differentiable scalar function.
 
 The final phase of the training process thus makes run the optimizer hundreds of times on $X$, $C$, and $S$, and reduce the two loss functions values acting on the network's parameters. After the fine-tuning of the weights, the hybrid image is produced, as in Figure \ref{fig:ex_st_tr}.
+
+\clearpage
