@@ -1,5 +1,5 @@
 \section{Model Generation}
-The main goal of the present work, as stated before, is to recreate a three-dimensional virtual model of histological tissue as faithfully as possible and then, to perform a planar sectioning on it to emulate virtually the traditional histological specimen preparation procedure. The creation of a model of such complex structures is definetly an high-level problem, and it has required a carefull designing, made of successive phase of improvements. In this work I will report only two specific attempts of modelization: the first aiming to report pancreatic tissue, and the second oriented toward dermatic tissue.
+The main goal of the present work, as stated before, is to recreate a three-dimensional virtual model of histological tissue as faithfully as possible and then, to perform planar sectioning on it to emulate virtually the traditional histological specimen preparation procedure. The creation of a model of such complex structures is definitely a high-level problem, and it has required a careful designing, made of subsequent stages of improvements. In this work, I will report only two specific attempts of modelization: the first aiming to report pancreatic tissue, and the second oriented toward dermatic tissue.
 
 \begin{figure}[b!]
     \centering
@@ -8,55 +8,116 @@ The main goal of the present work, as stated before, is to recreate a three-dime
     \label{fig:panc_struct}
 \end{figure}
 
-\subsection{Pancreas Tissue Model} \label{ssec:panc_tis_mod}
-The Pancreas is an internal organ of the human body, part of both the digestive system and endocrine system. It acts as a gland with both endocrine and exocrine functions, and it is located in the abdomen behind the stomach. Its main endocrine duty is the regulation of sugar levels in blood and the secretion of hormones, as insulin, glucagon. While, as a part of the digestive system it acts as an exocrine gland secreting pancreatic juice. The majority of pancreatic tissue has a digestive role, and the cells with this role form clusters (\textit{acini}) around the small pancreatic ducts, and are arranged in lobes. The acinus secrete inactive digestive enzymes called zymogens into the small intercalated ducts which they surround, and then in the pancreatic blood vessels system \cite{Pancreas}. In Figure \ref{fig:panc_struct} is reported a picture of pancreas, with its structure and its placement in the human body.
+\subsection{Pancreatic Tissue Model} \label{ssec:panc_tis_mod}
+The Pancreas is an internal organ of the human body, part of both the digestive system and the endocrine system. It acts as a gland with both endocrine and exocrine functions, and it is located in the abdomen behind the stomach. Its main endocrine duty is the regulation of sugar levels in the blood and the secretion of hormones, like insulin, glucagon. While, as a part of the digestive system it acts as an exocrine gland secreting pancreatic juice. The majority of pancreatic tissue has a digestive role, and the cells with this role form clusters (\textit{acini}) around the small pancreatic ducts, and are arranged in lobes. The acinus secrete inactive digestive enzymes called zymogens into the small intercalated ducts which they surround, and then in the pancreatic blood vessels system \cite{Pancreas}. In Figure \ref{fig:panc_struct} is shown a picture of the pancreas, with its structure and its placement in the human body.
 
-All the tissue is actually rich of others important elements as the islets of Langerhans, and sporadic connective tissue allover the structure, which are clearly visible in the traditional histological specimens. In this first attempt of modelization from scratch this second layer of complexity has not been already considered, and the main focus was to reflect only the main structural features on the virtual specimen. Given pancreatic tissue's organization the first features I decided to put emphasis on were: 1) The iterative (with a fractal-like behavior) ramification of blood vassels for the irroration of glandular acinus, 2) The space-filling distribution of acinus in the tissue, in fact we expect an homogeneous density in the organ and to not see \textit{holes} at all inside it. In this secton I will describe step by step all the process I followed to create the model of a portion of pancreatic tissue, and all the interesting pitfalls I overcame.
+All the tissue is actually rich in other important elements as the islets of Langerhans, and sporadic connective tissue all over the structure, which are clearly visible in the traditional histological specimens. In this first attempt of modelization from scratch this second layer of complexity has not been already considered, and the main focus was to reflect only the main structural features on the virtual specimen. Given pancreatic tissue's organization the first features I decided to put emphasis on were: 1) The iterative (with a fractal-like behavior) ramification of blood vessels for the irrigation of glandular acinus, 2) The space-filling distribution of acinus in the tissue, in fact, we expect a homogeneous density in the organ and to not see \textit{holes} at all inside it. In this section I will describe step by step all the process I followed to create the model of a portion of pancreatic tissue, and all the interesting pitfalls I overcame.
 
-\hl{[Should I make a bullet point list here? or going along with the text's flux?]}
+% To make enumerated description:
+\newcounter{mycounter}
+\newcommand*{\mycount}{\stepcounter{mycounter}\themycounter}
 
-The first step was took in 2 dimensions, and it was the choice of the right \textit{structure} to emulate the ramification of blood vessels in pancreatic tissue. The choice fell on a particular parametric L-system, as the one shown in Figure \ref{fig:bf_ls}, in section \ref{sec:tech_tool}. This structure is made of an iterative bifurcation of gradually shorter segments, with an angle of $\pm 85 \degree$ respect the main direction. For a start I added some features to give a more realistic look to the structure, which are all well represented in Figure \ref{fig:ram_feat}:
+\begin{description}
+    \item [\mycount) 2D Ramification] \hfill \\
+    The first step was took in 2 dimensions, and it was the choice of the right \textit{structure} to emulate the ramification of blood vessels in pancreatic tissue. The choice fell on a particular parametric L-system, as the one shown in Figure \ref{fig:bf_ls}, in section \ref{sec:tech_tool}. This structure is made of an iterative bifurcation of gradually shorter segments, with an angle of $\pm 85 \degree$ respect the main direction. For a start I added some features to give a more realistic look to the structure, which are all well represented in Figure \ref{fig:ram_feat}:
 
-\begin{figure}
-    \centering
-    \includegraphics[width = 0.6\textwidth]{images/ram_feat}
-    \caption{The development of the simple curve in Figure \ref{fig:bf_ls}, with some features to give it a more realistic look, like progressive thickness, angular noise in bifurcation and spheres at free ends of the ramification. The image is made using the tools exposed in section \ref{ssec:Lsys}.}
-    \label{fig:ram_feat}
-\end{figure}
+    \begin{figure}
+        \centering
+        \includegraphics[width = 0.6\textwidth]{images/ram_feat}
+        \caption{The development of the simple curve in Figure \ref{fig:bf_ls}, with some features to give it a more realistic look, like progressive thickness, angular noise in bifurcation and spheres at free ends of the ramification. The image is made using the tools exposed in section \ref{ssec:Lsys}.}
+        \label{fig:ram_feat}
+    \end{figure}
 
-\begin{itemize}
-    \item A pregressive thickness of the bifurcation's segments, starting from a thick main branch which dwindle every junction. The idea is that the main blood vessel becomes via via smaller becoming capillars for a single cell irroration.
-    \item A progressive randomness in the angular deflection at every fork. Perfectly repeated angles are almost nonexistent in nature, so I decided to introduce an increasing indetermination in the angle of bifurcation from the main branch to the free ends of the structure'branches.
-    \item Spheres at the ends of each branch, which acts as glandular acini. The maximum radius is comparable to the length of final segments.
-    \item A mechanism to avoid self-superimposition between branches and spheres. After the insertion of noise, the cumulative effect on the final segments might lead different branches to intersect. This is crearly a paradoxal situation, as real tissues while growing naturally occupy the space in a gradual way.
-\end{itemize}
+    \begin{itemize}
+        \item A progressive thickness of the bifurcation's segments, starting from a thick main branch that dwindles every junction. The idea is that the main blood vessel becomes gradually smaller becoming capillaries for single-cell irrigation.
+        \item A progressive randomness in the angular deflection at every fork. Perfectly repeated angles are almost nonexistent in nature, so I decided to introduce an increasing indetermination in the angle of bifurcation from the main branch to the free ends of the structure'branches.
+        \item Spheres at the ends of each branch, which acts as glandular acini. The maximum radius is comparable to the length of the final segments.
+        \item A mechanism to avoid self-superimposition between branches and spheres. After the insertion of noise, the cumulative effect on the final segments might lead to different branches to intersect. This is clearly a paradoxical situation, as real tissues while growing naturally occupy the space in a gradual way.
+    \end{itemize}
 
-To produce the specific image in Figure \ref{fig:ram_feat} I used a prticular setting of the tools described in section \ref{ssec:Lsys}, which have a greatly wider range of customization, and could be used to create many other different structures.
+    To produce the specific image in Figure \ref{fig:ram_feat} I used a particular setting of the tools described in section \ref{ssec:Lsys}, which have a greatly wider range of customization and could be used to create many other different structures.
 
-The successive step I followed was to expand this structure in three dimensions, and fill the space in each of the three directions. The idea to evolve the structure in Figure \ref{fig:ram_feat} is simply to twist of 90$\degree$ the ramification at every junction point, in such a way to exit the previous plane. However, putting into practice this development has not been easy. The organization of the structure in a 3D space requires an appropriate system of reference for handling subsequent rotations in three dimensions. The best option for handling relative 3D rotations, often used in computer graphics and in every kind of 3D modelization, are quaternions, as shown in \ref{ssec:quat}.
+    \item [\mycount) Expansion to 3D] \hfill \\
+    The successive step I followed was to expand this structure in three dimensions and fill the space in each of the three directions. The idea to evolve the structure in Figure \ref{fig:ram_feat} is simply to twist of 90$\degree$ the ramification at every junction point, in such a way to exit the previous plane. However, putting into practice this development has not been easy. The organization of the structure in a 3D space requires an appropriate system of reference for handling subsequent rotations in three dimensions. The best option for handling relative 3D rotations, often used in computer graphics and every kind of 3D modelization, are quaternions, as shown in \ref{ssec:quat}.
 
-\begin{figure}
-    \centering
-    \includegraphics[width = 0.6\textwidth]{images/3d_ram}
-    \caption{The three-dimensional expansion of the 2D ramification in Figure \ref{fig:ram_feat}.}
-    \label{fig:3d_ram}
-\end{figure}
+    \begin{figure}
+        \centering
+        \includegraphics[width = 0.6\textwidth]{images/3d_ram}
+        \caption{The three-dimensional expansion of the 2D ramification in Figure \ref{fig:ram_feat}.}
+        \label{fig:3d_ram}
+    \end{figure}
 
-In this new structure segments are replaced with cylinders, and circles are replaced with spheres. At each bifurcation to every cylinder corresponds:
-\begin{itemize}
-    \item a contraction in its extensions, regulated by an adjustable parameter $R$.
-    \item the usual deviation of $\pm 85 \degree$ respect to the direction of the parent branch.
-    \item a 90$\degree$ specific rotation along the axis of its parent branch.
-\end{itemize}
+    In this new structure, segments are replaced with cylinders, and circles are replaced with spheres. At each bifurcation to every cylinder corresponds:
+    \begin{itemize}
+        \item a contraction in its extensions, regulated by an adjustable parameter $R$.
+        \item the usual deviation of $\pm 85 \degree$ respect to the direction of the parent branch.
+        \item a 90$\degree$ specific rotation along the axis of its parent branch.
+    \end{itemize}
 
-The result of this procedure is a 3D ramification like the one in Figure \ref{fig:3d_ram}, in which we can recognise a good coverage of the space defined by the structure's boundaries and an immediate relation with the 2D structure in Figure \ref{fig:ram_feat}. It should be noted that, in the further refinments of the model from now on, there won't be present the progressive angular indetermination on the direction of branches. Altough it is a feature already implemented and working, it requires an efficient control for avoid reciprocal overlapping between elements to produce a realistic structure. This second element has not been already developed and it would certainly enrich the representative power of the model.
+    The result of this procedure is a 3D ramification like the one in Figure \ref{fig:3d_ram}, in which we can recognize a good coverage of the space defined by the structure's boundaries and immediate relation with the 2D structure in Figure \ref{fig:ram_feat}. It should be noted that, in the further refinements of the model from now on, there won't be present the progressive angular indetermination on the direction of branches. Although it is a feature already implemented and working, it requires efficient control to avoid reciprocal overlapping between elements to produce a realistic structure. This second element has not been already developed and it would certainly enrich the representative power of the model.
 
-As for the 2D ramification the production of this structure has required the implementation of a tool for 3D generation of greatly wider power, able to produce almost any type of three-dimensional iterative structure after the right adjustment, and with an high degree of customization. It is necessary to mention the foundamental tool which allowed me to accomplish this step of the devolpment, which is the \texttt{Python} library \texttt{VPython}: a library for 3D graphics visualization for python. This library allows a convinient and powerfull interface to draw many types of objects and to move them around in space, which has been priceless to orient my self in three dimensions while developing the model, and to produce all the 3D images visible in this work.
-\\
-VORONOI AS CELLS\\
-CHOICE OF SEMIRANDOM POINTS\\
-IDETITY ASSIGMENT TO CELLS\\
-SECTIONING AND IMAGE PRODUCTION -> SEGMENTATION MASK\\
+    As for the 2D ramification the production of this structure has required the implementation of a tool for the 3D generation with a greatly wider power, able to produce almost any type of three-dimensional iterative structure after the right adjustment, and with a high degree of customization. It is necessary to mention the fundamental tool which allowed me to accomplish this step of the development, which is the \texttt{Python} library \texttt{VPython}: a library for 3D graphics visualization for python. This library allows a convenient and powerful interface to draw many types of objects and to move them around in space, which has been priceless to orient my self in three dimensions while developing the model and to produce all the 3D images visible in this work.
+
+    \item [\mycount) Subdivision in Cells] \hfill \\
+    Once the 3D backbone of the pancreatic tissue blood vessels ramification system has taken shape, the next step was to embed all this structure in a spatial partitioning process, to create the subdivision into single cells. To perform this important task I used a 3D Voronoi decomposition, as shown in section \ref{ssec:vor_tass}. Depending on the choice of the starting points, the Voronoi tessellation could be an excellent item to recreate individual cells because it could guarantee some important properties: all the pieces are convex, adjacent, with similar size and volume, with different shapes, and without holes. These have been chosen as the most significant properties to be reflected in the first modelization of cells.
+
+    As shown in section \ref{ssec:vor_tass}, the decomposition strongly depends on the choice of the starting point. Points spread uniformly on a 3D regular lattice will produce a series of parallelepipeds repeated in the space. An example of uniform tessellation is shown in Figure \ref{fig:reg_vor}. On the other side, a decomposition based on a quasi-random generated point can present all the good properties we mentioned before, including the diversity in shapes. In Figure \ref{fig:sal_vor} is shown an example of a Voronoi decomposition based on points sampled in a 3D with the Saltelli algorithm, in reference to section \ref{ssec:saltelli}. Regardless of the points sampling technique, the boundaries of the sampling 3D box have been chosen to contain abundantly the ramification.
+
+    \begin{figure}
+        \centering
+        \begin{subfigure}[b]{0.45\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/reg_vor}
+             \caption{Regular lattice.}
+             \label{fig:reg_vor}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.45\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/sal_vor}
+             \caption{Sampling with Saltelli algorithm.}
+             \label{fig:sal_vor}
+        \end{subfigure}
+        \caption{Comparison between two Voronoi decompositions. The first (left) is created from a regular lattice of starting points, and every piece is exactly equal to all the others, creating a regular subdivision of the space The second (right) is created instead from a sampling made following the saltelli quasi-random algorithm. The pieces are all different in shape, but they all have similar sizes and volumes. In this pictures in particular have been shown only the pieces of the tessellation which lie in correspondence to the boundaries of the spheres underneath. While watching this picture one should immagine the decomposition extended similarly in all the space around the ramification, within certain boundaries, which largely contains the structure. This representation choice has been done just for enhance the interpretability of the image. }
+        \label{fig:vor_comp}
+    \end{figure}
+
+    There are tough some delicate considerations to be highlighted about the decomposition procedure. The first is about the most external pieces of the decomposition. Whilst the internal pieces are neatly bounded and defined, the most external layer instead is made on unbounded regions, which extend themselves to infinity. Those pieces have clearly to be rejected, as it would be absurd for a cell to have an infinity volume. Typically those unbounded regions are resized in order to adhere to some limiting boundaries, with an operation known as \textit{cropping}. In Figure \ref{fig:crop_vor} is shown an example of circular cropping in a 2D Voronoi decomposition: all the regions which intersect the circumference have to be resized.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width = 0.5\textwidth]{images/crop_vor}
+        \caption{Example of circular cropping in a 2D Voronoi decomposition: all the regions which intersect the circumference have to be resized.}
+        \label{fig:crop_vor}
+    \end{figure}
+
+    The cropping operation in 3D is extremely complex, tough. Thus, a more simple and efficient, yet less elegant, technique has been used. Instead of resizing the regions which lie on the boundaries of the sampling region, those regions have directly been rejected. This process is really fast and it does not lead to any danger of representativity loss if the boundaries are loose enough and if the density of sampling is not too low.
+
+    The other important consideration regards the density of sampling points. Increasing the number of points to be extracted from the same volume automatically the number of cells in the box will rise, and in contrast, their relative dimension will decrease. This is a key element of the model: a too rarified decomposition would not bee able to reflect the complexity of the structure underneath, but a too crowd decomposition on the other side would lead to an unrealistic dimension of the cells in the tissue. Furthermore, this parameter has a huge influence on the computing time necessary to generate the model and to process it for the sectioning as will be shown in section \ref{ssec:sectioning}. In almost all the applications so far, the density parameter has been tuned by eye, with a trial and error procedure. Although, a more rigorous way to adjust this parameter would be to consider the average dimension of the cells and make some microanatomical considerations to define the correct relative dimensions. The measure of the volume\footnote{The volume is expressed in the same arbitrary length unit of measures used during the ramification structure. This allows a coherent reference tool.} of the decomposition's regions is an accessible parameter, thus an easy way to estimate the average linear dimension of the cells can be to approximate all the cells to cuboid seeing their volumes as $V \approx L^3$. Averaging all the $L$ measures an estimate $\hat{L}$ can be done. This average length may be compared to the length of the blood vessel ramification, allowing a good reference tool.
+
+    \item [\mycount) Cells Identity Assignment] \hfill \\
+    The great power of creating all the models virtually is to know exactly the identity of every point in the structure. Although, This identity has to be reflected at the cellular level, assigning to every region a label. Imagining the Voronoi decomposition represented in Figure  \ref{fig:sal_vor} extended to the entire box containing the ramification, good discrimination would distinguish three classes of cells: those which lie completely inside a sphere, those which lie completely outside a sphere, and those which lie on the boundaries of a sphere. In Figure \ref{fig:cell_id} is shown a portion of the complete decomposition where the three classes of cells are reported with different colors: the internal cells in red, those on the boundaries in turquoise, and the external cells in gray.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width = 0.5\textwidth]{images/cell_id}
+        \caption{Portion of the complete Voronoi decomposition, showing the three different classes of cell in three different colors: the internal cells in red, those on the boundaries in turquoise and the external cells in gray.}
+        \label{fig:cell_id}
+    \end{figure}
+
+    In this particular case to find the relative position between every sphere in the structure and each cell it has been used a check on the proximity between the centers and the vertices of every polyhedral cell. If all the vertices of a region lie within a distance lower than the radius from the center of the same sphere then that region can be said to be an internal one. If none of the vertices lie within the radius distance from any center then that region is said to be external. In any other case, the region is said to be on the boundaries of some sphere, and this third label is assigned to it. As could be imagined the number of cells inside the volume can grow very quickly, and in the more rich ramifications also the number of spheres could be high. If we think that any polyhedron has a number of vertices of the order of $20/30$ then it is clear that the number of distance evaluations could grow very quickly, requiring some relevant computational power in the more extended simulations. In order to optimize this computation, I decided to use a python implementation of a K-dimensional Tree, which is a space-partitioning data structure especially suited for fast and optimized computation of distances \cite{10.1145/361002.361007}. A K-d Tree is a special binary space partitioning algorithm, in which every node of the three could be thought as a splitting $(k-1)$-hyperplane dividing the space into two semi-hyperspace. The result is an optimized algorithm for repeated distance evaluations. As for many other tools, in my code I used an excellent pre-implemented module \texttt{KDTree} from the \texttt{Scipy} library.
+
+    This procedure of labeling the regions is completely customizable, and it should be adapted to the specific application. By the way, the principle will always be to perform some sort of spatial consideration respect to the primary structure and assign all the interesting labels accordingly.
+\end{description}
+
+After labeling the cells in the decomposition the model is considered complete. Every enrichment to the structure should be reflected in some type of label for the cells, which are chosen as the fundamental unit in the model. As we will see in section \ref{ssec:sectioning} during the sectioning process in the produced image will be printed mainly the identity of the cells, hence any detail on a finer scale in the model would not be conveyed properly on the final image.
+
+\subsection{Dermal Tissue Model} \label{ssec:panc_tis_mod}
+
+\subsection{Pancreatic Tissue Model} \label{ssec:sectioning}
+
+
+SECTIONING AND IMAGE PRODUCTION (random direction) -> SEGMENTATION MASK\\
 \\
 ADJUSTMENTS: PALETTE, NOISE, STYLE TRANSFER\\
 \\

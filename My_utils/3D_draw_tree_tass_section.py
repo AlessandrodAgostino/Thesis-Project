@@ -48,7 +48,7 @@ def plane_z_intersection(p1, p2, z=0):
 
 #-------------------------------------------------------------------------------
 #%% VORONOI - PREPARATION
-Pancreas = createTree(iter = 6, rotation = False, seed = 49) #Ramification object
+Pancreas = createTree(iter = 1, rotation = False, seed = 49) #Ramification object
 
 #Extracting free end's spheres and radius
 spheres  = [] #List of spheres
@@ -70,6 +70,13 @@ shooting_boundaries = [ [ min_box[0]                , 0          ],
                         [ min_box[1]                , max_box[1] ],
                         [ min_box[2], spheres[1][2] - sph_rad/2] ]
 # bounds = shooting_boundaries
+bounds[0][0] = 0
+bounds[0][1] = 0.85 * bounds[0][1]
+bounds[1][0] = 0
+bounds[1][1] = 0.85 * bounds[1][1]
+bounds[2][1] = 0.2 * bounds[2][1]
+bounds[2][0] = 0.5 * bounds[2][0]
+
 
 #Defining the problem for a low discrepancy sampling inside 'bounds'
 problem = {'num_vars': 3,
@@ -77,7 +84,7 @@ problem = {'num_vars': 3,
            'bounds': bounds}
 
 #Parameter that regulate the sampling density
-N = 2000 #SHOULD UNDERSTAND BETTER HOW EXACTLY WORKS
+N = 150 #SHOULD UNDERSTAND BETTER HOW EXACTLY WORKS
 vor_points = saltelli.sample(problem, N) #Sampling
 vor_points.shape
 
@@ -104,7 +111,7 @@ rec_points.shape
 
 #Alternative REGULAR VORONOI in the same boundaries
 # """
-n_sample = 30
+n_sample = 25
 coords = np.zeros((3,n_sample))
 coords[0] = np.linspace(bounds[0][0], bounds[0][1], n_sample)
 coords[1] = np.linspace(bounds[1][0], bounds[1][1], n_sample)
@@ -114,6 +121,7 @@ reg_points = np.asarray([ pt for pt in itertools.product(coords[0], coords[1], c
 #-------------------------------------------------------------------------------
 #%% VORONOI - CREATION
 vor = Voronoi(vor_points) #Creating the tassellation
+# vor = Voronoi(reg_points) #Creating the tassellation
 
 #Cropping the regions that lies outside the boundaries
 crop_reg = [ reg for reg in vor.regions if inside_bounds(vor, reg, bounds)]
@@ -170,11 +178,12 @@ turquoise = color.hsv_to_rgb(vector(0.5,1,0.8))
 red       = color.red #Some colors
 white     = color.white
 black     = color.black
-colors    = [black, white, turquoise,  red, black] #[Outside, Partially, Inside, Out of Boundaries]
+gray      = color.gray(0.6)
+colors    = [black, gray, turquoise,  red, black] #[Outside, Partially, Inside, Out of Boundaries]
 Figures   =  [] #List to which append all the drawings
 
-drawListBranch(Pancreas, color = color.red, opacity = 1) #Drawing ramification
-drawSphereFreeEnds(Pancreas, color = color.red, opacity = 1) #Drawing free ends' spheres
+drawListBranch(Pancreas) #Drawing ramification
+drawSphereFreeEnds(Pancreas, opacity = 0.5) #Drawing free ends' spheres
 draw_axis(Figures, 10)
 zoom=0.75
 # scene.camera.pos = vector(-20*zoom,10*zoom,-20*zoom)
@@ -190,14 +199,14 @@ for n,ver in enumerate(vor.vertices):
 
 #Drawing a Voronoi Tassels and their volumes if they're finite
 for n,reg in enumerate(vor.regions):
-    if colors[region_id[n]] in []: #[red, turquoise] or [orange] for nothing
+    if colors[region_id[n]] in [red, turquoise, gray]: #[red, turquoise] or [orange] for nothing
         conv_hull= ConvexHull([vor.vertices[ver] for ver in reg])
         simpl = []
         for sim in conv_hull.simplices:
             pts = [conv_hull.points[pt] for pt in sim]
             simpl.append( triangle( vs=[vertex( pos     = vector(*ver),
                                                 color   = colors[region_id[n]],
-                                                opacity = 0.2) for ver in pts]))
+                                                opacity = 0.5) for ver in pts]))
 
 #Drawing the section at z=0
 for triang, n in intersectiong_triang_dict.items():
