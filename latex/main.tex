@@ -1,22 +1,23 @@
 \documentclass[12pt,a4paper]{report}
+
 \usepackage[english]{babel}
 \usepackage{newlfont}
 \usepackage{color}
-\usepackage{graphicx}
-\usepackage{amsmath}
+\usepackage{graphicx} % figures...
+\usepackage{amsmath} % math symb
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert} % norm sign
 \usepackage{enumerate}
 \usepackage{url}
-\usepackage{lipsum} %fake text
-\usepackage{gensymb} %° symbol
-\usepackage{bm} %bold math symbols
-\usepackage{amssymb} %calligraphy
-\usepackage{color,soul} %highlighting text
-\usepackage[labelfont={bf,it},textfont=it, margin=1cm]{caption} %caption settings
-\usepackage{subcaption} %subfigures
-\usepackage{natbib} %biblio
+\usepackage{lipsum} % fake text
+\usepackage{gensymb} % ° symbol
+\usepackage{bm} % bold math symbols
+\usepackage{amssymb} % calligraphy
+\usepackage{color,soul} % highlighting text
+\usepackage[labelfont={bf,it},textfont=it, margin=1cm]{caption} % caption settings
+\usepackage{subcaption} % subfigures
+\usepackage{natbib} % biblio
 \bibliographystyle{plain}
-\usepackage[nottoc]{tocbibind} %Show bib in index
+\usepackage[nottoc]{tocbibind} % show bib in index
 
 \textwidth=450pt
 \oddsidemargin=0pt
@@ -29,18 +30,27 @@
 \tableofcontents{}
 
 \input{sections/introduction}
+\clearpage
 
-\chapter{Histo \& Deep Learning \& SOA}
+\chapter{Histological Images Analysis}
     \input{sections/histo_images}
+    \clearpage
     \input{sections/intro_deep_learning}
+    \clearpage
     \input{sections/SOA_Segmentation}
+    \clearpage
 
-\chapter{Model Generations}
+\chapter{Model for The Generations of Synthetic Images}
     \input{sections/math_tools}
+    \clearpage
     \input{sections/model_generation}
-
+    \clearpage
+    \input{sections/sect_proc}
+    \clearpage
+    
 \chapter{Conclusions}
     \input{sections/conclusions}
+    \clearpage
 
 \bibliography{biblio}
 \end{document}

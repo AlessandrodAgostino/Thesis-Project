@@ -1,4 +1,4 @@
-\section{Model Development}
+\section{Tissues Model Development}
 The main goal of the present work, as stated before, is to recreate a three-dimensional virtual model of histological tissue as faithfully as possible and then, to perform planar sectioning on it to emulate virtually the traditional histological specimen preparation procedure. The creation of a model of such complex structures is definitely a high-level problem, and it has required a careful designing, made of subsequent stages of improvements. In this work, I will report only two specific attempts of modelization: the first aiming to represent pancreatic tissue, and the second oriented toward dermal tissue.
 
 \begin{figure}[b!]
@@ -112,8 +112,9 @@ All the tissue is actually rich in other important elements as the islets of Lan
 
 After labeling the cells in the decomposition the model is considered complete. Every enrichment to the structure should be reflected in some type of label for the cells, which are chosen as the fundamental unit in the model. As we will see in section \ref{ssec:sectioning} during the sectioning process in the produced image will be printed mainly the identity of the cells, hence any detail on a finer scale in the model would not be conveyed properly on the final image.
 
-\subsection{Dermal Tissue Model} \label{ssec:panc_tis_mod}
-The dermis or corium is a layer of skin between the epidermis (with which it makes up the cutis) and subcutaneous tissues, that primarily consists of dense irregular connective tissue and cushions the body from stress and strain. It is divided into two layers, the superficial area adjacent to the epidermis called the papillary region and a deep thicker area known as the reticular dermis.[1] The dermis is tightly connected to the epidermis through a basement membrane. Structural components of the dermis are collagen, elastic fibers, and extrafibrillar matrix.[2] It also contains mechanoreceptors that provide the sense of touch and thermoreceptors that provide the sense of heat. In addition, hair follicles, sweat glands, sebaceous glands (oil glands), apocrine glands, lymphatic vessels, nerves and blood vessels are present in the dermis. Those blood vessels provide nourishment and waste removal for both dermal and epidermal cells.
+\subsection{Dermal Tissue Model} \label{ssec:derm_tis_mod}
+\hl{\textit{The dermis or corium is a layer of skin between the epidermis (with which it makes up the cutis) and subcutaneous tissues, that primarily consists of dense irregular connective tissue and cushions the body from stress and strain. It is divided into two layers, the superficial area adjacent to the epidermis called the papillary region and a deep thicker area known as the reticular dermis.[1] The dermis is tightly connected to the epidermis through a basement membrane. Structural components of the dermis are collagen, elastic fibers, and extrafibrillar matrix.[2] It also contains mechanoreceptors that provide the sense of touch and thermoreceptors that provide the sense of heat. In addition, hair follicles, sweat glands, sebaceous glands (oil glands), apocrine glands, lymphatic vessels, nerves and blood vessels are present in the dermis. Those blood vessels provide nourishment and waste removal for both dermal and epidermal cells.
+}}
     \begin{figure}
         \centering
         \begin{subfigure}[b]{0.45\textwidth}
@@ -130,15 +131,3 @@ The dermis or corium is a layer of skin between the epidermis (with which it mak
         \caption{Microanatomical description of a region of dermal tissue and all the interesting elements present in cutis, and subcutaneous layer. An actual histological specimen from a sample of dermal tissue.}
         \label{fig:derm_descr}
     \end{figure}
-
-
-\subsection{Sectioning Process - Synthetic Images} \label{ssec:sectioning}
-
-
-SECTIONING AND IMAGE PRODUCTION (random direction) -> SEGMENTATION MASK\\
-\\
-ADJUSTMENTS: PALETTE, NOISE, STYLE TRANSFER\\
-\\
-PIPELINE TO AUTOMATIZATION\\
-ALTERNATIVE METHODS???\\
-\clearpage

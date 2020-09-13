@@ -309,5 +309,3 @@ The key ingredient for finalizing the model is to insert some little but fundame
 After the appropriate insertion of the loss-function evaluator layers, one last piece for finalizing the model is the right choice of the gradient descent optimizer. As in \cite{1508.06576} and according to the Deep Learning community the optimizer which suite best this role is the Limited Memory-BFGS \cite{10.1093/imamat/6.1.76},\cite{shanno1970conditioning}. L-BFGS is an iterative algorithm in the family of quasi-Newton methods that approximates the Broyden-Fletcher-Goldfarb-Shanno algorithm (BFGS) using a limited amount of computer memory, and it is a popular choice when estimating parameters of a non-linear differentiable scalar function.
 
 The final phase of the training process thus makes run the optimizer for hundreds of epochs on $X$, $C$, and $S$, and reduce the two loss functions values acting on the network's parameters. After the fine-tuning of the weights, the hybrid image is produced, as in Figure \ref{fig:ex_st_tr}.
-
-\clearpage
