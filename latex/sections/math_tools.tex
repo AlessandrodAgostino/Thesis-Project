@@ -98,9 +98,9 @@ The use of standard L-systems turned out to be widespread, and there were a lot 
 \subsection{Voronoi Tassellation} \label{ssec:vor_tass}
 Voronoi diagrams, or Voronoi decompositions, are space-partitioning systems, which divides an $n$-dimensional Euclidian space into sub-regions depending on the proximity to a given set of objects. More precisely, given an $n$-dimensional space and $m$ starting point $p_1,\dots, p_m$ inside it, the whole space will be subdivided in $m$ adjacent regions. Every point of the space is assigned to the region correspondent to the nearest starting point. In Figure \ref{fig:vor_20} is shown a practical example of a Voronoi decomposition of a plane into 20 regions corresponding to the 20 starting points. Informal use of Voronoi diagrams can be traced back to Descartes in 1644, and many other mathematicians after him. But, Voronoi diagrams are named after Georgy Feodosievych Voronoy who defined and studied the general n-dimensional case in 1908 \cite{VoronoiNouvellesAD}.
 
-\begin{figure}[b!]
+\begin{figure}
     \centering
-    \includegraphics[width = 0.5\textwidth]{images/vor_20}
+    \includegraphics[width = 0.4\textwidth]{images/vor_20}
     \caption{Example of a Voronoi decomposition of a plane into 20 regions corresponding to 20 starting points.}
     \label{fig:vor_20}
 \end{figure}
@@ -115,8 +115,8 @@ In addition to the choice of the distance function, another fundamental factor i
 
 \begin{figure}
     \centering
-    \includegraphics[width = 0.4\textwidth]{images/reg_pt}
-    \includegraphics[width = 0.4\textwidth]{images/ran_pt}
+    \includegraphics[width = 0.3\textwidth]{images/reg_pt}
+    \includegraphics[width = 0.3\textwidth]{images/ran_pt}
     \caption{On the right an example of 2D Voronoi decomposition resulting from homogeneously distributed points in the plane. On the left the resulting decomposition obtained from randomly distributed points in the plane, from \cite{ALSAYEDNOOR201644}.}
     \label{fig:diff_pt}
 \end{figure}
@@ -210,27 +210,27 @@ The result of the algorithm is, as just stated, a convex hull, which in geometry
 
 In \texttt{Python}, the most convenient way to work with convex hulls was to use the submodule \texttt{spatial.ConvexHull} from the \texttt{SciPy} library \cite{2020SciPy-NMeth}. This module allows also a convenient way for plotting images with \texttt{MatPlotLib}, which is the point of reference for plotting and image formation in \texttt{Python}.
 
-\subsection{Perlin Noise}
+\subsection{Perlin Noise} \label{ssec:perlin}
 Perlin noise is a widely used form of noise in computer graphics, which mimics very well natural and smooth fluctuations around a constant value. It has been developed by Ken Perlin in 1983, and it is now the staple tool for giving texture to object in virtual modelization, often considered the \textit{salt} of computer graphics texturization.
 The Perlin noise is a gradient-based algorithm defined on grid discretization of a $n$-dimensional space. The algorithm involves three subsequent steps:
 
 \begin{figure}
     \centering
-    \begin{subfigure}[b]{0.4\textwidth}
+    \begin{subfigure}[b]{0.3\textwidth}
          \centering
          \includegraphics[width = \textwidth]{images/grid_grad}
          \caption{}
          \label{fig:grid_grad}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.4\textwidth}
+    \begin{subfigure}[b]{0.3\textwidth}
          \centering
          \includegraphics[width = \textwidth]{images/PerlinNoiseDotProducts}
          \caption{}
          \label{fig:dot_prod}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.4\textwidth}
+    \begin{subfigure}[b]{0.3\textwidth}
          \centering
          \includegraphics[width = \textwidth]{images/PerlinNoiseInterpolated}
          \caption{}
@@ -248,7 +248,7 @@ The Perlin noise is a gradient-based algorithm defined on grid discretization of
     \item The final step is the interpolation between the $2^n$ series of dot products. To perform the interpolation usually is used a function with vanishing first degree (and preferably also second degree) derivative in correspondence of the $2^n$ grid nodes \footnote{Usually are used functions with a sigmoidal behavior, like any smoothstep function, which is a family of very common items in computer graphics.}. This means that the noise function will pass through zero at every node and have a gradient equal to the pre-computed grid node gradient. These properties give Perlin noise its characteristic spatial scale and smoothness.
 \end{enumerate}
 
-In general, the final result of the algorithm is a smooth function with a random-like behavior that mimics really well an organic appearance, like in Figure \ref{fig:my_perlin}, with fluctuation around the value 0, with amplitude $ \in [ 0;1] $. The surface in Figure \ref{fig:my_perlin} has been produced plotting in 3D the results of the function \texttt{pnoise2} from the library \texttt{noise}, which offers a good and intuitive tool for the production of different type of noise.
+In general, the final result of the algorithm is a smooth function with a random-like behavior that mimics really well an organic appearance, like in Figure \ref{fig:my_perlin}, with fluctuation around the value 0, with amplitude $ \in [ 0;1] $. The surface in Figure \ref{fig:my_perlin} has been produced plotting in 3D the results of the function \texttt{pnoise2} from the library \texttt{noise}, which offers a good and intuitive tool for the production of different type of noise. In order to put in practical use this module some adjustment were required. The particular function \texttt{pnoise2} simply yields the value of the Perlin noise surface in correspondence to a single $(x,y)$ point in the plane in a deterministic way. There was not the possibility to generate different whole Perlin surfaces every run. To overcome this limitation I made a vectorized\footnote{In Python the staple tool for scientific, number-cruncher computation is the \texttt{NumPy} library, which allows a fast, complete and efficient way to perform computation between number structure. The operation of trasnforming a function which acts on a single value (or pair of values) to a function able to perform on a suitable datastructure is called \textit{vectorization}, and its the recomended way to proceed when handling numerical functions in Python} version of \texttt{pnoise2} able to evaluate the function over an arbitrary wide grid of points expressed as set of all the pairs of coordinates $(x,y)$ of the grid's nodes. In this way a single call to the function is able to produce the entire surface covering the grid, in the form of a single \texttt{NumPy} 3darray. Furthermore, to recover the possibility of generating always different surfaces as in a random generation, I inserted an offset cordinate $(x_O,y_O)$, which moves in the plane the origin of the surface generation. This pair of offset coordinates then acts also as a \textit{seed} in the generation, allowing to completely recreate previously generated material in a controlled way.
 
 \begin{figure}
     \centering
@@ -266,7 +266,7 @@ Style-Transfer Neural Networks are common models, able of creating new hybrid im
 
 There are many different tested and comparable architectures to compute this kind of algorithm. In my work I decided to use in particular the procedure described in \cite{1508.06576}, using the \textit{PyTorch} ecosystem to implement the necessary code.
 
-\begin{figure}[b!]
+\begin{figure}
     \centering
     \includegraphics[width = 0.9\textwidth]{images/st_trasf_ex}
     \caption{Different examples of application of a style-transfer NN on the same content image, with different style images, from \cite{1508.06576}. The

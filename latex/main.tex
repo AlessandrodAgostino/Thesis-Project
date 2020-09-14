@@ -1,5 +1,4 @@
 \documentclass[12pt,a4paper]{report}
-
 \usepackage[english]{babel}
 \usepackage{newlfont}
 \usepackage{color}
@@ -17,7 +16,8 @@
 \usepackage{subcaption} % subfigures
 \usepackage{natbib} % biblio
 \bibliographystyle{plain}
-\usepackage[nottoc]{tocbibind} % show bib in index
+\usepackage[nottoc]{tocbibind} % show bib in toc
+\usepackage{hyperref} % show intro in toc
 
 \textwidth=450pt
 \oddsidemargin=0pt
@@ -33,6 +33,7 @@
 \clearpage
 
 \chapter{Histological Images Analysis}
+    \input{sections/preamble1}
     \input{sections/histo_images}
     \clearpage
     \input{sections/intro_deep_learning}
@@ -40,17 +41,17 @@
     \input{sections/SOA_Segmentation}
     \clearpage
 
-\chapter{Model for The Generations of Synthetic Images}
+\chapter{Model for the Generations of Synthetic Images}
+    \input{sections/preamble2}
     \input{sections/math_tools}
     \clearpage
     \input{sections/model_generation}
     \clearpage
     \input{sections/sect_proc}
     \clearpage
-    
-\chapter{Conclusions}
-    \input{sections/conclusions}
-    \clearpage
+
+\input{sections/conclusions}
+\clearpage
 
 \bibliography{biblio}
 \end{document}
