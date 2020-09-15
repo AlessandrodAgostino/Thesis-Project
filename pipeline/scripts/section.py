@@ -119,7 +119,7 @@ def _get_vor_points(boundaries,  N_points, small_boundaries = None, method = 'sa
     """
         #Mapping the points to the Boundaries
     if method == 'saltelli':
-        if small_boundaries == None:
+        if small_boundaries is None:
             small_boundaries = boundaries
 
         problem = {'num_vars': 3,
@@ -463,7 +463,17 @@ def derma_section(N_points=600, n_slices = 1, saving_path='.', dpi = 100, draw_n
     plt.close(fig)
 
 
-def pancr_section( iteration_level = 3,rotation = False, seed = None, y = 0, N_points = 5000, n_slices = 3, saving_path = '', noise_density = 20, plane_distance = 0.05, draw_nuclei = True, sampling_method = 'saltelli'):
+def pancr_section( iteration_level = 3,
+                   rotation = False,
+                   seed = None,
+                   y = 0,
+                   N_points = 5000,
+                   n_slices = 3,
+                   saving_path = '',
+                   noise_density = 20,
+                   plane_distance = 0.05,
+                   draw_nuclei = True,
+                   sampling_method = 'saltelli'):
     """
     This function draws and saves the images resulting from the slicing of a ramification.
 
@@ -492,7 +502,7 @@ def pancr_section( iteration_level = 3,rotation = False, seed = None, y = 0, N_p
     """
     Ramification = createTree(iter = iteration_level, rotation = rotation, seed = seed) #Creating the ramification object
     boundaries, small_boundaries, int_spheres, sph_rad = _box_and_spheres(Ramification, y) #Getting spatial informations
-    vor_points = _get_vor_points(boundaries, small_boundaries, N_points, method = sampling_method) #Getting point for creating Voronoi tassellation
+    vor_points = _get_vor_points(boundaries, N_points, small_boundaries = small_boundaries, method = sampling_method) #Getting point for creating Voronoi tassellation
 
     vor = Voronoi(vor_points) #Creating the tassellation
     cropped_reg = [ reg for reg in vor.regions if _inside_boundaries(vor, reg, small_boundaries)] #Cropping out the regions that lies outside the boundaries
@@ -573,4 +583,14 @@ def different_density_benchmarks():
         print(f'{N_points} figures written.')
 
 if __name__ == '__main__':
-    derma_section(N_points = 120000)
+    pancr_section( iteration_level = 3,
+                   rotation = False,
+                   seed = 123,
+                   y = 0,
+                   N_points = 5000,
+                   n_slices = 1,
+                   saving_path = '',
+                   noise_density = 20,
+                   plane_distance = 0.05,
+                   draw_nuclei = True,
+                   sampling_method = 'saltelli')

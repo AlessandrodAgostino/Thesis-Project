@@ -70,12 +70,12 @@ shooting_boundaries = [ [ min_box[0]                , 0          ],
                         [ min_box[1]                , max_box[1] ],
                         [ min_box[2], spheres[1][2] - sph_rad/2] ]
 # bounds = shooting_boundaries
-bounds[0][0] = 0
-bounds[0][1] = 0.85 * bounds[0][1]
-bounds[1][0] = 0
-bounds[1][1] = 0.85 * bounds[1][1]
-bounds[2][1] = 0.2 * bounds[2][1]
-bounds[2][0] = 0.5 * bounds[2][0]
+# bounds[0][0] = 0
+# bounds[0][1] = 0.85 * bounds[0][1]
+# bounds[1][0] = 0
+# bounds[1][1] = 0.85 * bounds[1][1]
+# bounds[2][1] = 0.2 * bounds[2][1]
+# bounds[2][0] = 0.5 * bounds[2][0]
 
 
 #Defining the problem for a low discrepancy sampling inside 'bounds'
@@ -84,7 +84,7 @@ problem = {'num_vars': 3,
            'bounds': bounds}
 
 #Parameter that regulate the sampling density
-N = 150 #SHOULD UNDERSTAND BETTER HOW EXACTLY WORKS
+N = 90 #SHOULD UNDERSTAND BETTER HOW EXACTLY WORKS
 vor_points = saltelli.sample(problem, N) #Sampling
 vor_points.shape
 
@@ -173,13 +173,13 @@ The filtering is done by deciding the color of the region to draw.
 Should be implemented in a more sensitive way.
 """
 #Preliminary graphic settings
-scene     = canvas(width=1000, height=800, center=vector(5,5,0), background=color.gray(1))
+scene     = canvas(width=1000, height=800, center=vector(5,5,0), background=color.gray(0.6))
 turquoise = color.hsv_to_rgb(vector(0.5,1,0.8))
 red       = color.red #Some colors
 white     = color.white
 black     = color.black
 gray      = color.gray(0.6)
-colors    = [black, gray, turquoise,  red, black] #[Outside, Partially, Inside, Out of Boundaries]
+colors    = [black, white, turquoise,  red, black] #[Outside, Partially, Inside, Out of Boundaries]
 Figures   =  [] #List to which append all the drawings
 
 drawListBranch(Pancreas) #Drawing ramification
@@ -199,7 +199,7 @@ for n,ver in enumerate(vor.vertices):
 
 #Drawing a Voronoi Tassels and their volumes if they're finite
 for n,reg in enumerate(vor.regions):
-    if colors[region_id[n]] in [red, turquoise, gray]: #[red, turquoise] or [orange] for nothing
+    if colors[region_id[n]] in []: #[red, turquoise] or [orange] for nothing
         conv_hull= ConvexHull([vor.vertices[ver] for ver in reg])
         simpl = []
         for sim in conv_hull.simplices:
@@ -210,7 +210,7 @@ for n,reg in enumerate(vor.regions):
 
 #Drawing the section at z=0
 for triang, n in intersectiong_triang_dict.items():
-    if colors[region_id[n]] in []:
+    if colors[region_id[n]] in [red, turquoise, white]:
         for sim in triang.simplices:
             pts = [triang.points[pt] for pt in sim]
             Figures.append( triangle( vs=[vertex( pos     = vector(*ver, 0),

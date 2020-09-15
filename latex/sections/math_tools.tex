@@ -172,6 +172,8 @@ Sobol in his article described in particular $(t,m,s)$-net and $(t,s)$-sequence 
 
 In order to perform the actual sampling during the modelization, it has been used the \texttt{saltelli} module from the \texttt{SALib} library, which performs sampling in an $s$-dimensional space following the Saltelli algorithm, which is a specific improved version of the Sobol algorithms oriented toward the parameter sensitivity analysis \cite{SALTELLI2002280}, \cite{SALTELLI2010259}.
 
+% In section \ref{ssec:app_mkov}, in Figure \ref{fig:sampling_comparison} is shown a comparison between corresponding section obtained following different sampling methods for the 
+
 \subsection{Planar Section of a Polyhedron} \label{ssec:pol_sec}
 As will be shown in section \ref{ssec:panc_tis_mod} a fundamental step for the functioning of the modelization is the planar section of a three-dimensional polyhedron. It turned out that there is no general rule to perform a planar section of a convex polyhedron with an arbitrary number of faces, respect to an arbitrary sectioning plane. Hence, I devised an algorithm to handle this task. In the case of a full intersection, the result of the sectioning process of a polyhedron is a polygonal surface, otherwise, it could be an empty set of points or a segment in case of particular tangency, but those two cases are not of interest to the model.
 
