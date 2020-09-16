@@ -1,313 +1,315 @@
-\section{Technical Tools for the Development} \label{sec:tech_tool}
-Before delving into the details of the development of the two proposed histological models, which are the heart of this work, it should be convenient to dwell on every tool employed during the design phase.
+\section{Quaternions} \label{ssec:quat}
+    Quaternions are, in mathematics, a number system that expands to four dimensions the complex numbers. They have been described for the first time by the famous mathematician William Rowan Hamilton in 1843. This number system define three independent \textit{imaginary} units $\bm{i}$, $\bm{j}$, $\bm{k}$ as in (\ref{eq:quat_rules}), which allows the general representation of a quaternion $\bm{q}$ is (\ref{eq:quat}) and its inverse $\bm{q}^{-1}$ (\ref{eq:inv_quat}) where $a,b,c,d$ are real numbers:
 
-All the code necessary for the work has been written in a pure \texttt{Python} environment, using several already established libraries and writing by my self the missing code, for some specific applications. All the code produced during the development, the images, and the data produced have been collected in a devoted repository on GitHub \cite{repo}. I decided to code in \texttt{Python} given the thriving variety of available libraries geared toward scientific computation, image processing, data analysis, and last but not least for its ease of use (compared to other programming languages).
-
-In this section, it will follow a description, in no particular order, of the less common tools I used during my work.
-
-\subsection{Quaternions} \label{ssec:quat}
-Quaternions are, in mathematics, a number system that expands to four dimensions the complex numbers. They have been described for the first time by the famous mathematician William Rowan Hamilton in 1843. This number system define three independent \textit{imaginary} units $\bm{i}$, $\bm{j}$, $\bm{k}$ as in (\ref{eq:quat_rules}), which allows the general representation of a quaternion $\bm{q}$ is (\ref{eq:quat}) and its inverse $\bm{q}^{-1}$ (\ref{eq:inv_quat}) where $a,b,c,d$ are real numbers:
-
-\begin{align}
-    \bm{i}^2 & = \bm{j}^2 = \bm{k}^2 = \bm{i}\bm{j}\bm{k} = -1, \label{eq:quat_rules}\\
-    \bm{q} & = a + b\bm{i} + c\bm{j} + d\bm{k}, \label{eq:quat}\\
-    \bm{q}^{-1 } = (a + b\bm{i} + c\bm{j} + d\bm{k})^{-1} & = \frac{1}{a^2 + b^2 + c^2 +d^2}\ (a - b\bm{i} - c\bm{j} - d\bm{k}). \label{eq:inv_quat}
-\end{align}
-
-Furthermore, the multiplication operation between quaternionn does not benefit from commutativity, hence the product between basis elements will behave as follows:
-
-\begin{align}
-    \bm{i} \cdot 1 = 1 \cdot \bm{i} = \bm{i}, & \qquad  \bm{j} \cdot 1 = 1 \cdot \bm{j} = \bm{j}, \qquad \bm{k} \cdot 1 = 1 \cdot \bm{k} = \bm{k} \label{eq:Ham_prod}\\
-    & \bm{i} \cdot \bm{j}= \bm{k}, \qquad \bm{j} \cdot \bm{i}= -\bm{k} \nonumber \\
-    & \bm{k} \cdot \bm{i}= \bm{j}, \qquad \bm{i} \cdot \bm{k}= -\bm{j} \nonumber \\
-    & \bm{j} \cdot \bm{k}= \bm{i}, \qquad \bm{k} \cdot \bm{j}= -\bm{i}. \nonumber
-\end{align}
-
-This number system has plenty of peculiar properties and applications, but for this project, quaternions are important for their ability to represent, in a very convenient way, rotations in three dimensions. The particular subset of quaternions with vanishing real part ($a=0$) has a useful, yet redundant, correspondence with the group of rotations in tridimensional space SO(3). Every 3D rotation of an object can be represented by a 3D vector $\vec u$: the vector's direction indicates the axis of rotation and the vector magnitude $|\vec u|$ express the angular extent of rotation. However, the matrix operation which expresses the rotation around an arbitrary vector $\vec u$ it is quite complex and does not scale easily for multiple rotations \cite{10.1007/BFb0031048}, which brings to very heavy and entangled computations.
-
-Using quaternions for expressing rotations in space, instead, it is very convinient. Given the unit rotation vector $\vec u$ and the rotation angle $\theta$, the corresponding rotation quaternion $\bm{q}$ becomes (\ref{eq:rot_quat}):
-\begin{align}
-    \vec u & = (u_x, u_y, u_z) = u_x\bm{i} + u_y\bm{j} + u_z\bm{k}, \\
-    \bm{q} & = e^{\frac{\theta}{2}(u_x\bm{i} + u_y\bm{j} + u_z\bm{k})} = \cos{\frac{\theta}{2}} + (u_x\bm{i} + u_y\bm{j} + u_z\bm{k})\sin{\frac{\theta}{2}}, \label{eq:rot_quat}\\
-    \bm{q}^{-1} & = \cos{\frac{\theta}{2}} - (u_x\bm{i} + u_y\bm{j} + u_z\bm{k})\sin{\frac{\theta}{2}},
-\end{align}
-where in (\ref{eq:rot_quat}) we can clearly see a generalization of the Euler's formula for the exponential notation of complex numbers, which hold for quaternions. It can be shown that the application of the rotation represented by $\bm{q}$ on an arbitrary 3D vector $\vec v$ should be easily expressed as:
-\begin{equation}
-    \vec v\,' = \bm{q} \vec v \bm{q}^{-1},
-\end{equation}
-using the Hamilton product defined on quaternions (\ref{eq:Ham_prod}). This rule raises a very convinient and an extremily scalable way to compute consecutive rotations in space. Given two independent and consecutive rotations represented by the two quaternions $\bm{q}$ and $\bm{p}$ applyed on the vector $\vec v$ the resulting rotated vector $\vec v\,'$ is simply yielded as:
-\begin{equation}
-    \vec v\,' = \bm{p} ( \bm{q} \vec v \bm{q}^{-1} ) \bm{p}^{-1} = (\bm{p}\bm{q}) \vec v (\bm{q}\bm{p})^{-1},
-\end{equation}
-which essentially is the application of the rotation $\bm{r} = \bm{q}\bm{p}$ on the vector $\vec v$. This representation is completely coherent with the algebra of 3D rotations, which does not benefit from commutativity in turn.
-
-Given this property, quaternions are indeed widely used in all sorts of applications of digital 3D space design, as for simulations and videogame. The position of an object in the space in simulations is generally given by the application of several independent rotations, typically in the order of a tenth of rotations, which with quaternions is given easily by the product of simple objects. Every other alternative method would imply the use of matrix representation of rotations or other rotation systems as Euler's angles and would eventually make the computation prohibitive.
-
-The use of quaternions in this work will be justified in section \ref{ssec:panc_tis_mod}, while speaking of parametric L-systems in 3D space, used to build the backbone of the ramified structure of blood vessels in the reconstruction of a sample of pancreatic tissue.
-
-I was able to find many useful \texttt{Python} libraries for computation with quaternions, but the one I appreciated the most for its interface and ease of use was the \texttt{pyquaternion}. With this library, it's almost immediate the definition of a quaternion by its correspondent rotation vector, and the multiplication between quaternions is very reliable.
-
-\subsection{Parametric L-Systems} \label{ssec:Lsys}
-Lindenmayer systems, or simply L-systems,  were conceived as a mathematical theory of plant development \cite{lindenmayer1968mathematical} in 1968 by Aristid Lindenmayer. Successively, a lot of geometrical interpretations of L-systems were proposed to make them a versatile instrument for modeling the morphology typical of plants and other organic structures. As a biologist, Lindenmayer studied different species of yeast and fungi and worked the growth patterns of various types of bacteria (e.g. as the \textit{cyanobacteria Anabaena catenula}). The main purpose for which L-systems were devised was to allow a formal description of the development of simple multicellular living organisms. Subsequently, the potentiality of these systems was expanded to describe higher-order plants and complex branching structures.
-
-An L-system is in general defined by an \textit{axiom} sequence and some development \textit{rules}, which are recursively applied to the sequence and lead its development. The original proposed L-system was fairly simple and shows really well the idea underneath:
-\begin{align}
-    & axiom\ :\ A \nonumber \\
-    & rules\ :\ (A \rightarrow AB),\quad(B \rightarrow A) \nonumber
-\end{align}
-where $A$ and $B$ could be any two different patterns in the morphology of an algae, or could be different bifurcations in a ramificated structure. The iterative application of the rules to the axiom sequence, let's say for 7 times, will produce the following sequence:
-\begin{align}
-    n = 0 &\ : A \nonumber \\
-    n = 1 &\ : AB \nonumber \\
-    n = 2 &\ : ABA \nonumber \\
-    n = 3 &\ : ABAAB \nonumber \\
-    n = 4 &\ : ABAABABA \nonumber \\
-    n = 5 &\ : ABAABABAABAAB \nonumber \\
-    n = 6 &\ : ABAABABAABAABABAABABA \nonumber \\
-    n = 7 &\ : ABAABABAABAABABAABABAABAABABAABAAB\,. \nonumber
-\end{align}
-
-This kind of tool, as will be shown also in \ref{ssec:panc_tis_mod}, is particularly suited for the creation of structures with fractal behavior, and it has been used in this work to create the backbone of the entangled bifurcation in blood vessels in the modelization of pancreatic tissue. In particular, there was the need for a fractal-like space-filling ramification as the one shown in Figures \ref{fig:bf_ls}. %and \ref{fig:full_ram}.
-
-\begin{figure}
-    \centering
-    \includegraphics[width = 0.7\textwidth]{images/bf_ls}
-    \caption{Growth pattern for the space-filling fract-like system, used to mimic the blood vassel bifurcations in sec \ref{ssec:panc_tis_mod}.}
-    \label{fig:bf_ls}
-\end{figure}
-
-%MAYBE THIS PICTURE IS REDUNDANT
-% \begin{figure}
-%     \centering
-%     \includegraphics[width = 0.7\textwidth]{images/full_ram}
-%     \caption{oijijo}
-%     \label{fig:full_ram}
-% \end{figure}
-
-The system in Figure \ref{fig:bf_ls} represent the successive ramification of a structure which grows adding segments gradually shorter, by a lenght ratio parameter $R$ and inclined of $\delta = \pm 85 \degree$ respect the previous branch. The axiom and the rules that produce this structure are the following:
-
-\begin{align}
-    & axiom\ :\ A \label{eq:bif_rules} \\
-    & rule_1\ :\ A \rightarrow → F(1)[+A][-A] \nonumber \\
-    & rule_2\ :\ F(s) \rightarrow F(s\cdot R) \nonumber
-\end{align}
-where $A$ represent the start of a new branch  and $F(s)$ represent a branch of lenght $s$. The presence of a rule which acts dfferently depending on the target object, is an further sophistication respect to the standard L-system. For this reason these systems are called \textit{parametric} L-systems.
-
-The use of standard L-systems turned out to be widespread, and there were a lot of different \texttt{Python} libraries at my disposal for coding. By the way, parametric L-systems were not just as popular, and I was not able to find a reliable library on which to build my work. I decided then to code a parametric branching system able to recreate the structure with rules (\ref{eq:bif_rules}) at any desired level of iteration. Creating the tool I needed on my own I was able to add all the optional features I would have needed during the development, like an adjustable degree of angular noise in the branch generation.
-
-\subsection{Voronoi Tassellation} \label{ssec:vor_tass}
-Voronoi diagrams, or Voronoi decompositions, are space-partitioning systems, which divides an $n$-dimensional Euclidian space into sub-regions depending on the proximity to a given set of objects. More precisely, given an $n$-dimensional space and $m$ starting point $p_1,\dots, p_m$ inside it, the whole space will be subdivided in $m$ adjacent regions. Every point of the space is assigned to the region correspondent to the nearest starting point. In Figure \ref{fig:vor_20} is shown a practical example of a Voronoi decomposition of a plane into 20 regions corresponding to the 20 starting points. Informal use of Voronoi diagrams can be traced back to Descartes in 1644, and many other mathematicians after him. But, Voronoi diagrams are named after Georgy Feodosievych Voronoy who defined and studied the general n-dimensional case in 1908 \cite{VoronoiNouvellesAD}.
-
-\begin{figure}
-    \centering
-    \includegraphics[width = 0.4\textwidth]{images/vor_20}
-    \caption{Example of a Voronoi decomposition of a plane into 20 regions corresponding to 20 starting points.}
-    \label{fig:vor_20}
-\end{figure}
-
-More precisely, let $X$ be a metric space and $d$ the distance defined on it. Let $K$ be the set of indices and let $(P_k)_{k\in K}$ be the tuple of sites in the space $X$. The $k^{th}$ Voronoi cell $R_k$, associated with the site $P_k$ is the set of all the points in $X$ whose distance to $P_k$ is smaller than the distance to any other site $P_j$, with $j\neq k$, or in other words:
-\begin{equation}
-    R_k = \{x \in X\;|\;d(x,P_k) \le d(x,P_j)\; \forall j \in K, \;j\neq k \}, \label{eq:formal_Vor_def}
-\end{equation}
-depending on the notion of distance defined on the space $X$ the final redistribution in subregions will look very differently.
-
-In addition to the choice of the distance function, another fundamental factor is the distribution of sites in the space to be divided. If the points are chosen equally and homogenously distributed the final distribution will appear as a simple regular lattice, while a completely random distribution of points in the space will provide a decomposition in cells with very different shapes and volumes, as shown in Figure \ref{fig:diff_pt}. Interesting results concerning points from a semi-random distribution will be shown in section \ref{ssec:panc_tis_mod}, which leads to decomposition with a good richness in shapes but with the desired homogeneity in volumes.
-
-\begin{figure}
-    \centering
-    \includegraphics[width = 0.3\textwidth]{images/reg_pt}
-    \includegraphics[width = 0.3\textwidth]{images/ran_pt}
-    \caption{On the right an example of 2D Voronoi decomposition resulting from homogeneously distributed points in the plane. On the left the resulting decomposition obtained from randomly distributed points in the plane, from \cite{ALSAYEDNOOR201644}.}
-    \label{fig:diff_pt}
-\end{figure}
-
-The Voronoi Decomposition has been of great interest in this project for the division of a 3D space in subregions, to recreate the spatial distribution of cells in a sample of human tissue, as will be shown in section \ref{ssec:panc_tis_mod}. The formal definition of Voronoi regions (\ref{eq:formal_Vor_def}) ensures the convexity of each decomposition's tassel, which in three-dimensional space would be adjacent convex polyhedrons. Every tassel of the decomposition will be represented by a bounded 3-dimensional convex hull \footnote{See section \ref{ssec:pol_sec} for further details.}, with except for those most external cells which are unbounded and requires special attention while using.
-
-The most widespread tool for the computation of Voronoi decompositions in \texttt{Python} is contained in the \texttt{spatial} submodule of the famous library \texttt{SciPy} \cite{2020SciPy-NMeth}, which is a staple tool for an incredible variety of scientific algorithms. The \texttt{Voronoi} object from \texttt{Scipy} library offers a very efficient algorithm for space-partitioning, and it has been one of the pillars for the modelization of tissues. Unluckily this module does not easily allow to perform Voronoi decomposition with different definitions of distance functions $d$ other than the Euclidian distance, which would have allowed interesting studies.
-
-\subsection{Saltelli Algorithm - Randon Number Generation} \label{ssec:saltelli}
-
-As mentioned in section \ref{ssec:vor_tass}, in this project there was the need for quasi-random number generation for the production of Voronoi tessellations. Quasi-random sequences (or low-discrepancy sequences) are patterns of numbers that emulate the behavior of uniform random distributions but have a more homogeneous and quick coverage of the sampling domain, which provides an important advantage in applications as in quasi-Monte Carlo integration techniques, as shown in Figure \ref{fig:Subrandom_2D}. In computer science there is not any possibility of recreating \textit{true} random sequences, hence any stochasticity is completely deterministic in its essence even if produced by very chaotic processes \footnote{A chaotic process is a deterministic process which has an extremely sensible dependence on its starting conditions. This property mimics very effectively the behavior of true random processes, which are intrinsically forbidden in computer science.}. Indeed, every algorithm for random number generation is completely repeatable given its starting status. Quasi-random sequences are completely deterministic too, but implements more \textit{predictable} and well-behaved algorithms.
-
-\begin{figure}
-    \centering
-    \includegraphics[width = 0.7\textwidth]{images/Subrandom_2D}
-    \caption{Coverage of the unit square with an additive quasirandom numbers sequence as in \ref{eq:ad_rec} (up) and for uniformly sampled random numbers (bottom). From top to bottom: 10, 100, 1000, 10000 points.}
-    \label{fig:Subrandom_2D}
-\end{figure}
-
-A first good example to understand the concept of quasi-random generation could be an additive reccurrence, as the following:
-\begin{equation}
-    s_{n+1} = ( s_n + \alpha ) \bmod 1,
-    \label{eq:ad_rec}
-\end{equation}
-which for every seed element $s_0$ and real parameter $\alpha$ produced completely different sequences.
-
-In the bottom line of Figure \ref{fig:Subrandom_2D} is clearly visible the good and homogeneous coverage of the sampling domain, although it is strongly visible a regular pattern between points, which does not convey an \textit{organic} sensation at all. However, increasing the complexity of our very simple starting model \ref{eq:ad_rec} it is possible to overcome this \textit{artificial} appearance of sampled points and to produce very good samples.
-
-\hl{[THE FOLLOWING PARAGRAPH SOUNDS TOO HEAVY AND TECHNICAL]}
-
-A notorious algorithm for quasi-random number generation is the Sobol sequence, introduced by the russian mathematician Ilya M. Sobol in 1967 \cite{SOBOL2001271}. In its work, Sobol wanted to construct a sequence $x_n$ of points in the $s$-dimensional unitary hybercube $I^s = [0,1]^s$ such as for any integrable function $f$:
-\begin{equation}
-    \lim_{n\to\infty} \frac{1}{n} \sum_{i=1}^{n} f(x_i) = \int_{I_s} f.
-\end{equation}
-
-Sobol wanted to minimize the \textit{holes} in the sampled domain (which it could be shown to be a property that helps the convergence of the sequence) and minimize as well the \textit{holes} in every lower-dimension projection of the sampled points. The particularly good distributions that fulfill those requirements are known as $(t,m,s)$-nets and $(t,s)$-sequences in base $b$.
-
-To better understand them we need first to define the concept of $s$-interval in base $b$, which is a subset of $I_s$ such as:
-\begin{equation}
-    E_s^b = \prod_{j=1}^{s} \Bigg[ \frac{a_j}{b^{\,d_j}}, \frac{a_j + 1}{b^{\,d_j}}\Bigg),
-\end{equation}
-where $a_j$ and $d_j$ are non-negative integers, and $a_j < b^{d_j}$ for all j in \{1, ...,s\}.
-
-Let be $t$ and $m$ two integers such as $0 \leq t \leq m$. A $(t,m,s)$-net in base $b$ is defined as a sequence $x_n$ of $b^m$ points of $I_s$ such that:
-\begin{equation}
-    \mathbf{Card} \ \mathbf{P} \cap \{x_1, \dots, x_n \} = b^t
-\end{equation}
-for all the elementary  interval $\mathbf{P}$ in base $b$ of hypervolume $\lambda(\mathbf{P}) =  b^{t-m}$.
-
-Given a non-negative integer $t$, a $(t,s)$-sequence in base $b$ is an infinite sequence of points $x_n$ such that for all integers $k \geq 0$, $m \geq t$ the sequence $ \{ x_{kb^m}, \dots, x_{(k+1)b^m-1} \}$ is a $(t,m,s)$-net in base $b$.
-
-Sobol in his article described in particular $(t,m,s)$-net and $(t,s)$-sequence in base 2. A more thorough description of all the formal properties of those particular sequences could be found in \cite{SOBOL1976236}.
-
-In order to perform the actual sampling during the modelization, it has been used the \texttt{saltelli} module from the \texttt{SALib} library, which performs sampling in an $s$-dimensional space following the Saltelli algorithm, which is a specific improved version of the Sobol algorithms oriented toward the parameter sensitivity analysis \cite{SALTELLI2002280}, \cite{SALTELLI2010259}.
-
-% In section \ref{ssec:app_mkov}, in Figure \ref{fig:sampling_comparison} is shown a comparison between corresponding section obtained following different sampling methods for the 
-
-\subsection{Planar Section of a Polyhedron} \label{ssec:pol_sec}
-As will be shown in section \ref{ssec:panc_tis_mod} a fundamental step for the functioning of the modelization is the planar section of a three-dimensional polyhedron. It turned out that there is no general rule to perform a planar section of a convex polyhedron with an arbitrary number of faces, respect to an arbitrary sectioning plane. Hence, I devised an algorithm to handle this task. In the case of a full intersection, the result of the sectioning process of a polyhedron is a polygonal surface, otherwise, it could be an empty set of points or a segment in case of particular tangency, but those two cases are not of interest to the model.
-
-Given a convex polyhedron with $n$ vertices and a sectioning plane $p$, let $V$ be the set of all the vertices and $f_p(\vec x)$ the equation defining the plane. The algorithm is defined by the following steps:
-
-\begin{figure}
-    \centering
-    \includegraphics[width = 0.6\textwidth]{images/sec_pol}
-    \caption{In this picture is shown an example of the application of the algorithm for the planar section on a polyhedron. The vertices are divided into two groups, with different colors yellow and green. All the possible lines between any couple of vertices picked from the two classes are drawn in dark gray. In Turquoise the resulting planar section, obtained as the convex hull containing all the intersections between the lines and the plane.}
-    \label{fig:sec_pol}
-\end{figure}
-
-\begin{enumerate}
-    \item Divide $V$ in two subsets: $A$ made of those vertices which lie above and $B$, made of those which lie below the sectioning plane. Like in \ref{eq:ab_bel}:
     \begin{align}
-        A = \{ \vec v \in V \ |\ f_p(\vec v)\geq 0\} \label{eq:ab_bel} \\
-        B = \{ \vec v \in V \ |\ f_p(\vec v)\leq 0\} \nonumber
+        \bm{i}^2 & = \bm{j}^2 = \bm{k}^2 = \bm{i}\bm{j}\bm{k} = -1, \label{eq:quat_rules}\\
+        \bm{q} & = a + b\bm{i} + c\bm{j} + d\bm{k}, \label{eq:quat}\\
+        \bm{q}^{-1 } = (a + b\bm{i} + c\bm{j} + d\bm{k})^{-1} & = \frac{1}{a^2 + b^2 + c^2 +d^2}\ (a - b\bm{i} - c\bm{j} - d\bm{k}). \label{eq:inv_quat}
     \end{align}
-    If any of the two subsets tourns out to be empty the plane $p$ does not intersect the polyhedron, and the section is empty. $A$ and $B$ are represented in different colors in Figure \ref{fig:sec_pol}.
 
-    \item Detect, and \textit{draw}, any possible line that crosses two points respectively from $A$ and $B$. If $n_A$ and $n_B$ are the numbers of points above and below the plane then there will be $n_A \times n_B$ possible lines. In Figure \ref{fig:sec_pol} all the lines between the two classes of points are drawn in dark gray.
+    Furthermore, the multiplication operation between quaternionn does not benefit from commutativity, hence the product between basis elements will behave as follows:
 
-    \item Detect $P$, the set of all the points from the intersection between the $n_A \times n_B$ lines from the previous step and the sectioning plane $p$. All these points will lie on the same plane, within the boundaries of the polygonal section.
+    \begin{align}
+        \bm{i} \cdot 1 = 1 \cdot \bm{i} = \bm{i}, & \qquad  \bm{j} \cdot 1 = 1 \cdot \bm{j} = \bm{j}, \qquad \bm{k} \cdot 1 = 1 \cdot \bm{k} = \bm{k} \label{eq:Ham_prod}\\
+        & \bm{i} \cdot \bm{j}= \bm{k}, \qquad \bm{j} \cdot \bm{i}= -\bm{k} \nonumber \\
+        & \bm{k} \cdot \bm{i}= \bm{j}, \qquad \bm{i} \cdot \bm{k}= -\bm{j} \nonumber \\
+        & \bm{j} \cdot \bm{k}= \bm{i}, \qquad \bm{k} \cdot \bm{j}= -\bm{i}. \nonumber
+    \end{align}
 
-    \item The final polygon is then yielded by computing the convex hull of the points in $P$. The convexity of the starting polyhedron in fact ensures the convexity of any section of the solid.
-\end{enumerate}
+    This number system has plenty of peculiar properties and applications, but for this project, quaternions are important for their ability to represent, in a very convenient way, rotations in three dimensions. The particular subset of quaternions with vanishing real part ($a=0$) has a useful, yet redundant, correspondence with the group of rotations in tridimensional space SO(3). Every 3D rotation of an object can be represented by a 3D vector $\vec u$: the vector's direction indicates the axis of rotation and the vector magnitude $|\vec u|$ express the angular extent of rotation. However, the matrix operation which expresses the rotation around an arbitrary vector $\vec u$ it is quite complex and does not scale easily for multiple rotations \cite{10.1007/BFb0031048}, which brings to very heavy and entangled computations.
 
-The result of the algorithm is, as just stated, a convex hull, which in geometry is defined as the smallest convex envelope or convex closure of a set of points. In 2 dimensions is the smallest convex polygon containing a certain set of points in a plane (In Figure \ref{fig:conv_hull} is shown the so-called "rubber band effect"), and in 3 dimensions it is the smallest convex polyhedron containing a set of points in the space.
+    Using quaternions for expressing rotations in space, instead, it is very convinient. Given the unit rotation vector $\vec u$ and the rotation angle $\theta$, the corresponding rotation quaternion $\bm{q}$ becomes (\ref{eq:rot_quat}):
 
-\begin{figure}
-    \centering
-    \includegraphics[width = 0.3\textwidth]{images/conv_hull}
-    \caption{Representation of the convex hull of a bounded planar set of points. This particular enclosure goes under the name of "rubber band effect".}
-    \label{fig:conv_hull}
-\end{figure}
+    \begin{align}
+        \vec u & = (u_x, u_y, u_z) = u_x\bm{i} + u_y\bm{j} + u_z\bm{k}, \\
+        \bm{q} & = e^{\frac{\theta}{2}(u_x\bm{i} + u_y\bm{j} + u_z\bm{k})} = \cos{\frac{\theta}{2}} + (u_x\bm{i} + u_y\bm{j} + u_z\bm{k})\sin{\frac{\theta}{2}}, \label{eq:rot_quat}\\
+        \bm{q}^{-1} & = \cos{\frac{\theta}{2}} - (u_x\bm{i} + u_y\bm{j} + u_z\bm{k})\sin{\frac{\theta}{2}},
+    \end{align}
 
-In \texttt{Python}, the most convenient way to work with convex hulls was to use the submodule \texttt{spatial.ConvexHull} from the \texttt{SciPy} library \cite{2020SciPy-NMeth}. This module allows also a convenient way for plotting images with \texttt{MatPlotLib}, which is the point of reference for plotting and image formation in \texttt{Python}.
+    where in (\ref{eq:rot_quat}) we can clearly see a generalization of the Euler's formula for the exponential notation of complex numbers, which hold for quaternions. It can be shown that the application of the rotation represented by $\bm{q}$ on an arbitrary 3D vector $\vec v$ should be easily expressed as:
 
-\subsection{Perlin Noise} \label{ssec:perlin}
-Perlin noise is a widely used form of noise in computer graphics, which mimics very well natural and smooth fluctuations around a constant value. It has been developed by Ken Perlin in 1983, and it is now the staple tool for giving texture to object in virtual modelization, often considered the \textit{salt} of computer graphics texturization.
-The Perlin noise is a gradient-based algorithm defined on grid discretization of a $n$-dimensional space. The algorithm involves three subsequent steps:
-
-\begin{figure}
-    \centering
-    \begin{subfigure}[b]{0.3\textwidth}
-         \centering
-         \includegraphics[width = \textwidth]{images/grid_grad}
-         \caption{}
-         \label{fig:grid_grad}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.3\textwidth}
-         \centering
-         \includegraphics[width = \textwidth]{images/PerlinNoiseDotProducts}
-         \caption{}
-         \label{fig:dot_prod}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.3\textwidth}
-         \centering
-         \includegraphics[width = \textwidth]{images/PerlinNoiseInterpolated}
-         \caption{}
-         \label{fig:interp}
-    \end{subfigure}
-    \caption{The three main steps of the algorithm to produce Perlin noise. In \ref{fig:grid_grad} the plane discretization and the assignment of a gradient vector to every node of the grid. In \ref{fig:dot_prod} the computation of the dot product with all the points inside the discretization and in \ref{fig:interp} the interpolation of the values to create the final function.}
-    \label{fig:perlin_alg}
-\end{figure}
-
-\begin{enumerate}
-    \item The first step is to discretize the $n$-dimensional space in a regular lattice: the dimension of the grid will impact heavily on the scale of the noise. As in Figure \ref{fig:grid_grad} at every node of the grid is assigned a randomly oriented $n$-dimensional unitary gradient vector. This is the preliminary setup which will allow the computation of the actual noise function in every point of the space.
-
-    \item Given the candidate point $\vec x$ between the grid nodes onto which evaluate the noise there are $2^n$ nearest grid nodes. For each one of these $2^n$ nodes, it is evaluated the distance vector from $\vec x$ as the offset between the two points. Then it is computed the dot product between every pair made of nearby gradient vectors and the offset vector. This operation should be thought of as made on every point in the lattice, as in Figure \ref{fig:dot_prod}, where at every point of the grid is represented just one of the $2^2 = 4$ series of dot products.
-
-    \item The final step is the interpolation between the $2^n$ series of dot products. To perform the interpolation usually is used a function with vanishing first degree (and preferably also second degree) derivative in correspondence of the $2^n$ grid nodes \footnote{Usually are used functions with a sigmoidal behavior, like any smoothstep function, which is a family of very common items in computer graphics.}. This means that the noise function will pass through zero at every node and have a gradient equal to the pre-computed grid node gradient. These properties give Perlin noise its characteristic spatial scale and smoothness.
-\end{enumerate}
-
-In general, the final result of the algorithm is a smooth function with a random-like behavior that mimics really well an organic appearance, like in Figure \ref{fig:my_perlin}, with fluctuation around the value 0, with amplitude $ \in [ 0;1] $. The surface in Figure \ref{fig:my_perlin} has been produced plotting in 3D the results of the function \texttt{pnoise2} from the library \texttt{noise}, which offers a good and intuitive tool for the production of different type of noise. In order to put in practical use this module some adjustment were required. The particular function \texttt{pnoise2} simply yields the value of the Perlin noise surface in correspondence to a single $(x,y)$ point in the plane in a deterministic way. There was not the possibility to generate different whole Perlin surfaces every run. To overcome this limitation I made a vectorized\footnote{In Python the staple tool for scientific, number-cruncher computation is the \texttt{NumPy} library, which allows a fast, complete and efficient way to perform computation between number structure. The operation of trasnforming a function which acts on a single value (or pair of values) to a function able to perform on a suitable datastructure is called \textit{vectorization}, and its the recomended way to proceed when handling numerical functions in Python} version of \texttt{pnoise2} able to evaluate the function over an arbitrary wide grid of points expressed as set of all the pairs of coordinates $(x,y)$ of the grid's nodes. In this way a single call to the function is able to produce the entire surface covering the grid, in the form of a single \texttt{NumPy} 3darray. Furthermore, to recover the possibility of generating always different surfaces as in a random generation, I inserted an offset cordinate $(x_O,y_O)$, which moves in the plane the origin of the surface generation. This pair of offset coordinates then acts also as a \textit{seed} in the generation, allowing to completely recreate previously generated material in a controlled way.
-
-\begin{figure}
-    \centering
-    \includegraphics[width = 0.6\textwidth]{images/perlin}
-    \caption{Example of Perlin noise 2D funciton produced while working on this project. This surface offers a smooth variation around the value 0 with amplituded $ \in [ 0;1] $.}
-    \label{fig:my_perlin}
-\end{figure}
-
-% [??]
-% citation to url - https://web.archive.org/web/20071011035810/http://noisemachine.com/talk1/
-
-\subsection{Style-Transfer Neural Network}
-\label{ssec:sttrNN}
-Style-Transfer Neural Networks are common models, able of creating new hybrid images implanting the visual style from an image preserving the visual content of another image. The two images necessary for the algorithm are called \textit{style} image $S$ and \textit{content} image $C$, and the resulting \textit{styled} picture $X$, as in Figure \ref{fig:ex_st_tr}.
-
-There are many different tested and comparable architectures to compute this kind of algorithm. In my work I decided to use in particular the procedure described in \cite{1508.06576}, using the \textit{PyTorch} ecosystem to implement the necessary code.
-
-\begin{figure}
-    \centering
-    \includegraphics[width = 0.9\textwidth]{images/st_trasf_ex}
-    \caption{Different examples of application of a style-transfer NN on the same content image, with different style images, from \cite{1508.06576}. The
-original picture depicts the Neckarfront in Tübingen, Germany (TOP-LEFT). The painting used as style image shown in the bottom left corner of each panel are in clockwise order: $\bullet$ The Shipwreck of the Minotaur by J.M.W. Turner, 1805 $\bullet$ Femme nue assise by Pablo Picasso, 1910 $\bullet$ Composition VII by Wassily Kandinsky, 1913 $\bullet$ Der Schrei by Edvard Munch, 1893 $\bullet$ The Starry Night by Vincent van Gogh, 1889.}
-    \label{fig:ex_st_tr}
-\end{figure}
-
-The backbone of the architecture is the VGG-19 network, which s a convolutional neural network 19 layers deep, as in figure \ref{fig:vgg19}. This huge model has been pre-trained on over a million images from the ImageNet database \cite{imagenet_cvpr09}, for the classification into over than 1000 classes of objects. As a result, the network has learned rich feature representations for a wide range of images. The best (and conceptually the only) way to load a pre-trained model is to load the ordered set of weights that define the network and to initialize an empty module with those values. This is the perfect start for creating a style transfer network, which requires a further and briefer training phase, to completely customize the network.
-
-\begin{figure}
-    \centering
-    \includegraphics[width = 0.9\textwidth]{images/vgg19_str}
-    \caption{The structure of the VGG 19 network. It is for its most a convolutional NN with $224 \times 224$ input size and with some downsampling layers which reduce the first two dimensions of the tensors along with the information flux of the network. At the very end of the architecture, there are three subsequent fully connected layers, responsible for the actual classification based on the features extracted from the previous layers.}
-    \label{fig:vgg19}
-\end{figure}
-
-The key ingredient for finalizing the model is to insert some little but fundamental modifications and to extend the training on the pair of input images. This final training should be aware of the \textit{concepts} of the visual style and visual content of the image, and the operation should try to preserve them both. This is usually done minimizing two new loss function, computed between the staring image and the produced image:
-
-\begin{description}
-    \item [Content Loss] \hfill \\
-    The content loss is a function that represents a weighted version of the content distance for an individual layer.
-    The most commonly used function to evaluate the preservation of content between two images is the simple Mean Squared Error as in equation (\ref{eq:MSE}). It can be computed between any couple of same-sized object, hence also between the results of the same feature maps on the images $X$ and $C$ at the same layer $L$.
     \begin{equation}
-        L_{Cont} = \norm{F_{XL}−F_{CL}}^2
-        \label{eq:cont_loss}
+        \vec v\,' = \bm{q} \vec v \bm{q}^{-1},
+    \end{equation}
+    using the Hamilton product defined on quaternions (\ref{eq:Ham_prod}). This rule raises a very convinient and an extremily scalable way to compute consecutive rotations in space. Given two independent and consecutive rotations represented by the two quaternions $\bm{q}$ and $\bm{p}$ applyed on the vector $\vec v$ the resulting rotated vector $\vec v\,'$ is simply yielded as:
+
+    \begin{equation}
+        \vec v\,' = \bm{p} ( \bm{q} \vec v \bm{q}^{-1} ) \bm{p}^{-1} = (\bm{p}\bm{q}) \vec v (\bm{q}\bm{p})^{-1},
+    \end{equation}
+    which essentially is the application of the rotation $\bm{r} = \bm{q}\bm{p}$ on the vector $\vec v$. This representation is completely coherent with the algebra of 3D rotations, which does not benefit from commutativity in turn.
+
+    Given this property, quaternions are indeed widely used in all sorts of applications of digital 3D space design, as for simulations and videogame. The position of an object in the space in simulations is generally given by the application of several independent rotations, typically in the order of a tenth of rotations, which with quaternions is given easily by the product of simple objects. Every other alternative method would imply the use of matrix representation of rotations or other rotation systems as Euler's angles and would eventually make the computation prohibitive.
+
+    The use of quaternions in this work will be justified in section \ref{ssec:panc_tis_mod}, while speaking of parametric L-systems in 3D space, used to build the backbone of the ramified structure of blood vessels in the reconstruction of a sample of pancreatic tissue.
+
+    I was able to find many useful \texttt{Python} libraries for computation with quaternions, but the one I appreciated the most for its interface and ease of use was the \texttt{pyquaternion}. With this library, it's almost immediate the definition of a quaternion by its correspondent rotation vector, and the multiplication between quaternions is very reliable.
+
+\section{Parametric L-Systems} \label{ssec:Lsys}
+    Lindenmayer systems, or simply L-systems,  were conceived as a mathematical theory of plant development \cite{lindenmayer1968mathematical} in 1968 by Aristid Lindenmayer. Successively, a lot of geometrical interpretations of L-systems were proposed to make them a versatile instrument for modeling the morphology typical of plants and other organic structures. As a biologist, Lindenmayer studied different species of yeast and fungi and worked the growth patterns of various types of bacteria (e.g. as the \textit{cyanobacteria Anabaena catenula}). The main purpose for which L-systems were devised was to allow a formal description of the development of simple multicellular living organisms. Subsequently, the potentiality of these systems was expanded to describe higher-order plants and complex branching structures.
+
+    An L-system is in general defined by an \textit{axiom} sequence and some development \textit{rules}, which are recursively applied to the sequence and lead its development. The original proposed L-system was fairly simple and shows really well the idea underneath:
+
+    \begin{align}
+        & axiom\ :\ A \nonumber \\
+        & rules\ :\ (A \rightarrow AB),\quad(B \rightarrow A) \nonumber
+    \end{align}
+
+    where $A$ and $B$ could be any two different patterns in the morphology of an algae, or could be different bifurcations in a ramificated structure. The iterative application of the rules to the axiom sequence, let's say for 7 times, will produce the following sequence:
+
+    \begin{align}
+        n = 0 &\ : A \nonumber \\
+        n = 1 &\ : AB \nonumber \\
+        n = 2 &\ : ABA \nonumber \\
+        n = 3 &\ : ABAAB \nonumber \\
+        n = 4 &\ : ABAABABA \nonumber \\
+        n = 5 &\ : ABAABABAABAAB \nonumber \\
+        n = 6 &\ : ABAABABAABAABABAABABA \nonumber \\
+        n = 7 &\ : ABAABABAABAABABAABABAABAABABAABAAB\,. \nonumber
+    \end{align}
+
+    This kind of tool, as will be shown also in \ref{ssec:panc_tis_mod}, is particularly suited for the creation of structures with fractal behavior, and it has been used in this work to create the backbone of the entangled bifurcation in blood vessels in the modelization of pancreatic tissue. In particular, there was the need for a fractal-like space-filling ramification as the one shown in Figures \ref{fig:bf_ls}. %and \ref{fig:full_ram}.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width = 0.7\textwidth]{images/bf_ls}
+        \caption{Growth pattern for the space-filling fract-like system, used to mimic the blood vassel bifurcations in sec \ref{ssec:panc_tis_mod}.}
+        \label{fig:bf_ls}
+    \end{figure}
+
+    %MAYBE THIS PICTURE IS REDUNDANT
+    % \begin{figure}
+    %     \centering
+    %     \includegraphics[width = 0.7\textwidth]{images/full_ram}
+    %     \caption{oijijo}
+    %     \label{fig:full_ram}
+    % \end{figure}
+
+    The system in Figure \ref{fig:bf_ls} represent the successive ramification of a structure which grows adding segments gradually shorter, by a lenght ratio parameter $R$ and inclined of $\delta = \pm 85 \degree$ respect the previous branch. The axiom and the rules that produce this structure are the following:
+
+    \begin{align}
+        & axiom\ :\ A \label{eq:bif_rules} \\
+        & rule_1\ :\ A \rightarrow → F(1)[+A][-A] \nonumber \\
+        & rule_2\ :\ F(s) \rightarrow F(s\cdot R) \nonumber
+    \end{align}
+    where $A$ represent the start of a new branch  and $F(s)$ represent a branch of lenght $s$. The presence of a rule which acts dfferently depending on the target object, is an further sophistication respect to the standard L-system. For this reason these systems are called \textit{parametric} L-systems.
+
+    The use of standard L-systems turned out to be widespread, and there were a lot of different \texttt{Python} libraries at my disposal for coding. By the way, parametric L-systems were not just as popular, and I was not able to find a reliable library on which to build my work. I decided then to code a parametric branching system able to recreate the structure with rules (\ref{eq:bif_rules}) at any desired level of iteration. Creating the tool I needed on my own I was able to add all the optional features I would have needed during the development, like an adjustable degree of angular noise in the branch generation.
+
+\section{Voronoi Tassellation} \label{ssec:vor_tass}
+    Voronoi diagrams, or Voronoi decompositions, are space-partitioning systems, which divides an $n$-dimensional Euclidian space into sub-regions depending on the proximity to a given set of objects. More precisely, given an $n$-dimensional space and $m$ starting point $p_1,\dots, p_m$ inside it, the whole space will be subdivided in $m$ adjacent regions. Every point of the space is assigned to the region correspondent to the nearest starting point. In Figure \ref{fig:vor_20} is shown a practical example of a Voronoi decomposition of a plane into 20 regions corresponding to the 20 starting points. Informal use of Voronoi diagrams can be traced back to Descartes in 1644, and many other mathematicians after him. But, Voronoi diagrams are named after Georgy Feodosievych Voronoy who defined and studied the general n-dimensional case in 1908 \cite{VoronoiNouvellesAD}.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width = 0.4\textwidth]{images/vor_20}
+        \caption{Example of a Voronoi decomposition of a plane into 20 regions corresponding to 20 starting points.}
+        \label{fig:vor_20}
+    \end{figure}
+
+    More precisely, let $X$ be a metric space and $d$ the distance defined on it. Let $K$ be the set of indices and let $(P_k)_{k\in K}$ be the tuple of sites in the space $X$. The $k^{th}$ Voronoi cell $R_k$, associated with the site $P_k$ is the set of all the points in $X$ whose distance to $P_k$ is smaller than the distance to any other site $P_j$, with $j\neq k$, or in other words:
+
+    \begin{equation}
+        R_k = \{x \in X\;|\;d(x,P_k) \le d(x,P_j)\; \forall j \in K, \;j\neq k \}, \label{eq:formal_Vor_def}
+    \end{equation}
+    depending on the notion of distance defined on the space $X$ the final redistribution in subregions will look very differently.
+
+    In addition to the choice of the distance function, another fundamental factor is the distribution of sites in the space to be divided. If the points are chosen equally and homogenously distributed the final distribution will appear as a simple regular lattice, while a completely random distribution of points in the space will provide a decomposition in cells with very different shapes and volumes, as shown in Figure \ref{fig:diff_pt}. Interesting results concerning points from a semi-random distribution will be shown in section \ref{ssec:panc_tis_mod}, which leads to decomposition with a good richness in shapes but with the desired homogeneity in volumes.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width = 0.3\textwidth]{images/reg_pt}
+        \includegraphics[width = 0.3\textwidth]{images/ran_pt}
+        \caption{On the right an example of 2D Voronoi decomposition resulting from homogeneously distributed points in the plane. On the left the resulting decomposition obtained from randomly distributed points in the plane, from \cite{ALSAYEDNOOR201644}.}
+        \label{fig:diff_pt}
+    \end{figure}
+
+    The Voronoi Decomposition has been of great interest in this project for the division of a 3D space in subregions, to recreate the spatial distribution of cells in a sample of human tissue, as will be shown in section \ref{ssec:panc_tis_mod}. The formal definition of Voronoi regions (\ref{eq:formal_Vor_def}) ensures the convexity of each decomposition's tassel, which in three-dimensional space would be adjacent convex polyhedrons. Every tassel of the decomposition will be represented by a bounded 3-dimensional convex hull \footnote{See section \ref{ssec:pol_sec} for further details.}, with except for those most external cells which are unbounded and requires special attention while using.
+
+    The most widespread tool for the computation of Voronoi decompositions in \texttt{Python} is contained in the \texttt{spatial} submodule of the famous library \texttt{SciPy} \cite{2020SciPy-NMeth}, which is a staple tool for an incredible variety of scientific algorithms. The \texttt{Voronoi} object from \texttt{Scipy} library offers a very efficient algorithm for space-partitioning, and it has been one of the pillars for the modelization of tissues. Unluckily this module does not easily allow to perform Voronoi decomposition with different definitions of distance functions $d$ other than the Euclidian distance, which would have allowed interesting studies.
+
+\section{Saltelli Algorithm - Randon Number Generation} \label{ssec:saltelli}
+    As mentioned in section \ref{ssec:vor_tass}, in this project there was the need for quasi-random number generation for the production of Voronoi tessellations. Quasi-random sequences (or low-discrepancy sequences) are patterns of numbers that emulate the behavior of uniform random distributions but have a more homogeneous and quick coverage of the sampling domain, which provides an important advantage in applications as in quasi-Monte Carlo integration techniques, as shown in Figure \ref{fig:Subrandom_2D}. In computer science there is not any possibility of recreating \textit{true} random sequences, hence any stochasticity is completely deterministic in its essence even if produced by very chaotic processes \footnote{A chaotic process is a deterministic process which has an extremely sensible dependence on its starting conditions. This property mimics very effectively the behavior of true random processes, which are intrinsically forbidden in computer science.}. Indeed, every algorithm for random number generation is completely repeatable given its starting status. Quasi-random sequences are completely deterministic too, but implements more \textit{predictable} and well-behaved algorithms.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width = 0.7\textwidth]{images/Subrandom_2D}
+        \caption{Coverage of the unit square with an additive quasirandom numbers sequence as in \ref{eq:ad_rec} (up) and for uniformly sampled random numbers (bottom). From top to bottom: 10, 100, 1000, 10000 points.}
+        \label{fig:Subrandom_2D}
+    \end{figure}
+
+    A first good example to understand the concept of quasi-random generation could be an additive reccurrence, as the following:
+    \begin{equation}
+        s_{n+1} = ( s_n + \alpha ) \bmod 1,
+        \label{eq:ad_rec}
+    \end{equation}
+    which for every seed element $s_0$ and real parameter $\alpha$ produced completely different sequences.
+
+    In the bottom line of Figure \ref{fig:Subrandom_2D} is clearly visible the good and homogeneous coverage of the sampling domain, although it is strongly visible a regular pattern between points, which does not convey an \textit{organic} sensation at all. However, increasing the complexity of our very simple starting model \ref{eq:ad_rec} it is possible to overcome this \textit{artificial} appearance of sampled points and to produce very good samples.
+
+    \hl{[THE FOLLOWING PARAGRAPH SOUNDS TOO HEAVY AND TECHNICAL]}
+
+    A notorious algorithm for quasi-random number generation is the Sobol sequence, introduced by the russian mathematician Ilya M. Sobol in 1967 \cite{SOBOL2001271}. In its work, Sobol wanted to construct a sequence $x_n$ of points in the $s$-dimensional unitary hybercube $I^s = [0,1]^s$ such as for any integrable function $f$:
+    \begin{equation}
+        \lim_{n\to\infty} \frac{1}{n} \sum_{i=1}^{n} f(x_i) = \int_{I_s} f.
     \end{equation}
 
-    In order to evaluate this content loss, it is necessary to insert a custom transparent\footnote{A transparent layer is a layer that performs some operations, like evaluating a function on its input, but returns as output an unchanged copy of its input.} layer directly after the convolution layer(s) that are being used to compute the content distance.
+    Sobol wanted to minimize the \textit{holes} in the sampled domain (which it could be shown to be a property that helps the convergence of the sequence) and minimize as well the \textit{holes} in every lower-dimension projection of the sampled points. The particularly good distributions that fulfill those requirements are known as $(t,m,s)$-nets and $(t,s)$-sequences in base $b$.
 
-    \item [Style Loss] \hfill \\
-    The concept of \textit{style} loss function is the true novelty introduced by \cite{1508.06576}. This loss function is implemented similarly to the content loss module, as it will act as a transparent layer in the network. The computation of the style loss requires in advanced the evaluation of the Gram matrix $G_{XL}$ at a certain layer $L$.
-    A Gram matrix is a result of multiplying a given matrix by its transposed matrix. In this case, the matrix to multiplicate is a reshaped version of the feature maps $F_{XL}$: $\hat{F}_{XL}$, a $K \times N$ matrix, where $K$ is the number of feature maps at layer $L$ and $N$ is the length of any vectorized feature map $F^k_{XL}$.
-    Furthermore, the Gram matrix must be normalized by dividing each element by the total number of elements in the matrix. The style distance is now computed using the mean square error between $G_{XL}$ and $G_{SL}$:
+    To better understand them we need first to define the concept of $s$-interval in base $b$, which is a subset of $I_s$ such as:
     \begin{equation}
-        L_{Style} = \norm{G_{XL}−G_{SL}}^2
-        \label{eq:styl_loss}
+        E_s^b = \prod_{j=1}^{s} \Bigg[ \frac{a_j}{b^{\,d_j}}, \frac{a_j + 1}{b^{\,d_j}}\Bigg),
     \end{equation}
-\end{description}
+    where $a_j$ and $d_j$ are non-negative integers, and $a_j < b^{d_j}$ for all j in \{1, ...,s\}.
 
-After the appropriate insertion of the loss-function evaluator layers, one last piece for finalizing the model is the right choice of the gradient descent optimizer. As in \cite{1508.06576} and according to the Deep Learning community the optimizer which suite best this role is the Limited Memory-BFGS \cite{10.1093/imamat/6.1.76},\cite{shanno1970conditioning}. L-BFGS is an iterative algorithm in the family of quasi-Newton methods that approximates the Broyden-Fletcher-Goldfarb-Shanno algorithm (BFGS) using a limited amount of computer memory, and it is a popular choice when estimating parameters of a non-linear differentiable scalar function.
+    Let be $t$ and $m$ two integers such as $0 \leq t \leq m$. A $(t,m,s)$-net in base $b$ is defined as a sequence $x_n$ of $b^m$ points of $I_s$ such that:
+    \begin{equation}
+        \mathbf{Card} \ \mathbf{P} \cap \{x_1, \dots, x_n \} = b^t
+    \end{equation}
+    for all the elementary  interval $\mathbf{P}$ in base $b$ of hypervolume $\lambda(\mathbf{P}) =  b^{t-m}$.
 
-The final phase of the training process thus makes run the optimizer for hundreds of epochs on $X$, $C$, and $S$, and reduce the two loss functions values acting on the network's parameters. After the fine-tuning of the weights, the hybrid image is produced, as in Figure \ref{fig:ex_st_tr}.
+    Given a non-negative integer $t$, a $(t,s)$-sequence in base $b$ is an infinite sequence of points $x_n$ such that for all integers $k \geq 0$, $m \geq t$ the sequence $ \{ x_{kb^m}, \dots, x_{(k+1)b^m-1} \}$ is a $(t,m,s)$-net in base $b$.
+
+    Sobol in his article described in particular $(t,m,s)$-net and $(t,s)$-sequence in base 2. A more thorough description of all the formal properties of those particular sequences could be found in \cite{SOBOL1976236}.
+
+    In order to perform the actual sampling during the modelization, it has been used the \texttt{saltelli} module from the \texttt{SALib} library, which performs sampling in an $s$-dimensional space following the Saltelli algorithm, which is a specific improved version of the Sobol algorithms oriented toward the parameter sensitivity analysis \cite{SALTELLI2002280}, \cite{SALTELLI2010259}.
+
+    % In section \ref{ssec:app_mkov}, in Figure \ref{fig:sampling_comparison} is shown a comparison between corresponding section obtained following different sampling methods for the
+
+\section{Planar Section of a Polyhedron} \label{ssec:pol_sec}
+    As will be shown in section \ref{ssec:panc_tis_mod} a fundamental step for the functioning of the modelization is the planar section of a three-dimensional polyhedron. It turned out that there is no general rule to perform a planar section of a convex polyhedron with an arbitrary number of faces, respect to an arbitrary sectioning plane. Hence, I devised an algorithm to handle this task. In the case of a full intersection, the result of the sectioning process of a polyhedron is a polygonal surface, otherwise, it could be an empty set of points or a segment in case of particular tangency, but those two cases are not of interest to the model.
+
+    Given a convex polyhedron with $n$ vertices and a sectioning plane $p$, let $V$ be the set of all the vertices and $f_p(\vec x)$ the equation defining the plane. The algorithm is defined by the following steps:
+
+    \begin{figure}
+        \centering
+        \includegraphics[width = 0.6\textwidth]{images/sec_pol}
+        \caption{In this picture is shown an example of the application of the algorithm for the planar section on a polyhedron. The vertices are divided into two groups, with different colors yellow and green. All the possible lines between any couple of vertices picked from the two classes are drawn in dark gray. In Turquoise the resulting planar section, obtained as the convex hull containing all the intersections between the lines and the plane.}
+        \label{fig:sec_pol}
+    \end{figure}
+
+    \begin{enumerate}
+        \item Divide $V$ in two subsets: $A$ made of those vertices which lie above and $B$, made of those which lie below the sectioning plane. Like in \ref{eq:ab_bel}:
+        \begin{align}
+            A = \{ \vec v \in V \ |\ f_p(\vec v)\geq 0\} \label{eq:ab_bel} \\
+            B = \{ \vec v \in V \ |\ f_p(\vec v)\leq 0\} \nonumber
+        \end{align}
+        If any of the two subsets tourns out to be empty the plane $p$ does not intersect the polyhedron, and the section is empty. $A$ and $B$ are represented in different colors in Figure \ref{fig:sec_pol}.
+
+        \item Detect, and \textit{draw}, any possible line that crosses two points respectively from $A$ and $B$. If $n_A$ and $n_B$ are the numbers of points above and below the plane then there will be $n_A \times n_B$ possible lines. In Figure \ref{fig:sec_pol} all the lines between the two classes of points are drawn in dark gray.
+
+        \item Detect $P$, the set of all the points from the intersection between the $n_A \times n_B$ lines from the previous step and the sectioning plane $p$. All these points will lie on the same plane, within the boundaries of the polygonal section.
+
+        \item The final polygon is then yielded by computing the convex hull of the points in $P$. The convexity of the starting polyhedron in fact ensures the convexity of any section of the solid.
+    \end{enumerate}
+
+    The result of the algorithm is, as just stated, a convex hull, which in geometry is defined as the smallest convex envelope or convex closure of a set of points. In 2 dimensions is the smallest convex polygon containing a certain set of points in a plane (In Figure \ref{fig:conv_hull} is shown the so-called "rubber band effect"), and in 3 dimensions it is the smallest convex polyhedron containing a set of points in the space.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width = 0.3\textwidth]{images/conv_hull}
+        \caption{Representation of the convex hull of a bounded planar set of points. This particular enclosure goes under the name of "rubber band effect".}
+        \label{fig:conv_hull}
+    \end{figure}
+
+    In \texttt{Python}, the most convenient way to work with convex hulls was to use the submodule \texttt{spatial.ConvexHull} from the \texttt{SciPy} library \cite{2020SciPy-NMeth}. This module allows also a convenient way for plotting images with \texttt{MatPlotLib}, which is the point of reference for plotting and image formation in \texttt{Python}.
+
+\section{Perlin Noise} \label{ssec:perlin}
+    Perlin noise is a widely used form of noise in computer graphics, which mimics very well natural and smooth fluctuations around a constant value. It has been developed by Ken Perlin in 1983, and it is now the staple tool for giving texture to object in virtual modelization, often considered the \textit{salt} of computer graphics texturization.
+    The Perlin noise is a gradient-based algorithm defined on grid discretization of a $n$-dimensional space. The algorithm involves three subsequent steps:
+
+    \begin{figure}
+        \centering
+        \begin{subfigure}[b]{0.3\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/grid_grad}
+             \caption{}
+             \label{fig:grid_grad}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.3\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/PerlinNoiseDotProducts}
+             \caption{}
+             \label{fig:dot_prod}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.3\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/PerlinNoiseInterpolated}
+             \caption{}
+             \label{fig:interp}
+        \end{subfigure}
+        \caption{The three main steps of the algorithm to produce Perlin noise. In \ref{fig:grid_grad} the plane discretization and the assignment of a gradient vector to every node of the grid. In \ref{fig:dot_prod} the computation of the dot product with all the points inside the discretization and in \ref{fig:interp} the interpolation of the values to create the final function.}
+        \label{fig:perlin_alg}
+    \end{figure}
+
+    \begin{enumerate}
+        \item The first step is to discretize the $n$-dimensional space in a regular lattice: the dimension of the grid will impact heavily on the scale of the noise. As in Figure \ref{fig:grid_grad} at every node of the grid is assigned a randomly oriented $n$-dimensional unitary gradient vector. This is the preliminary setup which will allow the computation of the actual noise function in every point of the space.
+
+        \item Given the candidate point $\vec x$ between the grid nodes onto which evaluate the noise there are $2^n$ nearest grid nodes. For each one of these $2^n$ nodes, it is evaluated the distance vector from $\vec x$ as the offset between the two points. Then it is computed the dot product between every pair made of nearby gradient vectors and the offset vector. This operation should be thought of as made on every point in the lattice, as in Figure \ref{fig:dot_prod}, where at every point of the grid is represented just one of the $2^2 = 4$ series of dot products.
+
+        \item The final step is the interpolation between the $2^n$ series of dot products. To perform the interpolation usually is used a function with vanishing first degree (and preferably also second degree) derivative in correspondence of the $2^n$ grid nodes \footnote{Usually are used functions with a sigmoidal behavior, like any smoothstep function, which is a family of very common items in computer graphics.}. This means that the noise function will pass through zero at every node and have a gradient equal to the pre-computed grid node gradient. These properties give Perlin noise its characteristic spatial scale and smoothness.
+    \end{enumerate}
+
+    In general, the final result of the algorithm is a smooth function with a random-like behavior that mimics really well an organic appearance, like in Figure \ref{fig:my_perlin}, with fluctuation around the value 0, with amplitude $ \in [ 0;1] $. The surface in Figure \ref{fig:my_perlin} has been produced plotting in 3D the results of the function \texttt{pnoise2} from the library \texttt{noise}, which offers a good and intuitive tool for the production of different type of noise. In order to put in practical use this module some adjustment were required. The particular function \texttt{pnoise2} simply yields the value of the Perlin noise surface in correspondence to a single $(x,y)$ point in the plane in a deterministic way. There was not the possibility to generate different whole Perlin surfaces every run. To overcome this limitation I made a vectorized\footnote{In Python the staple tool for scientific, number-cruncher computation is the \texttt{NumPy} library, which allows a fast, complete and efficient way to perform computation between number structure. The operation of trasnforming a function which acts on a single value (or pair of values) to a function able to perform on a suitable datastructure is called \textit{vectorization}, and its the recomended way to proceed when handling numerical functions in Python} version of \texttt{pnoise2} able to evaluate the function over an arbitrary wide grid of points expressed as set of all the pairs of coordinates $(x,y)$ of the grid's nodes. In this way a single call to the function is able to produce the entire surface covering the grid, in the form of a single \texttt{NumPy} 3darray. Furthermore, to recover the possibility of generating always different surfaces as in a random generation, I inserted an offset cordinate $(x_O,y_O)$, which moves in the plane the origin of the surface generation. This pair of offset coordinates then acts also as a \textit{seed} in the generation, allowing to completely recreate previously generated material in a controlled way.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width = 0.6\textwidth]{images/perlin}
+        \caption{Example of Perlin noise 2D funciton produced while working on this project. This surface offers a smooth variation around the value 0 with amplituded $ \in [ 0;1] $.}
+        \label{fig:my_perlin}
+    \end{figure}
+
+    % [??]
+    % citation to url - https://web.archive.org/web/20071011035810/http://noisemachine.com/talk1/
+
+\section{Style-Transfer Neural Network}    \label{ssec:sttrNN}
+    Style-Transfer Neural Networks are common models, able of creating new hybrid images implanting the visual style from an image preserving the visual content of another image. The two images necessary for the algorithm are called \textit{style} image $S$ and \textit{content} image $C$, and the resulting \textit{styled} picture $X$, as in Figure \ref{fig:ex_st_tr}.
+
+    There are many different tested and comparable architectures to compute this kind of algorithm. In my work I decided to use in particular the procedure described in \cite{1508.06576}, using the \textit{PyTorch} ecosystem to implement the necessary code.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width = 0.9\textwidth]{images/st_trasf_ex}
+        \caption{Different examples of application of a style-transfer NN on the same content image, with different style images, from \cite{1508.06576}. The
+    original picture depicts the Neckarfront in Tübingen, Germany (TOP-LEFT). The painting used as style image shown in the bottom left corner of each panel are in clockwise order: $\bullet$ The Shipwreck of the Minotaur by J.M.W. Turner, 1805 $\bullet$ Femme nue assise by Pablo Picasso, 1910 $\bullet$ Composition VII by Wassily Kandinsky, 1913 $\bullet$ Der Schrei by Edvard Munch, 1893 $\bullet$ The Starry Night by Vincent van Gogh, 1889.}
+        \label{fig:ex_st_tr}
+    \end{figure}
+
+    The backbone of the architecture is the VGG-19 network, which s a convolutional neural network 19 layers deep, as in figure \ref{fig:vgg19}. This huge model has been pre-trained on over a million images from the ImageNet database \cite{imagenet_cvpr09}, for the classification into over than 1000 classes of objects. As a result, the network has learned rich feature representations for a wide range of images. The best (and conceptually the only) way to load a pre-trained model is to load the ordered set of weights that define the network and to initialize an empty module with those values. This is the perfect start for creating a style transfer network, which requires a further and briefer training phase, to completely customize the network.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width = 0.9\textwidth]{images/vgg19_str}
+        \caption{The structure of the VGG 19 network. It is for its most a convolutional NN with $224 \times 224$ input size and with some downsampling layers which reduce the first two dimensions of the tensors along with the information flux of the network. At the very end of the architecture, there are three subsequent fully connected layers, responsible for the actual classification based on the features extracted from the previous layers.}
+        \label{fig:vgg19}
+    \end{figure}
+
+    The key ingredient for finalizing the model is to insert some little but fundamental modifications and to extend the training on the pair of input images. This final training should be aware of the \textit{concepts} of the visual style and visual content of the image, and the operation should try to preserve them both. This is usually done minimizing two new loss function, computed between the staring image and the produced image:
+
+    \begin{description}
+        \item [Content Loss] \hfill \\
+        The content loss is a function that represents a weighted version of the content distance for an individual layer.
+        The most commonly used function to evaluate the preservation of content between two images is the simple Mean Squared Error as in equation (\ref{eq:MSE}). It can be computed between any couple of same-sized object, hence also between the results of the same feature maps on the images $X$ and $C$ at the same layer $L$:
+        \begin{equation}
+            L_{Cont} = \norm{F_{XL}−F_{CL}}^2.
+            \label{eq:cont_loss}
+        \end{equation}
+
+        In order to evaluate this content loss, it is necessary to insert a custom transparent\footnote{A transparent layer is a layer that performs some operations, like evaluating a function on its input, but returns as output an unchanged copy of its input.} layer directly after the convolution layer(s) that are being used to compute the content distance.
+
+        \item [Style Loss] \hfill \\
+        The concept of \textit{style} loss function is the true novelty introduced by \cite{1508.06576}. This loss function is implemented similarly to the content loss module, as it will act as a transparent layer in the network. The computation of the style loss requires in advanced the evaluation of the Gram matrix $G_{XL}$ at a certain layer $L$.
+        A Gram matrix is a result of multiplying a given matrix by its transposed matrix. In this case, the matrix to multiplicate is a reshaped version of the feature maps $F_{XL}$: $\hat{F}_{XL}$, a $K \times N$ matrix, where $K$ is the number of feature maps at layer $L$ and $N$ is the length of any vectorized feature map $F^k_{XL}$.
+        Furthermore, the Gram matrix must be normalized by dividing each element by the total number of elements in the matrix. The style distance is now computed using the mean square error between $G_{XL}$ and $G_{SL}$:
+        \begin{equation}
+            L_{Style} = \norm{G_{XL}−G_{SL}}^2.
+            \label{eq:styl_loss}
+        \end{equation}
+    \end{description}
+
+    After the appropriate insertion of the loss-function evaluator layers, one last piece for finalizing the model is the right choice of the gradient descent optimizer. As in \cite{1508.06576} and according to the Deep Learning community the optimizer which suite best this role is the Limited Memory-BFGS \cite{10.1093/imamat/6.1.76},\cite{shanno1970conditioning}. L-BFGS is an iterative algorithm in the family of quasi-Newton methods that approximates the Broyden-Fletcher-Goldfarb-Shanno algorithm (BFGS) using a limited amount of computer memory, and it is a popular choice when estimating parameters of a non-linear differentiable scalar function.
+
+    The final phase of the training process thus makes run the optimizer for hundreds of epochs on $X$, $C$, and $S$, and reduce the two loss functions values acting on the network's parameters. After the fine-tuning of the weights, the hybrid image is produced, as in Figure \ref{fig:ex_st_tr}.
+
+\subsection{My machine} \label{ssec:my_machine}
+    Description of my working environment: linux, python, GPU ecc. ecc.

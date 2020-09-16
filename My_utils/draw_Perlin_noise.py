@@ -10,7 +10,7 @@ this script compute and plots the Perlin noise in different ways
 
 x_max = 10
 y_max = 10
-n_pts = 100
+n_pts = 200
 offset = 50
 
 x_val  = np.linspace(offset, 3*x_max + offset, 3*n_pts)
@@ -25,7 +25,7 @@ zz_stack = np.dstack([zz[:,:200], zz[:,200:400], zz[:,400:]])
 zz_stack[100:200, 100, :]
 
 fig, ax = plt.subplots(figsize=(8,8))
-plt.imshow(zz_stack)
+fig.savefig('rgb_prlin')
 #%%-------------------------------------------------------------------------------
 # #2D Plotting
 # maps = ['Reds', 'Greens', 'Blues' ]
