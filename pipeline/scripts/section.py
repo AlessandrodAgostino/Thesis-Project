@@ -588,7 +588,7 @@ if __name__ == '__main__':
                    seed = 123,
                    y = 0,
                    N_points = 5000,
-                   n_slices = 1,
+                   n_slices = 5,
                    saving_path = '',
                    noise_density = 20,
                    plane_distance = 0.05,
