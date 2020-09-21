@@ -24,7 +24,7 @@
             \label{fig:first_sect}
         \end{figure}
 
-    The simplest, yet over-abundant, way to proceed is to create the model in its entirety and subsequently choosing the sectioning plane. Afterward, it is necessary to select only the regions that intersect the plane and section them all. Actually, the test on the intersection passes through the check on the relative position of the polyhedron's vertices respect to the sectioning plane: if all the vertices lie on the same semi-space then the intersection would be null and the polyhedron is not of interest for that particular section. This procedure is exactly the first step of the algorithm in \ref{ssec:pol_sec}, thus the filtering on the regions is actually made during construction for optimization. The alternative method could be to choose in the first place the direction of the sectioning plane, and in second place to generate the model's decomposition only in the volume adjacent to that plane. This method enables to spare a good amount of computation, without any negative impact on the final result. The only delicate step is the choice of a wide enough region of space around the plane, which doesn't compromise the representation.
+    The simplest, yet over-abundant, way to proceed is to create the model in its entirety and subsequently choosing the sectioning plane. Afterward, it is necessary to select only the regions that intersect the plane and section them all. Actually, the test on the intersection passes through the check on the relative position of the polyhedron's vertices respect to the sectioning plane: if all the vertices lie on the same semi-space then the intersection would be null and the polyhedron is not of interest for that particular section. This procedure is exactly the first step of the algorithm in \ref{ssec:pol_sec}, thus the filtering on the regions is actually made during construction for optimization. The alternative method could be to choose in the first place the direction of the sectioning plane, and in second place to generate the model's decomposition only in the volume adjacent to that plane. This method enables the sparing of a good amount of computation, without any negative impact on the final result. The only delicate step is the choice of a wide enough region of space around the plane, which doesn't compromise the representation.
 
     As a guarantee for richness and diversification among the images, there is the need for some degree of controlled randomness in the sectioning process, for example in the determination of the sectioning plane direction. All the sectioning process is then based on a single starting \textit{seed}, which determines the direction of the sectioning plane in a deterministic way, and all the rest of the model is generated as a consequence. In this way, all the possible angulations are equally probable and will be sampled in view of multiple applications of this process. In Figure \ref{fig:4sph_sections} are shown two different sections, along two random planes on two simple ramified structures with four spheres.
 
@@ -46,7 +46,7 @@
         \end{figure}
 
 \subsection{Appearance Makeover} \label{ssec:app_mkov}
-    After the application of the sectioning algorithm of the previous section, the image which will act as a segmentation mask is ready. The last, and most complex task that remains is to transform the image and to give it a realistic look. I tried many different transformations, more or less complicated, and there was not a final decision on which is the best blend of them. In this section, I will describe them as an arsenal of possibilities and show their impact on the images.
+    After the application of the sectioning algorithm of the previous section, the image which will act as a segmentation mask is ready. The last and most complex task that remains is to transform the image and to give it a realistic look. I tried many different transformations, more or less complicated, and there was not a final decision on which is the best blend of them. In this section, I will describe them as an arsenal of possibilities and show their impact on the images.
 
     \begin{description}
         \item [Color Palette] \hfill \\
@@ -92,7 +92,7 @@
         \end{figure}
 
         \item [Boundaries Projection] \hfill \\
-        On the same wave of the previous tool, another operation which can help the appearance of an image is the projection of the boundaries of each (or just a part) of the polygonal sections. The drawing can be clearly tuned and customized depending on the specific necessities. In Figure \ref{fig:derma_slice} is shown an example of section on the dermal tissue model in \ref{ssec:derm_tis_mod}, in which the boundaries of all the cells have been lightly marked, and the boundaries of the cells in the keratine layer have been heavily marked instead.
+        On the same wave of the previous tool, another operation that can help the appearance of an image is the projection of the boundaries of each (or just a part) of the polygonal sections. The drawing can be clearly tuned and customized depending on the specific necessities. In Figure \ref{fig:derma_slice} is shown an example of a section on the dermal tissue model in \ref{ssec:derm_tis_mod}, in which the boundaries of all the cells have been lightly marked, and the boundaries of the cells in the keratine layer have been heavily marked instead.
 
         \begin{figure}
             \centering
@@ -106,21 +106,21 @@
 
         \begin{figure}
             \centering
-            \begin{subfigure}[t]{0.2\textwidth}
+            \begin{subfigure}[t]{0.3\textwidth}
                  \centering
                  \includegraphics[width = \textwidth]{images/gauss_blurr}
                  \caption{}
                  \label{fig:gauss_blurr}
             \end{subfigure}
             \quad
-            \begin{subfigure}[t]{0.2\textwidth}
+            \begin{subfigure}[t]{0.3\textwidth}
                  \centering
                  \includegraphics[width = \textwidth]{images/average}
                  \caption{}
                  \label{fig:av_blur}
             \end{subfigure}
             \quad
-            \begin{subfigure}[t]{0.2\textwidth}
+            \begin{subfigure}[t]{0.3\textwidth}
                  \centering
                  \includegraphics[width = \textwidth]{images/rgb_prlin}
                  \caption{}
@@ -133,12 +133,12 @@
 
         \item [Perlin RGB Noise] \hfill \\
         A further attempt to give visual texture to the image was done using again the Perlin noise, described in section \ref{ssec:perlin}. The idea is to create some fluctuation among the color channels of the image around the sharp values of the image produced by the sectioning algorithm.
-        From a practical point of view I created three different and independent Perlin noise surfaces, one for every color channel (Red, Green, and Blue), and added them to create a RGB noise on the image. An example of the resulting image is shown in Figure \ref{fig:rgb_prlin}.
+        From a practical point of view, I created three different and independent Perlin noise surfaces, one for every color channel (Red, Green, and Blue), and added them to create an RGB noise on the image. An example of the resulting image is shown in Figure \ref{fig:rgb_prlin}.
 
         \item [Style Transfer] \hfill \\
         This last tool I will describe is the most sophisticated so far. It consists of the application of a style-transfer neural network (STNN) on the image obtained through the sectioning process, for the implantation of the visual texture from a real sample of the corresponding tissue. Style-transfer NNs, and their functioning, have been described in detail in section \ref{ssec:sttrNN}, and here I will cover just the particular applications on the two type of section produced.
 
-        The first manipulation I report is the one on a section from the pancreatic tissue model. The image of which to conserve the visual content is a section with some simple pre-processing picked from the ones described before (Figure \ref{fig:st_nn1}): a more accurate color palette, the projection of nuclei, and the average on five adjacent slices. The image from which to pick the style, thus the visual texture, is a portion of an actual histological sample of pancreas, and it is shown in Figure \ref{fig:st_nn2}. The application of the STNN yields an hybrid image, shown in Figure \ref{fig:st_nn3}. The second application was made on a section on dermal tissue. The three content, style and styled images are shown respectively in Figure \ref{fig:st_nn4}, \ref{fig:st_nn5}, and \ref{fig:st_nn6}.
+        The first manipulation I report is the one on a section from the pancreatic tissue model. The image of which to conserve the visual content is a section with some simple pre-processing picked from the ones described before (Figure \ref{fig:st_nn1}): a more accurate color palette, the projection of nuclei, and the average on five adjacent slices. The image from which to pick the style, thus the visual texture, is a portion of an actual histological sample of the pancreas, and it is shown in Figure \ref{fig:st_nn2}. The application of the STNN yields a hybrid image, shown in Figure \ref{fig:st_nn3}. The second application was made on a section on dermal tissue. The three content, style and styled images are shown respectively in Figure \ref{fig:st_nn4}, \ref{fig:st_nn5}, and \ref{fig:st_nn6}.
 
         \begin{figure}
             \centering
@@ -166,9 +166,9 @@
             \label{fig:panc_stnn}
         \end{figure}
 
-        In Figures \ref{fig:panc_stnn}, and \ref{fig:derm_stnn} are reported the best results among all the different tests made on the sections. I made different tries on the same image with different processing before the manipulation with the STNN, to see the impact of the different adjustment on the resulting styled image. It tourned out that the presence of nuclei is essential to give an homogeneous texture to image and avoid unrealistic artifacts. On the other hand, the choice of the color palette has a way lighter effet than what one would think: the model yields almost the same result with a grey-levels image or with any other palette.
+        In Figures \ref{fig:panc_stnn}, and \ref{fig:derm_stnn} are reported the best results among all the different tests made on the sections. I made different tries on the same image with different processing before the manipulation with the STNN, to see the impact of the different adjustment on the resulting styled image. It turned out that the presence of nuclei is essential to give a homogeneous texture to the image and avoid unrealistic artifacts. On the other hand, the choice of the color palette has a way lighter effet than what one would think: the model yields almost the same result with a grey-levels image or with any other palette.
 
-        It interesting to notice the timing cost of this style transfer operation. While all the other manipulation described in this chapter requires a very short time (seconds) to be applied, and are in practice \textit{instantaneous}, the trasfer of style is a way more robust operation, which implies the finalization of the tarining of a pre-trained neural network. On a computer with the technical specification described in section \ref{ssec:my_machine} this operation instead took minutes, which is a time two full orders of magnitude grater.
+        It interesting to notice the timing cost of this style transfer operation. While all the other manipulation described in this chapter requires a very short time (seconds) to be applied, and are in practice \textit{instantaneous}, the transfer of style is a way more robust operation, which implies the finalization of the training of a pre-trained neural network. On a computer with the technical specification described in section \ref{ssec:my_machine} this operation instead took minutes, which is a time two full orders of magnitude greater.
 
         \begin{figure}
             \centering
@@ -196,13 +196,13 @@
             \label{fig:derm_stnn}
         \end{figure}
 
-        It should be noted that the presented results are obtained from the application of a pre-trained STNN model. The development of a speciliazed model for histological texture transfer could improve extremely the ability of producing realistic images, way further the present results.
+        It should be noted that the presented results are obtained from the application of a pre-trained STNN model. The development of a specialized model for histological texture transfer could improve extremely the ability to produce realistic images, way further the present results.
     \end{description}
 
-One single complete application of the process consists then in the generation of a tissue model, in the sectioning along a random section plane and in the processing of the image, in order to produce the pair of ground-truth image and the synthetic histological image. The target is to apply over and over this process to collect the necessary amount of images and constitute an entire dataset. An important feature to have for the process in thus a complete automatization, in order to scale up the generation of images, possibly even in parallel computation.
-For this purpose I created a pipeline workflow interface for the image generation, with an automatized harmonization of every piece of the process. The generation now requires just to fill a configuration file in which write all the specific characteristics of the images: as the type of structrure, its features, the desired processing on the images, and eventually the random seeds for a supervised generation. In Figure \ref{fig:dataset} is reported a small scale example of dataset produced with multiple automatized applications of the generation tool on a ramificated structure inspired to a pancreatic tissue model. It is clear the correspondence between segmentation mask and synthetic histological images, and the diversification given by the supervised randomness on the generation.
+One single complete application of the process consists then in the generation of a tissue model, in the sectioning along a random section plane, and in the processing of the image, in order to produce the pair of ground-truth image and the synthetic histological image. The target is to apply over and over this process to collect the necessary amount of images and constitute an entire dataset. An important feature to have for the process is thus a complete automatization, in order to scale up the generation of images, possibly even in parallel computation.
+For this purpose, I created a pipeline workflow interface for the image generation, with an automatized harmonization of every piece of the process. The generation now requires just to fill a configuration file in which writes all the specific characteristics of the images: the type of structure, its features, the desired processing on the images, and eventually the random seeds for a supervised generation. In Figure \ref{fig:dataset} is reported a small scale example of a dataset produced with multiple automatized applications of the generation tool on a ramified structure inspired to a pancreatic tissue model. It is clear the correspondence between segmentation mask and synthetic histological images, and the diversification given by the supervised randomness on the generation.
 
-The actual tool used for the set up of a working pipeline was the \texttt{Snakemake} \cite{10.1093/bioinformatics/bts480} workflow managment system, which is a python-based tool to create reproducible and scalable data analyses.
+The actual tool used for the set up of a working pipeline was the \texttt{Snakemake} \cite{10.1093/bioinformatics/bts480} workflow management system, which is a python-based tool to create reproducible and scalable data analyses.
 
     \begin{figure}
         \centering
@@ -211,7 +211,67 @@ The actual tool used for the set up of a working pipeline was the \texttt{Snakem
         \label{fig:dataset}
     \end{figure}
 
-\subsection{Alternative Works on Sythetic Histological Images Generation}
-\hl{Alernative works.}
-3 papers on the mail
-% ALTERNATIVE METHODS??? -> due articoli inviati ad Enrico
+\subsection{Alternative Works on Synthetic Histological Images Generation}
+As a conclusion to this chapter, I want to make an overview of some other interesting works on the generation of synthetic histological images, which have followed completely different paths and strategies.
+
+The first work I want to cite is a work from Ben Cheikh \textit{et al.} from 2017 \cite{10.1117/12.2254452}. In this work, they present a methodology for the generation of synthetic images of different types of breast carcinomas. They propose a method completely based on two-dimensional morphology operation, as successive image dilations and erosions. With the modulation of a very restricted number of parameters, regulating the abundance of the objects, their distribution in the image, and their shapes they are able to reconstruct realistic images reflecting different histological situations. In Figure \ref{fig:morpho_tripl} is shown an example of generated material besides a real histological H\&E stained sample. Starting from a generated segmentation mask which defines the \textit{tumoral pattern} the production of the synthetic image passes through successive steps, as the generation of characteristic collagen fibers around the structure, the injection of all the immune system cells, and some general
+final refinements.
+
+    \begin{figure}[ht]
+        \centering
+        \begin{subfigure}[t]{0.3\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/morpho_mask}
+             \caption{}
+             \label{fig:morpho_mask}
+        \end{subfigure}
+        \quad
+        \begin{subfigure}[t]{0.3\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/morpho_model}
+             \caption{}
+             \label{fig:morpho_model}
+        \end{subfigure}
+        \quad
+        \begin{subfigure}[t]{0.3\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/morpho_real}
+             \caption{}
+             \label{fig:morpho_real}
+        \end{subfigure}
+        \caption{Example of generated tumoral pattern (left), which acts as segmentation mask, of generated image (center) and a real example of the tissue to recreate. From \cite{10.1117/12.2254452}.}
+        \label{fig:morpho_tripl}
+    \end{figure}
+
+% \hl{Comment to adjust}
+% Although this strategy produces realistic-looking samples, the generation of the starting tumoral pattern is ruled by the random sampling of sparse seed points, the distribution of which should be finely tuned for the production of an accurate representation. Furthermore, this procedure is based completely on the phenomenological replication of the image, without any try to capture the spatial organization of an actual tissue ....
+% \hl{Comment to adjust}
+
+The second work I want to mention is base on a DL-base technique, which approaches synthetic image generation using a specific cGAN architecture inspired to the ``U-net'' \cite{Senaras2018} model described back in Figure \ref{fig:unet} in section \ref{ssec:soa_seg}.
+This model works with Ki67 stained samples of breast cancer tissue, and it is able to generate high-fidelity images starting from a given segmentation mask. Those starting segmentation masks tough are obtained through the processing of other real histological samples, via a nuclei-detection algorithm. The differences between real and synthetic samples are imperceptible, and the material generated in this work has effectively fooled experts, who qualified it has indistinguishable from the real one. In Figure \ref{fig:cgan_tripl} an example of a real image, a generated one, and their corresponding segmentation mask.
+
+    \begin{figure}[ht]
+        \centering
+        \begin{subfigure}[t]{0.3\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/cgan_mask}
+             \caption{}
+             \label{fig:cgan_mask}
+        \end{subfigure}
+        \quad
+        \begin{subfigure}[t]{0.3\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/cgan_model}
+             \caption{}
+             \label{fig:cgan_model}
+        \end{subfigure}
+        \quad
+        \begin{subfigure}[t]{0.3\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/cgan_real}
+             \caption{}
+             \label{fig:cgan_real}
+        \end{subfigure}
+        \caption{Example of generated tumoral pattern (left), which acts as segmentation mask, of generated image (center) and a real example of the tissue to recreate. From \cite{Senaras2018}.}
+        \label{fig:cgan_tripl}
+    \end{figure}
