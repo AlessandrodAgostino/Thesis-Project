@@ -1,5 +1,15 @@
+Conclusions
 
+- General considerations:
+	- ??
 
+- Open problems:
+	- Enrichment of the model:
+		- Adding more elements;
+		- Development of dedicated histological style-transfer NN;
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-addestramento segmentazione (aspirazione)
+	- Training of a NN for segmentaion:
+		- generation of whole datasets;
+		- curriculum learning;
+		- semantic hierarchical segmentation;
+

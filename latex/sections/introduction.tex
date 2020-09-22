@@ -1,9 +1,9 @@
 \chapter*{Introduction}
 \label{chap:intro}
 \addcontentsline{toc}{chapter}{\nameref{chap:intro}} %manually adding the unnumbered chapter to toc
-In the last decades, the development of Machine Learning (ML) and Deep Learning (DL) techniques has contaminated every aspect of the scientific world, with interesting results in many different research fields. The biomedical field is no exception to this and a lot of promising applications are taking form, especially as Computer-Aided Detection (CAD) systems which are tools for the support of physicians during the diagnostic process. Medical doctors and the healthcare system in general collect a huge amount of data from patients during all the treatment, screening, and analysis activities in many different shapes, from anagraphical data to blood analysis to clinical images.
+In the last decades, the development of Machine Learning (ML) and Deep Learning (DL) techniques has contaminated every aspect of the scientific world, with interesting results in many different research fields. The biomedical field is no exception to this and a lot of promising applications are taking form, especially as Computer-Aided Detection (CAD) systems which are tools for the support for physicians during the diagnostic process. Medical doctors and the healthcare system in general collect a huge amount of data from patients during all the treatment, screening, and analysis activities in many different shapes, from anagraphical data to blood analysis to clinical images.
 
-In medicine, the study of images is ubiquitous and countless diagnostic procedures rely on it, such as X-ray imaging (CAT), nuclear imaging (SPECT, PET), Magnetic resonance, and visual inspection of histological specimens after biopsies. The branch of artificial intelligence in the biomedical field that handles image analysis to assist physicians in their clinical decisions goes under the name of Digital Pathology Image Analysis (DPIA).
+In fact in medicine, the study of images is ubiquitous and countless diagnostic procedures rely on it, such as X-ray imaging (CAT), nuclear imaging (SPECT, PET), Magnetic resonance, and visual inspection of histological specimens after biopsies. The branch of artificial intelligence in the biomedical field that handles image analysis to assist physicians in their clinical decisions goes under the name of Digital Pathology Image Analysis (DPIA).
 In this thesis work, I want to focus on some of the beneficial aspects introduced by DPIA in the histological images analysis and some particular issues in the development of DL models able to handle this kind of procedure.
 
 Nowadays the great majority of analysis of histological specimens occurs through visual inspection, carried out by highly qualified experts. Some analysis, as cancer detection, requires the ability to distinguish if a region of tissue is healthy or not with high precision in very wide specimens. This kind of procedure is typically very complex and requires prolonged times of analysis besides substantial economic efforts. Furthermore, the designated personnel for this type of analysis is often limited, leading to delicate issues of priority assignment while scheduling analysis, based on the estimated patient's clinical development. Some sort of support to this analysis procedure is therefore necessary.
@@ -20,26 +20,19 @@ The problem of recognizing regions with different features within an image and d
 
 The latest developed segmentation algorithms are based on DL techniques, hence based on the implementation of intricated Neural Networks (NN) which process the input images and produce the corresponding segmentation. Those models are typically very complex, with millions of parameters to adjust and tune, therefore they need a huge amount of pre-labeled images to learn their segmentation rules. This need for data is exactly the main focus of my thesis work. The shortage of ground truth images is indeed one of the toughest hurdles to overcome during the development of DL-based algorithms. Another important aspect to bear in mind is the quality of the ground truth material. It's impossible for humans to label boundaries of different regions with pixel-perfect precision, while for machines the more precise is the input the more effective is the resulting algorithm.
 
-
 Different approaches have already been explored to overcome this problem, and they are mainly based on the generation of synthetic labeled data to use during the training phase. Some techniques achieve data augmentation manipulating already available images and then generating \textit{new} images, but as we will see later this approach suffers from different issues. The technique that I propose in this work follows a generation from scratch of entire datasets suitable for the training of new algorithms, based on the 3D modelization of a region of human tissue at the cellular level. The entire traditional sectioning process, which is made on real histological samples, is recreated virtually on this virtual model. This yields pairs of synthetic images with their corresponding ground-truth. Using this technique one would be able to collect sufficient material for the training (the entire phase or the preliminary part) of a model, overcoming the shortage of hand-labeled data.
 
 The 3D modeling of a region of particular human tissue is a very complex task, and it is almost impossible to capture all the physiological richness of a histological system. The models I implemented thus are inevitably less sophisticated respect the target biological structures. I'll show two models: one of pancreatic tissue and another of dermal tissue, besides all the tools I used and the choices I made during the designing phase.
 
 In order to present organically all the steps of my work the thesis is organized in chapters as follows:
 
-\begin{enumerate}
-    \item Structure
+\begin{description}
+    \item [1. Theoretical Background]. \hfill \\
+    In this chapter, I will describe how real histological images are obtained and their digitalization process works. Afterward, I will introduce the reader to the Deep Learning framework, explaining the key elements of this discipline and how they work. Finally, I will dedicate a section to the image segmentation problem, and the state of the art of segmentation DL-based algorithms, with particular attention to the applications in the bio-medical field.
 
-    \item Of the
+    \item [2. Technical Tools for Model Development]. \hfill \\
+    I will dedicate this chapter to the thorough description of every technical tool I needed during the designing phase of this project. The development has required the harmonization of many different technologies and mathematical tools, some of which not so popular. In this chapter, I will also describe my working environment.
 
-    \item Thesis
-\end{enumerate}
-
-
-% \begin{enumerate}
-%     \item Description of how histological images are obtained and analyzed, and which are the important aspects to take care of.
-%     \item Thorough description of my model for the generation of synthetic images of pancreatic tissue
-%     \item Thorough description of my model for the generation of synthetic images of epidermic tissue
-%     \item Introduction to Deep Learning and Segmentation task, and state of the art of DL based segmentation algorithms.
-%     \item Future work and improvements
-% \end{enumerate}
+    \item [3. Tissue Models Development]. \hfill \\
+    This third chapter is the heart of the project. I will describe in detail all the steps necessary to create the two models, one of pancreatic tissue and the other of dermal tissue, and how I am able to produce the synthetic images. The first section is devoted to the modeling of the histological structures, while the second in entirely dedicated to the sectioning process and the subsequent refinements to the images.
+\end{description}
