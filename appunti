@@ -7,9 +7,28 @@ Conclusions
 	- Enrichment of the model:
 		- Adding more elements;
 		- Development of dedicated histological style-transfer NN;
+		- Add more models !!
 
 	- Training of a NN for segmentaion:
 		- generation of whole datasets;
 		- curriculum learning;
 		- semantic hierarchical segmentation;
+
+----------------------------------------------
+
+Conclusions
+
+Riassunto dei punti principali: 1 par per ogni cosa.
+2 par in cui tirare le fila di tutto quello fatto
+2 par per le prospettive future
+
+Le mie immagini: ottime per un'addestramento intermedio.
+
+beside semi-supervised -> curriculum learning
+----------------------------------------------
+
+Asciugare linguaggio -> meno aggettivi
+
+
+
 

@@ -17,12 +17,71 @@ The problem of recognizing regions with different features within an image and d
     \label{fig:man_seg}
 \end{figure}
 
-
 The latest developed segmentation algorithms are based on DL techniques, hence based on the implementation of intricated Neural Networks (NN) which process the input images and produce the corresponding segmentation. Those models are typically very complex, with millions of parameters to adjust and tune, therefore they need a huge amount of pre-labeled images to learn their segmentation rules. This need for data is exactly the main focus of my thesis work. The shortage of ground truth images is indeed one of the toughest hurdles to overcome during the development of DL-based algorithms. Another important aspect to bear in mind is the quality of the ground truth material. It's impossible for humans to label boundaries of different regions with pixel-perfect precision, while for machines the more precise is the input the more effective is the resulting algorithm.
 
-Different approaches have already been explored to overcome this problem, and they are mainly based on the generation of synthetic labeled data to use during the training phase. Some techniques achieve data augmentation manipulating already available images and then generating \textit{new} images, but as we will see later this approach suffers from different issues. The technique that I propose in this work follows a generation from scratch of entire datasets suitable for the training of new algorithms, based on the 3D modelization of a region of human tissue at the cellular level. The entire traditional sectioning process, which is made on real histological samples, is recreated virtually on this virtual model. This yields pairs of synthetic images with their corresponding ground-truth. Using this technique one would be able to collect sufficient material for the training (the entire phase or the preliminary part) of a model, overcoming the shortage of hand-labeled data.
+Different approaches have already been explored to overcome this problem, and they are mainly based on the generation of synthetic labeled data to use during the training phase. Some techniques achieve data augmentation manipulating already available images and then generating \textit{new} images, but as we will see this approach suffers from different issues. Here, I want to make an overview of some other interesting works on the generation of synthetic histological images, which have followed completely different paths and strategies from mine.
 
-The 3D modeling of a region of particular human tissue is a very complex task, and it is almost impossible to capture all the physiological richness of a histological system. The models I implemented thus are inevitably less sophisticated respect the target biological structures. I'll show two models: one of pancreatic tissue and another of dermal tissue, besides all the tools I used and the choices I made during the designing phase.
+The first work I want to cite is a work from Ben Cheikh \textit{et al.} from 2017 \cite{10.1117/12.2254452}. In this work, they present a methodology for the generation of synthetic images of different types of breast carcinomas. They propose a method completely based on two-dimensional morphology operation, as successive image dilations and erosions. With the modulation of a very restricted number of parameters, regulating the abundance of the objects, their distribution in the image, and their shapes they are able to reconstruct realistic images reflecting different histological situations. In Figure \ref{fig:morpho_tripl} is shown an example of generated material besides a real histological H\&E stained sample. Starting from a generated segmentation mask which defines the \textit{tumoral pattern} the production of the synthetic image passes through successive steps, as the generation of characteristic collagen fibers around the structure, the injection of all the immune system cells, and some general
+final refinements.
+
+    \begin{figure}[ht]
+        \centering
+        \begin{subfigure}[t]{0.3\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/morpho_mask}
+             \caption{}
+             \label{fig:morpho_mask}
+        \end{subfigure}
+        \quad
+        \begin{subfigure}[t]{0.3\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/morpho_model}
+             \caption{}
+             \label{fig:morpho_model}
+        \end{subfigure}
+        \quad
+        \begin{subfigure}[t]{0.3\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/morpho_real}
+             \caption{}
+             \label{fig:morpho_real}
+        \end{subfigure}
+        \caption{Example of generated tumoral pattern (left), which acts as segmentation mask, of generated image (center) and a real example of the tissue to recreate, from \cite{10.1117/12.2254452}.}
+        \label{fig:morpho_tripl}
+    \end{figure}
+
+The second work I want to mention is based on a DL-base technique, which approaches synthetic image generation using a specific cGAN architecture inspired to the ``U-net'' \cite{Senaras2018} model, as will be described in Figure \ref{fig:unet} in section \ref{ssec:soa_seg}. This model works with Ki67 stained samples of breast cancer tissue, and it is able to generate high-fidelity images starting from a given segmentation mask. Those starting segmentation masks tough are obtained through the processing of other real histological samples, via a nuclei-detection algorithm. The differences between real and synthetic samples are imperceptible, and the material generated in this work has effectively fooled experts, who qualified it has indistinguishable from the real one. In Figure \ref{fig:cgan_tripl} an example of a real image, a generated one, and their corresponding segmentation mask.
+
+    \begin{figure}[t]
+        \centering
+        \begin{subfigure}[t]{0.3\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/cgan_mask}
+             \caption{}
+             \label{fig:cgan_mask}
+        \end{subfigure}
+        \quad
+        \begin{subfigure}[t]{0.3\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/cgan_model}
+             \caption{}
+             \label{fig:cgan_model}
+        \end{subfigure}
+        \quad
+        \begin{subfigure}[t]{0.3\textwidth}
+             \centering
+             \includegraphics[width = \textwidth]{images/cgan_real}
+             \caption{}
+             \label{fig:cgan_real}
+        \end{subfigure}
+        \caption{Example of generated tumoral pattern (left), which acts as segmentation mask, of generated image (center) and a real example of the tissue to recreate, from \cite{Senaras2018}.}
+        \label{fig:cgan_tripl}
+    \end{figure}
+
+
+Both of the two before-mentioned strategies produces realistic (or even perfect) results, but they are based onto considerations and analysis limited only to the aspect of the images. In the first work, the segmentation mask is produced in an almost full-random way, while in the second the segmentation mask is extracted starting from an actual real histological samples. The target of the present work instead lies in between those two approaches, and wants to produce randomized new images following a plausible modelization based on physical and histological considerations.
+
+The technique I propose in this work follows a generation from scratch of entire datasets suitable for the training of new algorithms, based on the 3D modelization of a region of human tissue at the cellular level. The entire traditional sectioning process, which is made on real histological samples, is recreated virtually on this virtual model. This yields pairs of synthetic images with their corresponding ground-truth. Using this technique one would be able to collect sufficient material for the training (the entire phase or the preliminary part) of a model, overcoming the shortage of hand-labeled data. The 3D modeling of a region of particular human tissue is a very complex task, and it is almost impossible to capture all the physiological richness of a histological system. The models I implemented thus are inevitably less sophisticated respect the target biological structures. I'll show two models: one of pancreatic tissue and another of dermal tissue, besides all the tools I used and the choices I made during the designing phase.
 
 In order to present organically all the steps of my work the thesis is organized in chapters as follows:
 
