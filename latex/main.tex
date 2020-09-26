@@ -19,11 +19,15 @@
 \usepackage{hyperref} % show intro in toc
 \usepackage{tocloft} % toc tewaking
 
-% Command for creating .diff file
-% latexdiff-vc --git -r --pdf --flatten main.tex
 
-\usepackage{lineno} % numbering lines
-\linenumbers
+%   REVISION TOOLS:
+%
+%   command for creating .diff file
+%   latexdiff-vc --git -r 20c2734 --pdf --flatten main.tex
+%
+%   numbering lines:
+    \usepackage{lineno}
+    \linenumbers
 
 \textwidth=450pt
 \oddsidemargin=0pt
@@ -47,6 +51,8 @@
 
     \chapter{Theoretical Background}
         \input{sections/preamble1}
+        \input{sections/micro_anatomy}
+        \clearpage
         \input{sections/histo_images}
         \clearpage
         \input{sections/intro_deep_learning}
