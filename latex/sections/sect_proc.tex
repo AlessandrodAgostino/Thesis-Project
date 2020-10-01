@@ -1,8 +1,8 @@
 \section{Synthetic Images Production} \label{sec:synth_image}
-    After the model is complete we have a three-dimensional representation of the tissue under study. The aim of the work is though to produce synthetic images from that structure, more precisely we want pairs of images composed of the synthetic-histological images and its related segmentation mask. The transition from 3D structure to a 2D image is the last step in the process, and it is inspired by the actual traditional technique for the preparation of the histological specimen, as described back in section \ref{ssec:samp_prep}. As the biopsy sample is treated and then sectioned with the microtome, the virtual model is sectioned in a random direction, producing an image representing the slice. This first image contains all the information of the section but its appearance is completely arbitrary and its look has nothing to share with a realistic sample. The original slice then acts perfectly as a segmentation mask, but some careful and dramatic makeover is needed to produce the final realistic looking image. In this section I will describe the general procedure to produce virtual slices from the two 3D virtual models described before in section \ref{sec:models} and the technique used to edit the images and give them the desired appearance.
- 
+    After the model is complete we have a three-dimensional representation of the tissue under study. The aim of the work is though to produce synthetic images from that structure, more precisely we want pairs of images composed of the synthetic-histological images and its related segmentation mask. The transition from 3D structure to a 2D image is the last step in the process, and it is inspired by the actual traditional technique for the preparation of the histological specimen, as described back in section \ref{ssec:samp_prep}. As the biopsy sample is treated and then sectioned with the microtome, the virtual model is sectioned in a random direction, producing an image representing the slice. This first image contains all the information of the section but its appearance is completely arbitrary and its look has nothing to share with a realistic sample. The original slice then acts perfectly as a segmentation mask, but some careful and drastic makeover is needed to produce the final realistic looking image. In this section I will describe the general procedure to produce virtual slices from the two 3D virtual models described before in section \ref{sec:models} and the technique used to edit the images and give them the desired appearance.
+
 \subsection{Sectioning Process} \label{ssec:sect_proc}
-    For any model created following the general procedure described in \ref{sec:models}, even more so for the two particular models of pancreatic and dermal tissue, the sectioning process will be almost the same, and it will rely mainly on the algorithm for the general section of polyhedron described back in section \ref{ssec:pol_sec}. As stated before the models are essentially composed by labeled polyhedron spatially organized in a 3D volume. The ordered section of each polyhedron will yield all the polygons that shall be assembled in the final section.
+    For any model created following the general procedure described in \ref{sec:models}, even more so for the two particular models of pancreatic and dermal tissue, the sectioning process will be almost the same, and it will rely mainly on the algorithm for the general section of a convex polyhedron described back in section \ref{ssec:pol_sec}. As stated before the models are essentially composed by labeled polyhedrons spatially organized in a 3D volume. The ordered section of each polyhedron will yield all the polygons that shall be assembled in the final section.
     In Figure \ref{fig:sec_3D} is shown the three-dimensional representation of the section of a simple ramification, as the one in Figure \ref{fig:cell_id}. All the polygons that compose the section are drawn with the color correspondent to their label, following the same idea of Figure \ref{fig:cell_id}. In Figure \ref{fig:section_simple} is printed the final result of the sectioning algorithm applied to the model, which will be the segmentation mask in the single pair of synthetic images. The colors in the produced slice match the colors used for the different identities in the 3D model.
 
         \begin{figure}[ht]
@@ -20,11 +20,11 @@
                  \caption{The fianl section image, produced directly on a planar picture, skipping completely the 3D representation.}
                  \label{fig:section_simple}
             \end{subfigure}
-            \caption{In this Figure is shown the idea of the correspondence between the section of a simple structure in the space and the correspondent section. The correspondence is not perfect for representation requirments, in fact the two images even if very similar are produced with two completely different methods. At the left an image of 2D polygonal section embeded in a 3D space, made using 3D visualization tools. At the right a simple image produced printing the polygons in a planar picture. Printing 2D polygons in a 3D space is much more complicated than one would think using the same tool used to produce the other images like Figure \ref{fig:cell_id} and \ref{fig:vor_comp}. This choice has been done for the sake of the overall homogeneity in pictures style.}
+            \caption{In this Figure is shown the idea of the correspondence between the section of a simple structure in the space and the correspondent section. The correspondence is not perfect for representation requirments, in fact the two images even if very similar are produced with two completely different methods. At the left an image of 2D polygonal section embeded in a 3D space, made using 3D visualization tools. At the right a simple image produced printing the polygons in a planar picture. Printing 2D polygons in a 3D space is much more complicated than one would think using the same tool used to produce the other images like Figure \ref{fig:cell_id} and \ref{fig:vor_comp}.}
             \label{fig:first_sect}
         \end{figure}
 
-    The simplest, yet over-abundant, way to proceed is to create the model in its entirety and subsequently choosing the sectioning plane. Afterward, it is necessary to select only the regions that intersect the plane and section them all. Actually, the test on the intersection passes through the check on the relative position of the polyhedron's vertices respect to the sectioning plane: if all the vertices lie on the same semi-space then the intersection would be null and the polyhedron is not of interest for that particular section. This procedure is exactly the first step of the algorithm in \ref{ssec:pol_sec}, thus the filtering on the regions is actually made during construction for optimization. The alternative method could be to choose in the first place the direction of the sectioning plane, and in second place to generate the model's decomposition only in the volume adjacent to that plane. This method enables the sparing of a good amount of computation, without any negative impact on the final result. The only delicate step is the choice of a wide enough region of space around the plane, which doesn't compromise the representation.
+    The simplest, yet over-abundant, way to proceed is to create the model in its entirety and subsequently choosing the sectioning plane. Afterward, it is necessary to select only the regions that intersect the plane and section them all. Actually, the test on the intersection passes through the check on the relative position of the polyhedron's vertices respect to the sectioning plane: if all the vertices lie on the same semi-space then the intersection would be null and the polyhedron is not of interest for that particular section. This procedure is exactly the first step of the algorithm in \ref{ssec:pol_sec}, thus the filtering on the regions is actually made during construction for optimization. The alternative method could be to choose in the first place the direction of the sectioning plane, and in second place to generate the model's decomposition only in the volume adjacent to that plane. This method enables to spare a great amount of computation, without any negative impact on the final result. The only delicate step is the choice of a wide enough region of space around the plane, which doesn't compromise the representation.
 
     As a guarantee for richness and diversification among the images, there is the need for some degree of controlled randomness in the sectioning process, for example in the determination of the sectioning plane direction. All the sectioning process is then based on a single starting \textit{seed}, which determines the direction of the sectioning plane in a deterministic way, and all the rest of the model is generated as a consequence. In this way, all the possible angulations are equally probable and will be sampled in view of multiple applications of this process. In Figure \ref{fig:4sph_sections} are shown two different sections, along two random planes on two simple ramified structures with four spheres.
 
@@ -45,7 +45,7 @@
             \label{fig:4sph_sections}
         \end{figure}
 
-\subsection{Appearance Makeover} \label{ssec:app_mkov}
+\subsection{Aesthetical Post-processing} \label{ssec:app_mkov}
     After the application of the sectioning algorithm of the previous section, the image which will act as a segmentation mask is ready. The last and most complex task that remains is to transform the image and to give it a realistic look. I tried many different transformations, more or less complicated, and there was not a final decision on which is the best blend of them. In this section, I will describe them as an arsenal of possibilities and show their impact on the images.
 
     \begin{description}
@@ -54,7 +54,7 @@
 
         \begin{figure}[h]
             \centering
-            \includegraphics[width = 0.2\textwidth]{images/new_palette}
+            \includegraphics[width = 0.25\textwidth]{images/new_palette}
             \caption{Example of images produced re-mapping the colors with a color palette inspired to a real H\&E stained histological sample.}
             \label{fig:new_palette}
         \end{figure}
@@ -75,7 +75,7 @@
                  \includegraphics[width = \textwidth]{images/nuclei_real}
                  \label{fig:nuclei_real}
             \end{subfigure}
-            \caption{Nuclei projection on the image: (left) in yellow in the segmentation mask and (right) in purple in the image under makeover.}
+            \caption{Nuclei projection on the image: (left) in yellow in the segmentation mask and (right) in purple in the image under processing.}
             \label{fig:nuclei_proj}
         \end{figure}
 
@@ -96,13 +96,15 @@
 
         \begin{figure}
             \centering
-            \includegraphics[width = 0.4\textwidth]{images/derma_slice}
+            \includegraphics[width = 0.35\textwidth]{images/derma_slice}
             \caption{Example of images produced re-mapping the colors with a color palette inspired to a real H\&E stained histological sample.}
             \label{fig:derma_slice}
         \end{figure}
 
         \item [Blurring Effects] \hfill \\
-        In all the images produced so far the boundaries between polygonal sections are perfectly sharp and without any smudge. To give a more realistic feeling to those pictures I tried different forms of blurring. As a first try, I applied a Gaussian blurring filter, which is an extremely common blurring operation in computer vision, which consists of a simple discrete convolution with a 2D Gaussian kernel. The effect is a regular and diffuse blur all over the image, as in Figure \ref{fig:gauss_blurr}. The second blurring effect I implemented was based instead on the averaging of parallel and adjacent slices on the same model. This method is inspired by the real sectioning technique (section \ref{ssec:samp_prep}), in which every slice is not an infinitesimal layer of matter, but a finite sample, which suffers from mechanical dragging during the process. The idea is that the average between three or more slices equally spaced above and below the \textit{main} slice should recreate a realistic blurring effect. An example of an image produced with this process is shown in Figure \ref{fig:av_blur}.
+        In all the images produced so far the boundaries between polygonal sections are perfectly sharp and without any smudge. To give a more realistic feeling to those pictures I tried different forms of blurring. As a first try, I applied a Gaussian blurring filter, which is an extremely common blurring operation in computer vision, which consists of a simple discrete convolution with a 2D Gaussian kernel. The effect is a regular and diffuse blur all over the image, as in Figure \ref{fig:gauss_blurr}.
+
+        The second blurring effect I implemented was based instead on the averaging of parallel and adjacent slices on the same model. This method is inspired by the real sectioning technique (section \ref{ssec:samp_prep}), in which every slice is not an infinitesimal layer of matter, but a finite sample, which suffers from mechanical dragging during the process. The idea is that the average between three or more slices equally spaced above and below the \textit{main} slice should recreate a realistic blurring effect. An example of an image produced with this process is shown in Figure \ref{fig:av_blur}.
 
         \begin{figure}
             \centering
